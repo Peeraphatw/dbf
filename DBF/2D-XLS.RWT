@@ -1,0 +1,157 @@
+* APCRD.RWT - A/P Movement by Supplier, Date
+*
+[report frame]
+Ti::~INIT1 ~INIT2
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายการเคลื่อนไหวเจ้าหนี้$E
+He:วันที่จาก          ~FROMDATE   ถึง  ~TODATE              `วันที่ : \DATE
+H1:รหัสผู้จำหน่ายจาก  ~FROMSUP    ถึง  ~TOSUP
+He:\LINE
+*He:  วันที่   เลขที่    จ่ายเงิน     ซื้อ   ลดหนี้/ส่งคืน จ่ายชำระหนี้  ยอดคงเหลือ     จ่ายเงินสด      เช็คจ่าย   หักเงินมัดจำ   ด/บ จ่าย      ส่วนลด     ภาษี ณที่จ่าย หมายเหตุ เลขที่เช็ค ลงวันที่ บัญชี ง/ฝ  สถานะเช็ค  F เลขที่ใบรับ วันที่   เลขที่บิล          ยอดจ่าย
+He:","","วันที่","เลขที่","จ่ายเงิน","ซื้อ","ลดหนี้/ส่งคืน","จ่ายชำระหนี้","ยอดคงเหลือ","จ่ายเงินสด","เช็คจ่าย","หักเงินมัดจำ","ด/บ จ่าย","ส่วนลด","ภาษี ณที่จ่าย","หมายเหตุ","เลขที่เช็ค","ลงวันที่","บัญชี ง/ฝ","สถานะเช็ค","F","เลขที่ใบรับ","วันที่","เลขที่บิล","ยอดจ่าย"
+He:\LINE
+**:DD/MM/YY ?RRxxxxxxxxxx Y ZZZ,ZZZ,ZZ9.99ZZ,ZZZ,ZZ9.99ZZZ,ZZZ,ZZ9.99ZZZ,ZZZ,ZZ9.99 99,999,999.99 99,999,999.99 99,999,999.99   999,999.99   xxxxxxxxx1   999,999.99    ***      xxxxxxxxxx DD/MM/YY xxxxxxxxxx xxxxxxxxxx ! RRxxxxxxxx DD/MM/YY  xxxxxxxxx1xxxxx99,999,999.99
+Gh::~PRN_THISSUP    ; 1 SUPCOD
+Gh:~Z$B~SUPPLIER                                                            $B
+*Bo:~Zยอดยกมา                                                         ~BALFWD
+Bo:~Z","ยอดยกมา","","","","","","~BALFWD"
+Ih::                ;1 APTRN->SUPCOD APMAS->SUPCOD
+Ib:~DOCDAT ~F~DOCNUM      ~Y~NETAMT       ~RETAMT      ~PAYAMT       ~BALANCE       ~CSHPAY       ~CHQPAY       ~ADVAMT         ~INTPAY      ~DISC        ~TAX       ~REMARK   {1}  ;1
+Ih::                ;2 APRCPCQ->RCPNUM A->DOCNUM
+Ib:   {1}                                                                                                                                                                      ~CHQNUM    ~CHQDAT       ~BANK      ~CHQSTAT ;2
+Ih::                ;3 APRCPIT->RCPNUM A->DOCNUM
+Ib:                                                                                                                                                                                                                        ~W~IT_RCVNUM ~IT_DATE   ~IT_REFNUM     ~IT_PAYAMT ;3
+Gf:~Z                       -------------- ------------ -------------               ------------- ------------- ------------- ------------ ------------ ------------ ; 1
+Gf:~Zรวม ~SUPNAME           $B~SUMNET       ~SUMRET      ~SUMPAY                     ~SUMCSH       ~SUMCHQ       ~SUMADV       ~SUMINT      ~SUMDISC     ~SUMTAX      $B~CLRSUM1 ~CLRSUM2 ~CLRSUM3 ;1
+Gf:~Z                       ============== ============ =============               ============= ============= ============= ============ ============ ============ ; 1
+Gf:~Z   ;1
+Su:ยอดยกมารวมทั้งสิ้น       $B                                         ~TOTFWD       $B
+Su:รวมทั้งสิ้น              $B~TOTNET       ~TOTRET      ~TOTPAY       ~TOTBAL       ~TOTCSH       ~TOTCHQ       ~TOTADV       ~TOTINT      ~TOTDISC     ~TOTTAX      $B
+Su:                         ============== ============ ============= ============= ============= ============= ============= ============ ============ ============
+Su:หมายเหตุ
+Su:  ใบจ่ายเงินที่มีเครื่องหมาย '***' ในช่องหมายเหตุ  หมายถึงทำรายการจ่ายชำระหนี้ไม่เรียบร้อย
+Su:  ในช่อง F อาจมีเครื่องหมายพิเศษ ได้แก่ :-
+Su:           ! หมายถึง มีการจ่ายชำระหนี้เต็มจำนวน  แต่ค่าในช่อง'เก็บเงิน'ของเอกสารที่ถูกจ่ายชำระ เช่นใบ RR,GR มีค่าเป็น N (แทนที่จะเป็น Y)
+Su:           ? หมายถึง มีการจ่ายชำระหนี้เพียงบางส่วน หรือหาเอกสารที่จ่ายชำระไม่พบ  ต้องตรวจสอบรายการนี้เอง (เพราะโปรแกรมไม่สามารถตรวจสอบให้ได้ว่าจ่ายครบหรือไม่)
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=267
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APCRD.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\005
+
+[master file]
+File=APMAS
+Alias=C
+Tag=APMAS1
+System=DATA_PATH
+
+[item file]
+File=APTRN
+Alias=A
+Tag=APTRN8
+System=DATA_PATH
+Filter=RECTYP#'0'
+
+File=APRCPCQ
+Alias=B
+Tag=APRCPCQ1
+System=DATA_PATH
+
+File=APRCPIT
+Alias=F
+Tag=APRCPIT1
+System=DATA_PATH
+
+[relate file]
+File=BKTRN
+Alias=D
+Tag=BKTRN3
+System=DATA_PATH
+Master file=APRCPCQ
+Master-Related Field=CHQNUM
+
+File=BKMAS
+Alias=E
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",                 "exp"
+~SUPPLIER:      0,      "",                 "sup_nam",              "sup_nam = C->SUPNAM - ' /' - C->SUPCOD",B
+~SUPNAME:      12,      "",                 "sup_nam",              "",B
+~INIT1:         0,      "",                 "",                     "sumnet=0;sumret=0;sumpay=0;sumcsh=0;sumchq=0;sumadv=0;sumint=0;sumdisc=0;sumtax=0; bal=0;net=0;ret=0;pay=0;totfwd=0;totbal=0"
+~INIT2:         0,      "",                 "",                     "totnet=0;totret=0;totpay=0;totcsh=0;totchq=0;totadv=0;totint=0;totdisc=0;tottax=0"
+~FROMSUP:       0,      "",                 "Sup1()",               ""
+~TOSUP:         0,      "",                 "Sup2()",               ""
+~FROMDATE:      0,      "d ดดด yyyy",       "@date1()",             ""
+~TODATE:        0,      "d ดดด yyyy",       "@date2()",             ""
+~PRN_THISSUP:   0,      "",                 "prn_sup",              "bal=@n_ap_balfwd(); prn_sup=@apcrd_prn0()"
+~Z:             0,      "",                 "prn_sup",              ""
+~Y:             0,      "",                 "collected",            "collected=' '+IIF(A->RECTYP#'9',A->CMPLAPP,' ')",E
+~F:             0,      "",                 "is_ok",                "is_ok=' '+IIF(A->RECTYP#'9'.AND.A->CMPLAPP='N'.AND. (STR(A->NETAMT - A->TAX,12,2)#STR(A->REMAMT,12,2)),'?',' ')"
+~DOCDAT:        0,      "วว/ดด/ปปปป",                 "A->DOCDAT",            "",C
+~DOCNUM:        0,      "",                 "A->DOCNUM",            "",D
+~REFNUM:        0,      "",                 "A->REFNUM",            "",D
+~BALFWD:        0,      "999,999,999.99",   "bal",                  "totfwd=totfwd+bal"
+~NETAMT:        0,      "ZZZ,ZZZ,ZZZ.ZZ",   "net",                  "net=IIF(A->RECTYP#'3'.and.A->RECTYP#'4',0,A->NETAMT - A->TAX); sumnet=sumnet+net",F
+~RETAMT:        0,      "ZZZ,ZZZ,ZZZ.ZZ",   "ret",                  "ret=IIF(A->RECTYP#'5',0,A->NETAMT); sumret=sumret+ret",G
+~PAYAMT:        0,      "ZZZ,ZZZ,ZZZ.ZZ",   "pay",                  "pay=IIF(A->RECTYP#'9',0,A->NETAMT+A->ADVAMT); sumpay=sumpay+pay",H
+~BALANCE:       0,      "999,999,999.99",   "bal",                  "bal = bal+net-ret-pay; bal=IIF(bal>-0.01.and.bal<0,0,bal)",I
+~CSHPAY:        0,      "ZZ,ZZZ,ZZZ.ZZ",    "A->CSHPAY",            "sumcsh=sumcsh+A->CSHPAY",J
+~CHQPAY:        0,      "ZZ,ZZZ,ZZZ.ZZ",    "A->CHQPAY",            "sumchq=sumchq+A->CHQPAY",K
+~ADVAMT:        0,      "ZZ,ZZZ,ZZZ.ZZ",    "adv",                  "adv=IIF(A->RECTYP='9',A->ADVAMT,0); sumadv=sumadv+adv",L
+~INTPAY:        0,      "ZZZ,ZZZ.ZZ",       "A->INTPAY",            "sumint=sumint+A->INTPAY",M
+~DISC:          0,      "",                 "discount",             "discount=IIF(A->RECTYP='9',A->DISC,'          '); sumdisc=sumdisc+IIF(A->RECTYP='9',A->DISCAMT, 0)",N
+~TAX:           0,      "ZZZ,ZZZ.ZZ",       "A->TAX",               "sumtax=sumtax+A->TAX",O
+~REMARK:        0,      "",                 "chkerr",               "chkerr=IIF(A->RECTYP='5',A->PONUM,IIF(A->RECTYP='9' .and. STR(A->RCVAMT,15,2)#STR(A->NETAMT,15,2),'   ***    ', IIF(A->DOCSTAT='C'.and.A->NETAMT # 0, '***ยอดค้าง', '          ')))",P
+
+~CHQNUM:        0,      "",                 "B->CHQNUM",            "",Q
+~CHQDAT:        0,      "วว/ดด/ปปปป",                 "D->CHQDAT",            "",R
+~BANK:         10,      "",                 "BKMAS->SHORTNAM",      "",S
+~CHQSTAT:       0,      "",                 "p_istab( BKTRN->CHQSTAT, 02, 1, 13 )",         "",T
+
+~IT_RCVNUM:     0,      "",                 "F->DOCNUM",                "",V
+~IT_DATE:       0,    "",             "DDD",                 "DD=@aprcpit_get_rcvdat();XXX=STR(VAL(SUBSTR(DD,7,3))+2500,4,0);DDD=SUBSTR(DD,1,6)-XXX ",W
+~IT_REFNUM:     0,      "",                 "aprcpit_get_refnum()",     "",X
+~W:             0,      "",                 "aprcpit_chk_cmplapp()",    "",U
+~IT_PAYAMT:     0,      "99,999,999.99",    "pay",                      "pay = IIF(APRCPIT->RECTYP='0'.or.APRCPIT->RECTYP='5',APRCPIT->PAYAMT*-1,APRCPIT->PAYAMT)",Y
+
+~SUMNET:        0,      "999,999,999.99",   "sumnet",               "",F
+~SUMRET:        0,      "999,999,999.99",   "sumret",               "",G
+~SUMPAY:        0,      "999,999,999.99",   "sumpay",               "",H
+~SUMCSH:        0,      "999,999,999.99",   "sumcsh",               "",J
+~SUMCHQ:        0,      "999,999,999.99",   "sumchq",               "",K
+~SUMADV:        0,      "999,999,999.99",   "sumadv",               "",L
+~SUMINT:        0,      "99,999,999.99",    "sumint",               "",M
+~SUMDISC:       0,      "99,999,999.99",    "sumdisc",              "",N
+~SUMTAX:        0,      "99,999,999.99",    "sumtax",               "",O
+~CLRSUM1:       0,      "",                 "",                     "totnet=totnet+sumnet;sumnet=0;totret=totret+sumret;sumret=0;totpay=totpay+sumpay;sumpay=0; totbal=totbal+bal; bal=0"
+~CLRSUM2:       0,      "",                 "",                     "totcsh=totcsh+sumcsh;sumcsh=0;totchq=totchq+sumchq;sumchq=0;totadv=totadv+sumadv;sumadv=0;totint=totint+sumint;sumint=0"
+~CLRSUM3:       0,      "",                 "",                     "totdisc=totdisc+sumdisc;sumdisc=0;tottax=tottax+sumtax;sumtax=0"
+~TOTFWD:        0,      "999,999,999.99",   "totfwd",               "",I
+~TOTNET:        0,      "999,999,999.99",   "totnet",               "",F
+~TOTRET:        0,      "999,999,999.99",   "totret",               "",G
+~TOTPAY:        0,      "999,999,999.99",   "totpay",               "",H
+~TOTBAL:        0,      "999,999,999.99",   "totbal",               "",I
+~TOTCSH:        0,      "999,999,999.99",   "totcsh",               "",J
+~TOTCHQ:        0,      "999,999,999.99",   "totchq",               "",K
+~TOTADV:        0,      "999,999,999.99",   "totadv",               "",L
+~TOTINT:        0,      "99,999,999.99",    "totint",               "",M
+~TOTDISC:       0,      "99,999,999.99",    "totdisc",              "",N
+~TOTTAX:        0,      "99,999,999.99",    "tottax",               "",O
+
+
+
+

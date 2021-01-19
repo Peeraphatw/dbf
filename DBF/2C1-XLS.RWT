@@ -1,0 +1,91 @@
+* APAGING.RWT -- A/P Aging Report by Supplier
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานวิเคราะห์อายุหนี้แยกตามเจ้าหนี้ (แบบสรุป)$E
+He:ผู้จำหน่ายจาก  ~FROMSUP    ถึง  ~TOSUP                   `วันที่ : \DATE
+He:เฉพาะวันที่ครบกำหนดไม่เกินวันที่ ~AGEDATE     ~REM_AGEDATE
+He::\LINE
+He:","ชื่อเจ้าหนี้","","","","...............จะครบกำหนด...............","",".......................เกินกำหนด........................","","","","ยอดหนี้รวม","เช็คจ่ายล่วงหน้า","วงเงิน","เกินวงเงิน","เครดิต","หมายเหตุ.
+He:","","","","เกิน~ND2วัน","ภายใน~ND2วัน","ภายใน~ND1วัน","~PRD1   วัน","~PRD2   วัน"," ~PRD3   วัน","เกิน~PRD4วัน","(วัน)
+**:  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxxx5xxxxx  999,999,999.99999,999,999.99999,999,999.99  999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99  999  xxxxxxx
+He::\LINE
+Bo:~Z~SUPPLIER                                                 ~DUEOVR60     ~DUEIN60      ~DUEIN30        ~OVRDUE1      ~OVRDUE2      ~OVRDUE3      ~OVRDUE4      ~SUMSUP        ~CHQPAY       ~CRLINE       ~OVRLINE        ~CD  ~REMARK
+Su::~E","","",""," -------------"," -------------"," --------------","  -------------"," -------------"," -------------"," -------------"," --------------"," -------------
+Su:~E                           รวมทั้งสิ้น                    $B~TOT0         ~TOT1         ~TOT2           ~TOT3         ~TOT4         ~TOT5         ~TOT6         ~TOTAL         ~SUMCHQ           $B
+Su::~E","","",""," ============="," ============="," ============== "," ============="," ============="," ============="," ============="," =============="," =============
+Su:หมายเหตุ
+Su:  รายการที่มีเครื่องหมาย '***' ในช่องหมายเหตุ  หมายถึงยอดหนี้รวมของเจ้าหนี้ในรายงานนี้ ไม่ตรงกับยอดหนี้ที่สะสมไว้ในเจ้าหนี้รายตัว (ต้องคำนวณยอดเจ้าหนี้ใหม่)
+Su:~IS_PRINT           '???' ในช่องหมายเหตุ  หมายถึงโปรแกรมไม่ได้ตรวจสอบยอดหนี้รวมของเจ้าหนี้ให้ เพราะกำหนดวันที่ครบกำหนดไว้
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=232
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APAGING.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\004
+
+[master file]
+File=APMAS
+Alias=A
+Tag=APMAS1
+System=DATA_PATH
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",         "exp"
+~INIT:          0,      "",                 "init_tot()",   "sumchq=0;sumbal=0; prn0=@n_prn0(); prnerr=@n_agerr; as=@AgeDate(); is_print=IIF(as#'   ',' ',':')"
+~FROMSUP:       0,      "",                 "Sup1()",       ""
+~TOSUP:         0,      "",                 "Sup2()",       ""
+~AGEDATE:       0,      "d ดดด yyyy",       "@date_age()",  "as=@AgeDate()"
+~REM_AGEDATE:   0,      "",                 "rem_asdate",   "rem_asdate=IIF(as#'  ','(ระบุวันครบกำหนดไว้ โปรแกรมจะไม่ตรวจสอบยอดหนี้รวมของเจ้าหนี้รายตัวให้)', '(เลือกทั้งหมด)                                                        ')"
+~IS_PRINT:      0,      "",                 "is_print",     ""
+~SUPPLIER:      0,      "",                 "sup_nam",      "sup_nam = A->SUPNAM - ' /' - A->SUPCOD",B
+*~Z:            0,      "",                 "prn_sup",      "noused=@sum_rcv(); sum_tot=@n_sum_tot(); prn_sup=IIF(prn0=0.and.sum_tot=0.and.A->CHQPAY=0, ':', ' ' )"
+~Z:             0,      "",                 "prn_sup",      "noused=@sum_rcv(); sum_tot=@n_sum_tot(); cmpbal=@cmp_bal(); prn_sup=IIF((prnerr=1.and.cmpbal='   ').or.(prn0=0.and.sum_tot=0.and.A->CHQPAY=0), ':', ' ' )"
+~E:             0,      "",                 "prn_err",      "prn_err=IIF(prnerr=1,':',' ')"
+~ND1:           0,      "",                 "notdue1()",    ""
+~ND2:           0,      "",                 "notdue2()",    ""
+~PRD1:          0,      "",                 "ovrprd1()",    ""
+~PRD2:          0,      "",                 "ovrprd2()",    ""
+~PRD3:          0,      "",                 "ovrprd3()",    ""
+~PRD4:          0,      "",                 "ovrprd4()",    ""
+~DUEOVR60:      0,      "999,999,999.99",   "sup0",         "sup0=@n_sup0()",E
+~DUEIN60:       0,      "999,999,999.99",   "sup1",         "sup1=@n_sup1()",F
+~DUEIN30:       0,      "999,999,999.99",   "sup2",         "sup2=@n_sup2()",G
+~OVRDUE1:       0,      "999,999,999.99",   "sup3",         "sup3=@n_sup3()",H
+~OVRDUE2:       0,      "999,999,999.99",   "sup4",         "sup4=@n_sup4()",I
+~OVRDUE3:       0,      "999,999,999.99",   "sup5",         "sup5=@n_sup5()",J
+~OVRDUE4:       0,      "999,999,999.99",   "sup6",         "sup6=@n_sup6()",K
+~SUMSUP:        0,      "9999,999,999.99",  "sum_tot",      "",L
+~CHQPAY:        0,      "999,999,999.99",   "A->CHQPAY",    "sumchq=sumchq+A->CHQPAY",M
+~CRLINE:        0,      "ZZZ,ZZZ,ZZZ.ZZ",   "A->CRLINE",    "",N
+~OVRLINE:       0,      "ZZZ,ZZZ,ZZZ.ZZ",   "ovrline",      "ovrline = IIF(A->CRLINE <= 0 .or. A->CRLINE > (A->BALANCE+A->CHQPAY), 0, (A->BALANCE+A->CHQPAY) - A->CRLINE )",O
+~CD:            0,      "ZZZ",              "A->PAYTRM",    "",P
+~REMARK:        0,      "",                 "cmp_bal()",    "",Q
+
+~TOT0:          0,      "999,999,999.99",   "tot0",         "tot0=@n_tot0()",E
+~TOT1:          0,      "999,999,999.99",   "tot1",         "tot1=@n_tot1()",F
+~TOT2:          0,      "999,999,999.99",   "tot2",         "tot2=@n_tot2()",G
+~TOT3:          0,      "999,999,999.99",   "tot3",         "tot3=@n_tot3()",H
+~TOT4:          0,      "999,999,999.99",   "tot4",         "tot4=@n_tot4()",I
+~TOT5:          0,      "999,999,999.99",   "tot5",         "tot5=@n_tot5()",J
+~TOT6:          0,      "999,999,999.99",   "tot6",         "tot6=@n_tot6()",K
+~TOTAL:         0,      "9999,999,999.99",  "tot",          "tot=@n_total()",L
+~SUMCHQ:        0,      "999,999,999.99",   "sumchq",       "",M
+
+
+
+
+
+
+

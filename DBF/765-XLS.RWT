@@ -1,0 +1,99 @@
+* STTOPV_S.RWT - Top Sales Value Report by Stock+Salesman
+*
+[report frame]
+Ti::~INIT_VAR
+He:\NAME                               ","","","","","","","หน้า",": \PAGE
+He:$Eรายงานการจัดลำดับยอดขาย$E ตามมูลค่าของแต่ละสินค้า,พนักงานขาย  (~TOP ลำดับแรก)
+He:วันที่จาก       ~FROMDATE            ถึง  ~TODATE ","","","","","","","วันที",": \DATE
+H1:รหัสสินค้าจาก   ~FROMSTK             ถึง  ~TOSTK
+H1:หมวดสินค้าจาก   ~FROMGRP             ถึง  ~TOGRP             เลือกแผนก  ~FROMDEP
+He:\LINE
+He:สินค้า","ลำดับ","ชื่อพนักงานขาย","หน่วยนับ","ปริมาณขายสุทธิ","มูลค่าขาย","ต้นทุนขายสุทธิ","กำไรขั้นต้น","(%)
+He:\LINE
+*  xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxx9,999,999.999 9999,999,999.99 9999,999,999.99 999,999,999.99 99,999.99
+Gh:~ARTICLE                                                   ~QUDES  ~NEW_STK  ;1 STKCOD
+Bo:~NNC            ~SLMNAM                                            ~SALQTY       ~SALVAL         ~TRNVAL         ~PROFIT        ~PFRAT
+Su:                                                                                 --------------- --------------- --------------
+Su:                      รวมทั้งสิ้น                                                $B~TSALVAL        ~TTRNVAL        ~TPROFIT       ~TPF     $B
+Su:                                                                                 =============== =============== ==============
+Su:หมายเหตุ:    ยอดขายสุทธิ(ของแถมไม่นำมาคิด) = ปริมาณที่ขายสด+ขายเชื่อ-รับคืน
+Su:             มูลค่าขาย                 = จำนวนเงินขายสด+ขายเชื่อ-รับคืน
+Su:             ต้นทุนขายสุทธิ            = (ต้นทุนขายสด+ต้นทุนขายเชื่อ+ต้นทุนของที่แถม) - (ต้นทุนที่รับคืน+ต้นทุนของแถมที่รับคืน)
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=137
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STTOPV_S.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=STKGRP>='StkGrp1()'.AND. STKGRP<='StkGrp2()'
+DATE FORMAT=DD/MM/YY
+
+[master file]
+File=A
+Alias=A
+Key=STKCOD+STR(999999999-SALVAL,15,2)+STR(999999999-TRNQTY,15,4)
+*Descending=Y
+System=DATA_PATH
+
+[relate file]
+File=OESLM
+Alias=R
+Tag=OESLM1
+System=DATA_PATH
+Master file=A
+Master-Related Field=SLMCOD
+
+File=STMAS
+Alias=B
+Tag=STMAS1
+System=DATA_PATH
+Master file=A
+Master-Related Field=STKCOD
+
+[data spec]
+*~dat:      len,"pict",             "data",         "exp"
+~INIT_VAR:  0,  "",                 "",             "TSALVAL=0;TTRNVAL=0;TPROFIT=0"
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMDATE:  0,  "d ดดด yyyy",       "@date1()",     ""
+~TODATE:    0,  "d ดดด yyyy",       "@date2()",     ""
+~FROMGRP:   0,  "",                 "StkGrp1()",    ""
+~TOGRP:     0,  "",                 "StkGrp2()",    ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+
+~TOP:       0,  "9999",             "prntop()",         ""
+~NNC:       0,  "",                 "prncount_cus_s()", "",B
+~NEW_STK:   0,  "",                 "clrcount_cus()",   ""
+~ARTICLE:   58, "",                 "ARTICLE",      "ARTICLE=A->STKCOD-'  '-A->STKDES"
+~STKCOD:    0,  "",                 "A->STKCOD",    ""
+~STKDES:    0,  "",                 "A->STKDES",    ""
+*~QUDES:    0,  "",                 "p_istab(A->QUCOD,20,1,8)", ""
+~QUDES:     0,  "",                 "p_cqu()",       "nouse=@save_cfactor()",D
+~SLMNAM:    42, "",                 "slm_nam",      "slm_nam = OESLM->SLMNAM -'/ '- A->SLMCOD",C
+
+*~SALQTY:   0,  "qty(13)",          "A->TRNQTY",    ""
+~SALQTY:    0,  "",                 "Q",            "Q=@s_cqu( A->TRNQTY,13 )",E
+~SALVAL:    0,  "9999,999,999.99",  "A->SALVAL",    "TSALVAL=TSALVAL+A->SALVAL",F
+~TRNVAL:    0,  "9999,999,999.99",  "A->TRNVAL",    "TTRNVAL=TTRNVAL+A->TRNVAL; PROFIT=A->SALVAL - A->TRNVAL; PFRAT= PROFIT*100/A->SALVAL",G
+~PROFIT:    0,  "999,999,999.99",   "PROFIT",       "TPROFIT=TPROFIT+PROFIT",H
+~PFRAT:     0,  "99,999.99",        "PFRAT",        "",I
+~TSALVAL:   0,  "9999,999,999.99",  "TSALVAL",      "",F
+~TTRNVAL:   0,  "9999,999,999.99",  "TTRNVAL",      "",G
+~TPROFIT:   0,  "999,999,999.99",   "TPROFIT",      "TPF=TPROFIT*100/TSALVAL",H
+~TPF:       0,  "99,999.99",        "TPF",          "",I
+
+
+
+
+
+

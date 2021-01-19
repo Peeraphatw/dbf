@@ -1,0 +1,98 @@
+* STTOPQ_Y.RWT - Top Purchase Quantity Report by Stock+Supplier
+*
+[report frame]
+Ti::~INIT_VAR
+He:\NAME                                                   ","","","","","","","","","","","","","","","","หน้า   : \PAGE
+He:$Eรายงานการจัดลำดับยอดซื้อ$E ตามปริมาณซื้อของแต่ละสินค้า,ผู้จำหน่าย  (~TOP ลำดับแรก)
+He:วันที่จาก       ","","~FROMDATE        ถึง  ~TODATE           ","","","","","","","","","","","","","","วันที่ : \DATE
+H1:รหัสสินค้าจาก   ","","~FROMSTK            ถึง  ~TOSTK
+H1:หมวดสินค้าจาก   ","","~FROMGRP             ถึง  ~TOGRP      ","","","","","","","","","","","","","","เลือกแผนก  ~FROMDEP
+*He:\LINE
+He:สินค้า","","ลำดับ","ชื่อผู้จำหน่าย","","หน่วยนับ","ปริมาณซื้อสุทธิ","มูลค่าซื้อ
+*He:\LINE
+*  xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxx9,999,999.999 9999,999,999.99 
+Gh:~ARTICLE                                                   ~QUDES  ~NEW_STK  ;1 STKCOD
+Bo:~NNC            ~SUPNAM                                            ~PURQTY       ~PURVAL         
+Su:                                                                                 --------------- 
+Su:                      รวมทั้งสิ้น                                                $B~TPURVAL        $B
+Su:                                                                                 =============== 
+Su:หมายเหตุ:    ยอดซื้อสุทธิ(ของแถมไม่นำมาคิด) = ปริมาณที่ซื้อสด+ซื้อเชื่อ-ส่งคืน
+Su:             มูลค่าซื้อ               = จำนวนเงินซื้อสด+ซื้อเชื่อ-ส่งคืน
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=100
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STTOPQ_Y.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\000\027\103
+15_Inch=\027\033\001
+Query=STKGRP>='StkGrp1()'.AND. STKGRP<='StkGrp2()'
+
+[master file]
+File=A
+Alias=A
+Key=STKCOD+STR(999999999-TRNQTY,15,4)+STR(999999999-PURVAL,15,2)
+*Descending=Y
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=R
+Tag=APMAS1
+System=DATA_PATH
+Master file=A
+Master-Related Field=PEOPLE
+
+File=STMAS
+Alias=B
+Tag=STMAS1
+System=DATA_PATH
+Master file=A
+Master-Related Field=STKCOD
+
+[data spec]
+*~dat:      len,"pict",             "data",         "exp"
+~INIT_VAR:  0,  "",                 "",             "TPURVAL=0;TTRNVAL=0;TPROFIT=0"
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMDATE:  0,  "d ดดด ปปปป",       "@date1()",     ""
+~TODATE:    0,  "d ดดด ปปปป",       "@date2()",     ""
+~FROMGRP:   0,  "",                 "StkGrp1()",    ""
+~TOGRP:     0,  "",                 "StkGrp2()",    ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+
+~TOP:       0,  "9999",             "prntop()",         ""
+~NNC:       0,  "",                 "prncount_sup_q()", "",C
+~NEW_STK:   0,  "",                 "clrcount_sup()",   "",G
+~ARTICLE:   58, "",                 "ARTICLE",      "ARTICLE=A->STKCOD-'  '-A->STKDES"
+~STKCOD:    0,  "",                 "A->STKCOD",    ""
+~STKDES:    0,  "",                 "A->STKDES",    "",B
+*~QUDES:    0,  "",                 "p_istab(A->QUCOD,20,1,8)", "",F
+~QUDES:     0,  "",                 "p_cqu()",       "nouse=@save_cfactor()",F
+
+~SUPNAM:    42, "",                 "sup_nam",      "sup_nam = APMAS->SUPNAM -'/ '- A->PEOPLE",D
+*~SUPCOD:    0, "",                 "A->PEOPLE",      "",E
+*~SUPNAM:    0, "",                 "APMAS->SUPNAM"   "",D
+
+*~PURQTY:   0,  "qty(13)",          "A->TRNQTY",    "",G
+~PURQTY:    0,  "",                 "Q",            "Q=@s_cqu( A->TRNQTY,13 )",G
+~PURVAL:    0,  "9999,999,999.99",  "A->PURVAL",    "TPURVAL=TPURVAL+A->PURVAL",H
+~PROFIT:    0,  "999,999,999.99",   "PROFIT",       "TPROFIT=TPROFIT+PROFIT"
+~PFRAT:     0,  "99,999.99",        "PFRAT",        ""
+~TPURVAL:   0,  "9999,999,999.99",  "TPURVAL",      "",H
+~TTRNVAL:   0,  "9999,999,999.99",  "TTRNVAL",      ""
+~TPROFIT:   0,  "999,999,999.99",   "TPROFIT",      "TPF=TPROFIT*100/TPURVAL"
+~TPF:       0,  "99,999.99",        "TPF",          ""
+
+
+
+
+

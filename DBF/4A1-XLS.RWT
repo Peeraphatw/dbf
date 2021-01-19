@@ -1,0 +1,80 @@
+* STNOSAL.RWT - Never Sales Stock Report, Order by Stock Code
+*
+[report frame]
+Ti::~INIT ~CLR_C
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eสินค้าที่ไม่มีการขาย$E ก่อนวันที่ ~ASDATE
+He:รหัสสินค้าจาก   ~FROMSTK             ถึง  ~TOSTK         `วันที่ : \DATE
+H1:หมวดสินค้าจาก   ~FROMGRP             ถึง  ~TOGRP
+*He:\LINE
+He:"รหัสสินค้า,"รายละเอียด","หน่วยนับ","ยอดคงเหลือ","มูลค่าคงเหลือ","วันขายล่าสุด","ยอดขายจากต้นปี","มูลค่า","
+*He:\LINE
+*  xxxxxxxxxxxxxxxxxxxx xxxxxxxxx1xxxxxxxxx2xxxxxxxx3xxxxxxxxx4 xxxxxxxx 99,999,999.999 999,999,999.99  dd/mm/yy  9999,999.999 99,999,999.99
+Bo::~SETMEM~SETMEM1 ~GETSTAT ~GETBAL 
+Bo:~STKCOD        ~STKDES                                       ~QUDES   ~TOTBAL        ~TOTVAL         ~LSELDAT  ~S9Q         ~S9V
+Su:                                                                      -------------- --------------
+Su:  รวมทั้งสิ้น  ~G_STK สินค้า                                          $B~GTOTBAL       ~GTOTVAL      $B
+Su:                                                                      ============== ==============
+Su:
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=137
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STNOSAL.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=STMAS->STKTYP='0'
+Query=.AND.STKCOD>='Stk1()'.AND. STKCOD<='Stk2()'
+Query=.AND.STMAS->STKGRP>='StkGrp1()'.AND. STMAS->STKGRP<='StkGrp2()'
+Query=.AND. DTOS(STMAS->LSELDAT) < 'AsDate()'
+*Query=.AND. DTOS(STMAS->LSELDAT) >= '19940501'
+Date Format=วว/ดด/ปปปป
+
+[master file]
+File=STMAS
+Alias=A
+Tag=STMAS1
+System=DATA_PATH
+
+[data spec]
+*~dat:      len,"pict",         "data",             "exp"
+~INIT:      0,  "",             "",                 "GTOTBAL=0;GTOTVAL=0; T9Q=0;T9QF=0;T9V=0;T9VF=0"
+~CLR_C:     0,  "",             "",                 "g_stk=0"
+~FROMSTK:   0,  "",             "Stk1()",           ""
+~TOSTK:     0,  "",             "Stk2()",           ""
+~FROMGRP:   0,  "",             "StkGrp1()",        ""
+~TOGRP:     0,  "",             "StkGrp2()",        ""
+~ASDATE:    0,  "d ดดด yyyy",   "@date_as()",       ""
+
+~STKCOD:    0,  "",             "A->STKCOD",        ""
+~STKDES:    0,  "",             "A->STKDES",        "",B
+~ARTICLE:   60, "",             "stk",              "stk = A->STKCOD -' /'- A->STKDES"
+*~SETMEM:   0,  "",             "",                 "SALQTY=A->SALQTY01+A->SALQTY02+A->SALQTY03+A->SALQTY04+A->SALQTY05+A->SALQTY06+A->SALQTY07+A->SALQTY08+A->SALQTY09+A->SALQTY10+A->SALQTY11+A->SALQTY12+A->SALQTY13"
+*~SETMEM1:  0,  "",             "",                 "SALVAL=A->SALVAL01+A->SALVAL02+A->SALVAL03+A->SALVAL04+A->SALVAL05+A->SALVAL06+A->SALVAL07+A->SALVAL08+A->SALVAL09+A->SALVAL10+A->SALVAL11+A->SALVAL12+A->SALVAL13"
+~GETBAL:    0,  "",             "stmas_totbal()",   "g_stk=g_stk+1"
+~GETSTAT:   0,  "",             "stmas_stat1()",    ""
+~QUDES:     0,  "",             "p_istab(A->QUCOD,20,1,8)", "",C
+~LSELDAT:   0,  "",             "A->LSELDAT",       "",F
+~TOTBAL:    0,  "qty(14)",      "A->TOTBAL",        "GTOTBAL=GTOTBAL+A->TOTBAL",D
+~UNITPR:    0,  "pri(11)",      "A->UNITPR",        ""
+~TOTVAL:    0,  "ZZZ,ZZZ,ZZZ.ZZ","A->TOTVAL",       "GTOTVAL=GTOTVAL+A->TOTVAL",E
+~GTOTBAL:   0,  "qty(14)",      "GTOTBAL",          "",D
+~GTOTVAL:   0,  "999,999,999.99","GTOTVAL",         "",E
+
+~S9Q:       0,  "qtyZ(12)",         "S9Q",          "S9Q =@n_9q()",G
+~S9QF:      0,  "qtyZ(12)",         "S9QF",         "S9QF=@n_9qf()"
+~S9V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S9V",          "S9V =@n_9v()",H
+~S9VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "S9VF",         "S9VF=@n_9vf()"
+~G_STK:     0,  "99,999",           "g_stk",        ""
+
+
+

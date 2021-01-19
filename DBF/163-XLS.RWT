@@ -1,0 +1,102 @@
+* ARBILOUT.RWT - Billing Slip Report by Billing Date
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eใบวางบิล เรียงตามวันที่ไปวางบิล$E
+He:วันที่ไปวางบิลจาก  ~FROMDATE      ถึง  ~TODATE           `วันที่ : \DATE
+H1:รหัสลูกค้าจาก      ~FROMCUS       ถึง  ~TOCUS
+He:\LINE
+*He:วันที่ไปวางบิล ชื่อลูกค้า                                    ใบวางบิล       วันที่  วันที่นัด    ยอดตามใบวางบิล ยอดค้างชำระ เงื่อนไขการชำระเงิน     หมายเหตุ
+*He:~D                 ใบกำกับ#       วันที่        ค้างชำระ
+He:","วันที่ไปวางบิล"," ชื่อลูกค้า ","","",""," ใบวางบิล"," วันที่ ","วันที่นัด "," ยอดตามใบวางบิล ","ยอดค้างชำระ ","","เงื่อนไขการชำระเงิน "," หมายเหตุ 
+He:~D","",""," ใบกำกับ# "," วันที่ "," ค้างชำระ ",
+He:\LINE
+**:DD/MM/YY  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5 BIxxxxxxxx   DD/MM/YY DD/MM/YY  99,999,999.99 99,999,999.99      xxxxxxxxx1xxxxxxxxx2xxxxx xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5
+**:                   IV99999999   DD/MM/YY  99,999,999.99
+Bo:~BILOUT   ~CUSTOMER                                          ~BILNUM      ~BILDAT  ~APPDAT   ~NETAMT       ~REMAIN       ~W   ~PAYCOND                  ~REMARK_X
+Ih:","","","","หมายเหตุ:",         ;1 artrnrm->docnum+'@' arbil->bilnum+'@'
+Ib:                      ~REMARK        ;1
+Ih::                                    ;2 artrn->bilnum arbil->bilnum
+Ib:                   ~IVCNUM      ~IVCDAT   ~REMAMT        ;2
+*Su:                                                                                             ------------- -------------
+Su:","","","","","รวมทั้งสิ้น  ~CNT   ใบ  ","","","","$B~TOTAL        ","~TOTREM       $B",
+*Su:                                                                                             ============= =============
+Su:
+Su:~CHKFหมายเหตุ:  ถ้าใบวางบิลใบใด มีเครื่องหมาย *** หลังช่องยอดค้างชำระ จะหมายถึงว่า  ยอดตามใบวางบิลใบนั้น ไม่เท่ากับผลรวมของยอดค้างชำระของใบกำกับที่วางบิล  ซึ่งอาจมีสาเหตุจาก :-
+Su:~CHKF             1.ใบกำกับบางใบถูกรับชำระไปแล้ว  จึงทำให้ยอดค้างชำระเป็นไม่เท่ากับตอนที่วางบิล (ในกรณีถือว่าเป็นปกติ)
+Su:~CHKF             2.ใบกำกับบางใบหายไปหลังจากที่ทำใบวางบิล  (ในกรณีถือว่าผิดปกติ ให้กลับไปแก้ไขใบวางบิลใบนั้นอีกครั้ง)
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=202
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARBILOUT.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\004
+Query=DTOS(BILOUT)>='Date1()'.AND.DTOS(BILOUT)<='Date2()'
+
+[master file]
+File=ARBIL
+Alias=A
+Tag=ARBIL4
+System=DATA_PATH
+
+[item file]
+File=ARTRN
+Alias=C
+Tag=ARTRN4
+System=DATA_PATH
+ 
+File=artrnrm
+Alias=X
+Tag=artrnrm1
+System=DATA_PATH
+
+[relate file]
+File=ARMAS
+Alias=B
+Tag=ARMAS1
+System=DATA_PATH
+Master file=ARBIL
+Master-Related Field=CUSCOD
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",             "exp"
+~INIT:          0,      "",                 "",                 "cnt=0;p_det=@n_prn_detail(); prn_detail=IIF(p_det=0,':',' '); grand=0; totrem=0; bilerr=':'"
+~FROMDATE:      0,      "d ดดด yyyy",       "@date1()",         ""
+~TODATE:        0,      "d ดดด yyyy",       "@date2()",         ""
+~FROMCUS:       0,      "",                 "Cus1()",           ""
+~TOCUS:         0,      "",                 "Cus2()",           ""
+~APPDAT:        0,      "วว/ดด/ปปปป",                 "A->APPDAT",        "",I
+~BILNUM:        0,      "",                 "A->BILNUM",        "cnt=cnt+1",G
+~BILDAT:        0,      "วว/ดด/ปปปป",                 "A->BILDAT",        "",H
+~CUSTOMER:     50,      "",                 "cus_nam",          "cus_nam = B->CUSNAM - ' /' - A->CUSCOD",C
+~BILOUT:        0,      "วว/ดด/ปปปป",                 "A->BILOUT",        "",B
+~PAYCOND:       0,      "",                 "A->PAYCOND",       "",L
+~REMARK_X:      0,      "",                 "A->REMARK",        "",M
+~NETAMT:        0,      "99,999,999.99",    "A->NETAMT",        "grand = grand + A->NETAMT",J
+~TOTAL:         0,      "999,999,999.99",   "grand",            ""
+~REMAIN:        0,      "99,999,999.99",    "ivcrem",           "ivcrem =@n_bilrem(); totrem=totrem+ivcrem",K
+~TOTREM:        0,      "999,999,999.99",   "totrem",           ""
+
+~CNT:           0,      "99,999",           "cnt",              ""
+~W:             0,      "",                 "warning",          "warning=IIF(STR(ivcrem,14,2) = STR(ARBIL->NETAMT,14,2) .OR. ivcrem <= 0, '   ', '***' ); bilerr=IIF(warning='***', ' ', bilerr)",L
+~CHK:           0,      "",                 "isprint",          "isprint=IIF(STR(ivcrem,14,2) = STR(ARBIL->NETAMT,14,2) .OR. ivcrem <= 0, ':', ' ' )"
+~IVCNUM:        0,      "",                 "ARTRN->DOCNUM",    "",D
+~IVCDAT:        0,      "วว/ดด/ปปปป",                 "ARTRN->DOCDAT",    "",E
+~REMAMT:        0,      "99,999,999.99",    "ARTRN->REMAMT",    "",F
+~SETFLAG:       0,      "",                 "",                 "bilerr=IIF(isprint=' ', ' ', bilerr)"
+~CHKF:          0,      "",                 "bilerr",           ""
+
+~D:             0,      "",                 "prn_detail",       ""
+~REMARK:        0,      "",                 "ARTRNRM->REMARK",  "",E
+
+

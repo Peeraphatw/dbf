@@ -1,0 +1,108 @@
+* GLTRL.RWT - Trial Balance by Date
+*
+[report frame]
+Ti::~INIT_VAR
+He:\NAME                                                   ","","","","","","","หน้า : \PAGE
+He:งบทดลอง   ณ วันที่ ~TODATE
+He:เลขที่บัญชีจาก  ","","~FROMACC        ถึง  ~TOACC             ","","","","","วันที่ : \DATE
+H1:วันที่จาก       ","","~FROMDATE        ถึง  ~TODATE
+H1:เลือกแผนก       ","","~D1              รวมบัญชียอดเป็น 0  ~Y
+*He:\LINE
+*He:                                                                         <------------  ยอดยกมา -----------> <---------  ยอดเคลื่อนไหว --------> <----------  ยอดคงเหลือ  --------->
+He:","","","      ยอดยกมา","","     ยอดเคลื่อนไหว","","     ยอดคงเหลือ","
+He:เลขที่บัญชี","แผนก","ชื่อบัญชี","เดบิท","เครดิต","เดบิท","เครดิต","เดบิท","เครดิต
+*He: เลขที่บัญชี    แผนก              ชื่อบัญชี                                        เดบิท            เครดิต             เดบิท            เครดิต             เดบิท            เครดิต
+*He:\LINE
+*  9999-9999-99999 xxxx  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5  9,999,999,999.99  9,999,999,999.99  9,999,999,999.99  9,999,999,999.99  9,999,999,999.99  9,999,999,999.99
+Bo::~Z1     ~Z3     ~Z5     ~ZZ
+Bo:~NUM            ~DEP  ~ACCNAM                                             ~BALBF_DB         ~BALBF_CR         ~PTD_DB           ~PTD_CR           ~BAL_DB           ~BAL_CR          ~N
+*Su:","","","-----------------","-----------------","-----------------","-----------------","-----------------","-----------------
+Su:                                      รวม ~TC    บัญชี                   ~TOTBF_DB         ~TOTBF_CR         ~TPTD_DB          ~TPTD_CR          ~TBAL_DB          ~TBAL_CR         
+*Su:","","","=================","=================","=================","=================","=================","=================
+*Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=180
+Output=Select, Printer, Screen, File,
+File Name=GLTRIAL.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\004
+Query=ACCNUM>='Acc1()'.AND.ACCNUM<='Acc2()' .AND. GLACC->ACCTYP='0'
+
+[master file]
+File=GLBAL
+Alias=B
+Tag=GLBAL1
+System=DATA_PATH
+
+[relate file]
+File=GLACC
+Alias=A
+Tag=GLACC1
+System=DATA_PATH
+Master file=GLBAL
+Master-Related Field=ACCNUM
+
+File=ISTAB
+Alias=T
+Tag=ISTAB2
+System=DATA_PATH
+Master file=GLBAL
+Master-Related Field=DEPCOD
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",                 "data",         "exp"
+~INIT_VAR:  0,  "",                     "",             "CNT=0;P0=@yesno();Totdb=0;Totcr=0;Totbf_db=0;Totbf_cr=0;TotBal_DB=0;TotBal_CR=0"
+~DEP:       0,  "",                     "B->DEPCOD",    "X=IIF(B->DEPCOD#'  '.and. T->TYPCOD='  ','**','  ');Y=IIF(A->USEDEP='M' .and. B->DEPCOD='  ','^^','  ')",B
+~X:         0,  "",                     "X",            "Y=IIF(A->USEDEP='N' .and. B->DEPCOD#'  ','^^', Y );X=IIF(X#'  ',X,Y)"
+~ACCNUM:    0,  "",                     "B->ACCNUM",    "",C
+~ACCNAM:    0,  "",                     "A->ACCNAM",    "",C
+*~TODATE:    0,  "dd ดดด yyyy",          "@date2()",     ""
+~TODATE:    0,  "dd ดดด ปปปป",          "@date2()",     ""
+~Z1:        0,  "",                     "",             "BF=@nBAL_LD()"
+~Z3:        0,  "",                     "",             "pdb=@nPTD_DB();pcr=@nPTD_CR()"
+~Z5:        0,  "",                     "",             "BAL=BF+pdb-pcr"
+~ZZ:        0,  "",                     "",             "WW=pdb + pcr"
+~NUM:       0,  "",                     "NUM",          "SK=IIF(P0='N',IIF(BF=0.and.WW=0,'}',' '),' ');NUM=IIF(SK='}','}              ',B->ACCNUM)"
+
+~BALBF_DB:  0,  "9,999,999,999.99",     "B1",           "B1=IIF(BF>0,   BF,0);TotBF_DB = Totbf_DB + B1",D
+~BALBF_CR:  0,  "9,999,999,999.99",     "B2",           "B2=IIF(BF<0,-1*BF,0);TotBF_CR = Totbf_CR + B2",E
+
+
+~PTD_DB:    0,  "9,999,999,999.99",     "pdb",          "TotDB = TotDB + pdb",F
+~PTD_CR:    0,  "9,999,999,999.99",     "pcr",          "TotCR = TotCR + pcr",G
+*~PTD_DB:   0,  "9,999,999,999.99",     "amt",          "net=pdb-pcr;amt=IIF(net>0,net,0);TotDB = TotDB + amt",F
+*~PTD_CR:   0,  "9,999,999,999.99",     "amt",          "amt=IIF(net<0,0-net,0);TotCR = TotCR + amt",G
+~BAL_DB:    0,  "9,999,999,999.99",     "B1",           "B1=IIF(BAL>0,   BAL,0);TotBal_DB = Totbal_DB + B1",H
+~BAL_CR:    0,  "9,999,999,999.99",     "B2",           "B2=IIF(BAL<0,-1*BAL,0);TotBal_CR = Totbal_CR + B2",I
+~TOTBF_DB:  0,  "99,999,999,999.99",    "Totbf_DB",     "",D
+~TOTBF_CR:  0,  "99,999,999,999.99",    "Totbf_CR",     "",E
+~TPTD_DB:   0,  "99,999,999,999.99",    "TotDB",        "",F
+~TPTD_CR:   0,  "99,999,999,999.99",    "TotCR",        "",G
+~TBAL_DB:   0,  "99,999,999,999.99",    "TotBal_DB",    "",H
+~TBAL_CR:   0,  "99,999,999,999.99",    "TotBal_CR",    "",I
+~N:         0,  "",                     "",             "CNT=CNT+1"
+~TC:        0,  "99,999",               "CNT",          ""
+~FROMACC:   0,  "",                     "Acc1()",       ""
+~TOACC:     0,  "",                     "Acc2()",       ""
+~D1:        0,  "",                     "Dep1()",       ""
+~D2:        0,  "",                     "Dep2()",       ""
+~D3:        0,  "",                     "Dep3()",       ""
+~D4:        0,  "",                     "Dep4()",       ""
+~D5:        0,  "",                     "Dep5()",       ""
+~D6:        0,  "",                     "Dep6()",       ""
+~FROMDATE:  0,  "d ดดด ปปปป",           "@date1()",     ""
+*~FROMDATE:  0,  "d ดดด yyyy",           "@date1()",     ""
+*~TODATE:    0,  "d ดดด yyyy",           "@date2()",     ""
+~Y:         0,  "",                     "P0",           ""
+
+
+
+
+

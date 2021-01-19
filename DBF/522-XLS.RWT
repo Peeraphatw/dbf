@@ -1,0 +1,183 @@
+* GLJNL2 - Journal Listing by VOUCHER
+*
+[report frame]
+Ti::~INIT ~INIT2
+He:\NAME                                                    ","","","","","หน้า : \PAGE
+He:สมุดรายวันเรียงตามใบสำคัญ
+He:เลขที่เอกสารจาก  ","","~FROMV        ถึง  ~TOV                 ","","","วันที่ : \DATE
+H1:รายวันจาก        ","","~A ~B1        ถึง  ~B ~B2
+*He:\LINE
+He:","เลขที่บัญชี","แผนก","ชื่อบัญชี","เดบิท","เครดิต","สถานะ
+*He:","เลขที่บัญชี","แผนก","ชื่อบัญชี","คำอธิบาย","เดบิท","เครดิต","สถานะ
+*He:\LINE
+*  xxxxxxxxx1xxxx! xxxx xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxx 9,999,999,999.999,999,999,999.99  UNPOST
+** xxxxxxxxx1xxxx! xxxx xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxx xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5 9,999,999,999.999,999,999,999.99  X
+Gh::      ; 1 VOUCHER
+Bo:~VOUCHER     ~VOUDAT        ~H_DESCRP                                                                                                                        ~POST
+Ih::    ;1 gljnlit->voucher gljnl->voucher
+Ib:~ACCNUM         ~DEP    ~ACCNAM                                       ~DBAMT          ~CRAMT            ~E ~N   ;1
+*Ib:~ACCNUM         ~DEP    ~ACCNAM                                       ~DESCRP                                            ~DBAMT          ~CRAMT            ~E ~N  ;1
+Ih::    ;2 bktrn->voucher gljnl->voucher
+Ib:         เช็ค#   ~CHQNUM   ~CHQDAT       ~CHQAMT       ~BANK      ~BRANCH          ~REMARK       ;2
+Ih::    ;3 isvat->vatrec+isvat->docnum 'S'+gljnl->voucher
+Ib:~PVAT ภาษีขาย#   ~REFNUM   ~VATDAT      ~AMT01       ~VAT01       ~VATP ;3
+Ih::    ;4 isvat->vatrec+isvat->docnum 'P'+gljnl->voucher
+Ib:~PVAT  ภาษีซื้อ# ~REFNUM   ~VATDAT      ~AMT01       ~VAT01       ~VATP ;4
+Ib:~02                ขอคืนไม่ได้          ~AMT02       ~VAT02   ;4
+Ih::    ;5 istax->refnum gljnl->voucher
+Ib:~PTAX ใบหักภาษี# ~TAXNUM   ~TAXDAT      ~PAYAMT      ~TAXAMT      ~TAXP ;5
+Ib:                                             หักไว้  ~RATE % สำหรับ  ~TAXDES    ;5
+*Ih:           หมายเหตุ:        ;5 artrnrm->docnum+'@' gljnl->voucher+'@'
+*Ib:              ~REMARK_H     ;5
+*Gf:                                                                                                                      ---------------- ---------------  ;1
+*Gf:                                                                                                              ~CHK    ~TOTDB          ~TOTCR             ~INIT2
+*Su:                                                                                                                      ---------------- ---------------
+*Su:       ~DN    เอกสาร ~CNT    รายการ                                                                      รวมทั้งสิ้น  ~GTDB           ~GTCR
+*Su:                                                                                                                      ================ ===============
+*Gf:","","","","----------------","---------------  ;1
+Gf:                                                           ~CHK    ~TOTDB          ~TOTCR             ~INIT2   ;1
+Su:","","","","----------------","---------------
+Su:       ~DN    เอกสาร ~CNT    รายการ                    รวมทั้งสิ้น ~GTDB           ~GTCR
+Su:","","","","================","===============
+Su:
+Su: หมายเหตุ  สถานะ U=ยังไม่ผ่านบัญชี, C=ยกเลิก, E=ถูกแก้ไขหลังจากผ่านบัญชีแล้ว
+*Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+*Right=105
+Right=156
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=GLJNL.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=VOUCHER>='Doc1()'.AND.VOUCHER<='Doc2()'.AND.JNLTYP>='Book1()'.AND.JNLTYP<='Book2()'
+Query=.AND. DTOS(VOUDAT)>='Date1()'.AND.DTOS(VOUDAT)<='Date2()'
+*Sort=VOUCHER
+
+[master file]
+File=GLJNL
+Alias=H
+Tag=GLJNL1
+System=DATA_PATH
+
+[item file]
+File=GLJNLIT
+Alias=J
+Tag=GLJNLIT1
+System=DATA_PATH
+
+File=BKTRN
+Alias=B
+Tag=BKTRN13
+System=DATA_PATH
+Filter=CHQSTAT#'20'.AND.CHQSTAT#'22'
+
+File=ISVAT
+Alias=V
+Tag=ISVAT1
+System=DATA_PATH
+
+File=ISTAX
+Alias=T
+Tag=ISTAX1
+System=DATA_PATH
+
+File=artrnrm
+Alias=Z
+Tag=artrnrm1
+System=DATA_PATH
+
+[relate file]
+File=GLACC
+Alias=C
+Tag=GLACC1
+System=DATA_PATH
+Master file=GLJNLIT
+Master-Related Field=ACCNUM
+*Filter=ACCTYP#'1'
+
+File=BKMAS
+Alias=D
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len "pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "GTDB=0;GTCR=0;CNT=0;DN=0; is_audit=@n_isAudit()"
+~INIT2:     0,  "",                 "",             "TOTDB=0;TOTCR=0"
+~VOUCHER:   0,  "",                 "H->VOUCHER",   "DN=DN+1"
+~VOUDAT:    0,  "วว/ดด/ปปปป",                 "H->VOUDAT",    "",B
+~H_DESCRP:  0,  "",                 "H->DESCRP",    "",C
+~ACCNUM:   45,  "",                 "J->ACCNUM",    "",B
+~DEP:       0,  "",                 "J->DEPCOD",    "",C
+~P_ISDEP:   0,  "",                 "p_isdep( J->DEPCOD)",  ""
+~DESCRP:    0,  "",                 "J->DESCRP",    ""
+~ACCNAM:    0,  "",                 "NAMERR",       "NAMERR=IIF(GLACC->ACCNUM='    ','*** A/C Not Found ***                             ',GLACC->ACCNAM)",D
+~DBAMT:     0,  "Z,ZZZ,ZZZ,ZZZ.ZZ", "AMT",          "AMT=IIF(J->TRNTYP='0', J->AMOUNT, 0);TOTDB=TOTDB+AMT",E
+~CRAMT:     0,  "Z,ZZZ,ZZZ,ZZZ.ZZ", "AMT",          "AMT=IIF(J->TRNTYP='1', J->AMOUNT, 0);TOTCR=TOTCR+AMT",F
+~TOTDB:     0,  "9,999,999,999.99", "TOTDB",        "GTDB=GTDB+TOTDB",E
+~TOTCR:     0,  "9,999,999,999.99", "TOTCR",        "GTCR=GTCR+TOTCR",F
+~GTDB:      0,  "9,999,999,999.99", "GTDB",         "",E
+~GTCR:      0,  "9,999,999,999.99", "GTCR",         "",F
+~JNLNAME:   0,  "",                 "Book1s()",     ""
+~A:         0,  "",                 "Book1()",      ""
+~B:         0,  "",                 "Book2()",      ""
+~B1:        0,  "",                 "Book1sht()",   ""
+~B2:        0,  "",                 "Book2sht()",   ""
+~FROMDATE:  0,  "d ดดด yyyy",       "@date1()",     ""
+~TODATE:    0,  "d ดดด yyyy",       "@date2()",     ""
+~CHK:       0,  "",                 "CHK",          "CHK=IIF(STR(TOTDB,15,2) # STR(TOTCR,15,2), '***', 'รวม')"
+~POST:      0,  "",                 "POST",         "POST=IIF(GLJNL->DOCSTAT='C','C',IIF(GLJNL->TRNSTAT='U','U',' '))",G
+~E:         0,  "",                 "ED",           "ED=IIF(is_audit=1.AND.GLJNLIT->ADJUST='Y','E',' ')",G
+~N:         0,  "",                 "",             "CNT=CNT+1"
+~DN:        0,  "99,999",           "DN",           ""
+~CNT:       0,  "999,999",          "CNT",          ""
+~FROMV:     0,  "",                 "Doc1()",       ""
+~TOV:       0,  "",                 "Doc2()",       ""
+
+~CHQNUM:    0,  "",                 "BKTRN->CHQNUM",    ""
+~CHQDAT:    0,  "วว/ดด/ปปปป",                 "BKTRN->CHQDAT",    ""
+~CHQAMT:    0,  "999,999,999.99",   "BKTRN->AMOUNT",    ""
+~BANK:      0,  "",                 "Bank",             "Bank = @p_istab(BKTRN->BNKCOD,01,0,10); bank=IIF(BKTRN->BKTRNTYP='QR',bank+'    ',SUBSTR(BKMAS->SHORTNAM,1,10))"
+~BRANCH:    0,  "",                 "Branch",           "Branch = IIF(BKTRN->BKTRNTYP='QR',BKTRN->BRANCH,'                      ')"
+~REMARK:    0,  "",                 "BKTRN->REMARK",    ""
+
+~REFNUM:    0,  "",                 "ISVAT->REFNUM",    ""
+~DOCDAT:    0,  "วว/ดด/ปปปป",                 "ISVAT->DOCDAT",    ""
+~VATDAT:    0,  "วว/ดด/ปปปป",                 "ISVAT->VATDAT",    ""
+~PVAT:      0,  "",                 "",                 "prd = @format_date( ISVAT->VATPRD, MM/YY )"
+~VATP:      0,  "",                 "vat_prd",          "vat_prd=IIF( SUBSTR(DTOS(ISVAT->VATPRD),1,6) # SUBSTR(DTOS(ISVAT->VATDAT),1,6), '(ยื่นรวมในงวด '+prd+ISVAT->LATE+')', '                     ')"
+~AMT01:     0,  "99,999,999.99",    "ISVAT->AMT01",     ""
+~VAT01:     0,  "9,999,999.99",     "ISVAT->VAT01",     ""
+~02:        0,  "",                 "02",               "02=IIF(ISVAT->AMT02 > 0 .or. ISVAT->VAT02 > 0, ' ', ':')"
+~AMT02:     0,  "99,999,999.99",    "ISVAT->AMT02",     ""
+~VAT02:     0,  "9,999,999.99",     "ISVAT->VAT02",     ""
+~REMARK_H:  0,  "",                 "ARTRNRM->REMARK",  ""
+
+~TAXNUM:    0,      "",                 "ISTAX->TAXNUM",    ""
+~TAXDAT:    0,      "วว/ดด/ปปปป",                 "ISTAX->TAXDAT",    ""
+~TAXNAM:    0,      "",                 "ISTAX->NAME",      ""
+~TAXADDR:   0,      "",                 "ISTAX->ADDR",      ""
+~TAXID:     0,      "",                 "ISTAX->TAXID",     ""
+~TAXDES:    0,      "",                 "ISTAX->TAXDES",    ""
+~PTAX:      0,      "",                 "",                 "prd = @format_date( ISTAX->TAXPRD, MM/YY )"
+~TAXP:      0,      "",                 "tax_prd",          "tax_prd=IIF( SUBSTR(DTOS(ISTAX->TAXPRD),1,6) # SUBSTR(DTOS(ISTAX->TAXDAT),1,6), '(ยื่นรวมในงวด '+prd+ISTAX->LATE+')', '                     ')"
+~PAYAMT:    0,      "99,999,999.99",    "ISTAX->AMOUNT",    ""
+~RATE:      0,      "999.99",           "ISTAX->TAXRAT",    ""
+~TAXAMT:    0,      "9,999,999.99",     "ISTAX->TAXAMT",    ""
+
+
+
+
+

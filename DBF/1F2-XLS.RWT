@@ -1,0 +1,95 @@
+* ARMASAT.RWT -- Customer Detail Report by Customer's Area and Type
+*
+[report frame]
+He:\NAME                                                    ","","","","","","","","หน้า   : \PAGE
+He:$Eรายละเอียดลูกค้า แยกตามเขตการขาย$E
+He:                                                         ","","","","","","","","วันที่ : \DATE
+He:\LINE
+He:  รหัสลูกค้า","คำนำหน้า+ชื่อลูกค้า","","","พนักงานขาย","เครดิต","ประเภท-","ส่วนลด","ยอดวงเงิน
+He:                             ","ที่อยู่","","","","(วัน)","ราคา","เลขที่บัญชี","ขนส่งโดย
+He:                     ","","เบอร์โทรศัพท์","ชื่อผู้ติดต่อ","","","","เงื่อนไขการชำระเงิน
+He:\LINE
+Gh:$Bเขตการขาย    :","~TABLE1                                             $B ; 1 AREACOD
+Gh:$Bประเภทลูกค้า :","~TABLE2                                             $B ; 2 CUSTYP
+Bo:  ~CUSCOD    ~CUSNAM                                                        ~SLMCOD         ~TRM  ~PRI~DISC      ~CRLINE
+Bo:                ~ADDR                                                                                  ~ACCNUM        ~DLVBY
+Bo::                ~ADDR01                                        ~ADDR02                                 ~ADDR03
+Bo:                     ~TELNUM                                  ~CONTACT                                 ~PAYCOND
+Bo:~REMARK_NB           ~REMARK 
+Gf:\FEED    ;1
+Su:
+Su:ขอบเขตรายงาน:
+Su: เขตการขายจาก    ~FROMAREA       ถึง ~TOAREA
+Su: ประเภทลูกค้าจาก ~FROMCUSTYP     ถึง ~TOCUSTYP
+Su: ลูกค้าจาก       ~FROMCUS        ถึง ~TOCUS
+Su: พนักงานขายจาก   ~FROMSLM        ถึง ~TOSLM
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=132
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARMASAT.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=CUSCOD>='Cus1()'.AND.CUSCOD<='Cus2()'
+Query=.AND.CUSTYP>='CusTyp1()'.AND.CUSTYP<='CusTyp2()'
+Query=.AND.AREACOD>='Area1()'.AND. AREACOD<='Area2()'
+Query=.AND.SLMCOD>='Slm1()'.AND.SLMCOD<='Slm2()'
+Sort=AREACOD+CUSTYP+CUSCOD
+
+[master file]
+File=ARMAS
+Alias=A
+Tag=ARMAS1
+System=DATA_PATH
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",             "exp"
+~FROMAREA:      0,      "",                 "Area1()",          ""
+~TOAREA:        0,      "",                 "Area2()",          ""
+~FROMCUSTYP:    0,      "",                 "CusTyp1()",        ""
+~TOCUSTYP:      0,      "",                 "CusTyp2()",        ""
+~FROMCUS:       0,      "",                 "Cus1()",           ""
+~TOCUS:         0,      "",                 "Cus2()",           ""
+~FROMSLM:       0,      "",                 "Slm1()",           ""
+~TOSLM:         0,      "",                 "Slm2()",           ""
+
+~TABLE1:        0,      "",                 "p_istab( A->AREACOD,40,1,40)",     ""
+~TABLE2:        0,      "",                 "p_istab( A->CUSTYP,45,1,40)",      ""
+
+~CUSCOD:        0,      "",                 "A->CUSCOD",        ""
+~CUSNAM:        0,      "",                 "name",             "name = A->PRENAM - ' ' - A->CUSNAM",B
+~ADDR:          0,      "",                 "addr",             "addr = A->ADDR01 - ' ' - A->ADDR02",B
+~TELNUM:        0,      "",                 "A->TELNUM",        "",C
+~CONTACT:       0,      "",                 "A->CONTACT",       "",D
+~PAYCOND:       0,      "",                 "A->PAYCOND",       "",H
+~SLMCOD:        0,      "",                 "A->SLMCOD",        "",E
+~AREA:          0,      "",                 "A->AREACOD",       ""
+~TRM:           0,      "",                 "A->PAYTRM",        "",F
+~PRI:           0,      "",                 "A->TABPR",         "",G
+~DISC:          0,      "",                 "A->DISC",          "",H
+~CRLINE:        0,      "99,999,999.99",    "A->CRLINE",        "",I
+~ACCNUM:        0,      "",                 "A->ACCNUM",        "",H
+~DLVBY:         0,      "",                 "A->DLVBY",         "",I
+~REMARK_NB:     0,      "",                 "has_remark",       "has_remark=IIF(A->REMARK='          ',':',' ')"
+~REMARK:        0,      "",                 "A->REMARK",        "",C
+
+~HREM1:         0,      "",                 "x1",               "x1=@p_hrem( A->CUSCOD,1 )",C
+~HREM2:         0,      "",                 "x2",               "x2=@p_hrem( A->CUSCOD,2 )",C
+~HREM3:         0,      "",                 "x3",               "x3=@p_hrem( A->CUSCOD,3 )",C
+~HREM4:         0,      "",                 "x4",               "x4=@p_hrem( A->CUSCOD,4 )",C
+~HREM5:         0,      "",                 "x5",               "x5=@p_hrem( A->CUSCOD,5 )",C
+
+~ADDR01:        0,      "",                 "ARMAS->ADDR01",    "",B
+~ADDR02:        0,      "",                 "ARMAS->ADDR02",    "",C
+~ADDR03:        0,      "",                 "ADDR03",           "ADDR03 = ARMAS->ADDR03 - ' ' - ARMAS->ZIPCOD",D
+

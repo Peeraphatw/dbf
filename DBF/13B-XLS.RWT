@@ -1,0 +1,154 @@
+* OEBAKSUP.RWT - Back Order Report by Supplier, Delivery Date
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานสินค้าค้างส่ง แยกตามผู้จำหน่าย,สินค้า$E
+He:ส่งของวันที่   ~FROMDATE            ถึง  ~TODATE         `วันที่ : \DATE
+H1:ผู้จำหน่ายจาก  ~FROMSUP             ถึง  ~TOSUP
+H1:รหัสสินค้าจาก  ~FROMSTK             ถึง  ~TOSTK
+H1:คลังสินค้าจาก  ~FROMLOC             ถึง  ~TOLOC             เลือกแผนก  ~FROMDEP
+He:\LINE
+*He:    วันที่ส่งของ ใบสั่งขาย    วันที่สั่งขาย     ลูกค้า                               คลัง       ยอดสั่ง        ค้างส่ง     จำนวนเงิน
+He:รหัสสินค้า","รายละเอียดสินค้า","วันที่ส่งของ","ใบสั่งขาย","วันที่สั่งขาย","ลูกค้า","คลัง","ยอดสั่ง","","ค้างส่ง"," จำนวนเงิน ",
+**        C        D           E     F     G        H                            I                                    
+He:\LINE
+**:    DD/MM/YY OExxxxxxxxxx-nnn DD/MM/YY xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxx xxxx 999,999.999 xx 999,999.999 999,999,999.99
+Gh:$B~SUPPLIER                                                              $B ; 1 STMAS->SUPCOD
+Gh:  ~STOCKCOD                   ~STOCKDES                                               ; 2 STKCOD
+Bo:    ~DLVDAT    ~SONUM           ~SODAT      ~CUSNAM                                                ~LOC ~ORDQTY     ~Q ~REMQTY     ~REMVAL
+Gf:","","","","","","","--------------","","---------------","---------------               ;2
+Gf:รวม                                                                                                    $B~SUB1QTY      ~SUB1REM    ~SUB1VAL      $B~C_SUB1  ;2
+Gf:","","","","","","","======","","======="," ====== ;2
+Su:
+Su:รวมทั้งสิ้น  (จำนวนเงินเป็นยอดโดยประมาณ เพราะยังไม่ได้นำส่วนลดรวมมาหัก)                                $B~TOTQTY        ~TOTREM     ~TOTVAL       $B
+Su:","","","","","","","======","","======="," ======
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=160
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=OEBAKCUS.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=OESOIT->REMQTY >= 0.0001 .AND. OESOIT->SORECTYP#'5'
+Query=.AND.STMAS->SUPCOD>='Sup1()'.AND. STMAS->SUPCOD<='Sup2()'
+Query=.AND.DTOS(OESOIT->DLVDAT)>='Date1()' .AND. DTOS(OESOIT->DLVDAT)<='Date2()'
+Query=.AND.OESOIT->CUSCOD>='Cus1()' .AND. OESOIT->CUSCOD<='Cus2()'
+Query=.AND.OESOIT->STKCOD>='Stk1()' .AND. OESOIT->STKCOD<='Stk2()'
+Query=.AND.OESOIT->LOCCOD>='Loc1()' .AND. OESOIT->LOCCOD<='Loc2()'
+Sort=STMAS->SUPCOD+STKCOD+DTOS(DLVDAT)+SONUM+SEQNUM
+
+[master file]
+File=OESOIT
+Alias=A
+Tag=OESOIT5
+System=DATA_PATH
+
+[relate file]
+File=ARMAS
+Alias=B
+Tag=ARMAS1
+System=DATA_PATH
+Master file=OESOIT
+Master-Related Field=CUSCOD
+
+File=STMAS
+Alias=C
+Tag=STMAS1
+System=DATA_PATH
+Master file=OESOIT
+Master-Related Field=STKCOD
+
+File=OESO
+Alias=D
+Tag=OESO1
+System=DATA_PATH
+Master file=OESOIT
+Master-Related Field=SONUM
+
+File=OESLM
+Alias=F
+Tag=OESLM1
+System=DATA_PATH
+Master file=OESO
+Master-Related Field=SLMCOD
+
+File=APMAS
+Alias=T
+Tag=APMAS1
+System=DATA_PATH
+Master file=STMAS
+Master-Related Field=SUPCOD
+
+[data spec]
+*           len (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "sub1qty=0;sub1rem=0;sub1val=0; totqty=0;totrem=0;totval=0"
+~FROMSUP:   0,  "",                 "Sup1()",       ""
+~TOSUP:     0,  "",                 "Sup2()",       ""
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMLOC:   0,  "",                 "Loc1()",       ""
+~TOLOC:     0,  "",                 "Loc2()",       ""
+~FROMCUS:   0,  "",                 "Cus1()",       ""
+~TOCUS:     0,  "",                 "Cus2()",       ""
+~FROMSLM:   0,  "",                 "Slm1()",       ""
+~TOSLM:     0,  "",                 "Slm2()",       ""
+~FROMDATE:  0,  "d ดดด yyyy",       "@date1()",     ""
+~TODATE:    0,  "d ดดด yyyy",       "@date2()",     ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+
+~SUPPLIER:  0,  "",                 "sup_nam",      "sup_nam = APMAS->SUPNAM - ' /' - STMAS->SUPCOD"
+~SUPNAME:   0,  "",                 "sup_nam",      ""
+~CUSTOMER:  0,  "",                 "cus_nam",      "cus_nam = ARMAS->CUSNAM - ' /' - A->CUSCOD"
+~CUSNAME:   0,  "",                 "cus_nam",      ""
+~STOCKDES:  0,  "",                 "stk_des",      "stk_des = C->STKDES ",B
+~STOCKCOD:  0,  "",                 "stk_cod",      "stk_cod = A->STKCOD",A
+~STKDES:    0,  "",                 "stk_des",      ""
+~SALESMAN:  0,  "",                 "slm_nam",      "slm_nam = OESLM->SLMNAM - ' /' - OESO->SLMCOD"
+~SLMNAME:   0,  "",                 "slm_nam",      ""
+
+~LOC:       0,  "",                 "A->LOCCOD",    "",G
+*~DLVDAT:    0,  "dd/mm/ปปปป",                 "A->DLVDAT",    "",B
+~DLVDAT:    0,  "dd/mm/ปปปป",                 "A->DLVDAT",    "",C
+~SONUM:     0,  "",                 "num",          "num=A->SONUM-'-'-A->SEQNUM",D
+~SODAT:     0,  "dd/mm/ปปปป",                 "D->SODAT",     "",E
+~STKNAM:   45,  "",                 "A->STKDES",    ""
+~CUSNAM:    0,  "",                 "ARMAS->CUSNAM","",F
+~ORDQTY:    0,  "qty(11)",          "A->ORDQTY",    "sub1qty=sub1qty+A->ORDQTY",H
+~REMQTY:    0,  "qty(11)",          "A->REMQTY",    "sub1rem=sub1rem+A->REMQTY",J
+~KEEPBAL:   0,  "",                 "",             "tot_bal=STMAS->TOTBAL; tot_reo=STMAS->TOTREO; qux=STMAS->QUCOD"
+~Q:         0,  "",                 "A->TQUCOD",    "",I
+~UNITPR:    0,  "priZ(12)",         "A->UNITPR",    ""
+~DISC:      0,  "",                 "A->DISC",      ""
+~REMVAL:    0,  "999,999,999.99",   "remval",       "remval=A->REMQTY*A->UNITPR-(A->DISCAMT*A->REMQTY/A->ORDQTY); sub1val=sub1val+remval",K
+
+~SUB1QTY:   0,  "qty(11)",          "sub1qty",      "",H
+~SUB1REM:   0,  "qty(11)",          "sub1rem",      "",J
+~SUB1VAL:   0,  "999,999,999.99",   "sub1val",      "",K
+~C_SUB1:    0,  "",                 "",             "totqty=totqty+sub1qty; sub1qty=0; totrem=totrem+sub1rem; sub1rem=0; totval=totval+sub1val; sub1val=0"
+~TOTQTY:    0,  "qty(11)",          "totqty",       "",H
+~TOTREM:    0,  "qty(11)",          "totrem",       "",J
+~TOTVAL:    0,  "999,999,999.99",   "totval",       "",K
+
+
+
+
+
+
+
+
+
+
+
+

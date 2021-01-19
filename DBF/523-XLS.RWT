@@ -1,0 +1,119 @@
+* GLJNL3X.RWT - Journal sort by Account No.
+*
+[report frame]
+Ti::~INIT_VAR
+He:\NAME                                                    ","","","","","","","หน้า : \PAGE
+He:สมุดรายวันเรียงตามเลขที่บัญชี
+He:เลขที่บัญชีจาก  ","","~FROMACC        ถึง  ~TOACC             ","","","","","วันที่ : \DATE
+H1:วันที่จาก       ","","~FROMDATE        ถึง  ~TODATE           เลือกแผนก  ~D1
+*He:\LINE
+He:","วันที่","สมุด","ใบสำคัญ","เดบิท","เครดิต","คำอธิบาย","สถานะ
+He:","--------","----","-----------","-----------------","----------------","------------------------------------------------","-----
+*  dd/mm/yy  GEN    GLxxxxxxxxYY 99,999,999,999.99 99,999,999,999.99   xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5  X
+Gh::   ; 1  ACCNUM
+Gh:เลขที่บัญชี:  ~ACCNUM                                                                    ; 2  DEPCOD
+Bo:~VDATE    ~MNE   ~VOUCHER     ~DB_AMT           ~CR_AMT             ~DESCRP                                             ~POST ~A2  
+Gf:                              ----------------- -----------------      ; 2
+Gf:~A1              รวม          ~TOTDB            ~TOTCR            ~CLR
+Gf:\LINE
+Su:","","","","=================","=================
+Su:รวมทั้งสิ้น  ~GTDB             ~GTCR           
+Su:","","","","=================","=================
+Su:~RS     รายการ
+Su:~TC     บัญชี
+Su:
+Su: หมายเหตุ  สถานะ U=ยังไม่ผ่านบัญชี, C=ยกเลิก
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=123
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=GLJNL3X.TXT
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=ACCNUM>='Acc1()'.AND.ACCNUM<='Acc2()'
+Query=.AND.DTOS(VOUDAT)>='Date1()'.AND.DTOS(VOUDAT)<='Date2()'
+Query=.AND.GLACC->ACCTYP='0'
+*เพื่อดูเฉพาะเอกสารซื้อเชื่อ(ทุกเมนูย่อยที่สร้างเพิ่ม)
+*Query=.AND.ISRUN->DOCTYP='RR'
+
+[master file]
+File=GLJNLIT
+Alias=J
+Tag=GLJNLIT2
+System=DATA_PATH
+
+[relate file]
+File=GLJNL
+Alias=H
+Tag=GLJNL1
+System=DATA_PATH
+Master file=GLJNLIT
+Master-Related Field=VOUCHER
+
+File=GLACC
+Alias=A
+Tag=GLACC1
+System=DATA_PATH
+Master file=GLJNLIT
+Master-Related Field=ACCNUM
+
+File=GLBAL
+Alias=B
+Tag=GLBAL1
+System=DATA_PATH
+Master file=GLJNLIT
+Master-Related Field=ACCNUM+DEPCOD
+
+File=ISRUN
+Alias=RUN
+Tag=ISRUN2
+System=DATA_PATH
+Master file=GLJNLIT
+Master-Related Field=SUBSTR(VOUCHER,1,2)
+
+[data spec]
+*~dat:      len,"pict",                 "data",         "exp"
+~INIT_VAR:  0,  "",                     "",             "TOTDB=0;TOTCR=0;GTDB=0;GTCR=0;CNT=0;TAC=0; is_audit=@n_isAudit()"
+~CLR:       0,  "",                     "",             "TOTDB=0;TOTCR=0"
+~FROMACC:   0,  "",                     "Acc1()",       ""
+~TOACC:     0,  "",                     "Acc2()",       ""
+~D1:        0,  "",                     "Dep1()",       ""
+~D2:        0,  "",                     "Dep2()",       ""
+~FROMDATE:  0,  "d ดดด ปปปป",           "@date1()",     ""
+~TODATE:    0,  "d ดดด ปปปป",           "@date2()",     ""
+~PF:        0,  "",                     "Period1()",    ""
+~PT:        0,  "",                     "Period2()",    ""
+*~ACCNUM:   0,  "",                     "J->ACCNUM",    ""
+~ACCNUM:    0,  "",                     "acc",          "acc=trim(J->ACCNUM)+' '+J->DEPCOD+' '+GLACC->ACCNAM"
+~DEP:       0,  "",                     "J->DEPCOD",    ""
+~ACCNAM:    0,  "",                     "NAMERR",       "NAMERR=IIF(GLACC->ACCNUM='    ','*** A/C Not Found ***                             ',GLACC->ACCNAM)"
+~VDATE:     0,  "",                     "J->VOUDAT",    "",B , 0, 1
+~MNE:       0,  "",                     "mne_jnl()",    "DB_AMT=IIF (J->TRNTYP='0', J->AMOUNT, 0)",C
+~VOUCHER:   0,  "",                     "J->VOUCHER",   "CR_AMT=IIF (J->TRNTYP='1', J->AMOUNT, 0)",D
+~DESCRP:    0,  "",                     "J->DESCRP",    "",G
+~DB_AMT:    0,  "ZZ,ZZZ,ZZZ,ZZZ.ZZ",    "DB_AMT",       "TOTDB=TOTDB+DB_AMT",E
+~CR_AMT:    0,  "ZZ,ZZZ,ZZZ,ZZZ.ZZ",    "CR_AMT",       "TOTCR=TOTCR+CR_AMT",F
+~TOTDB:     0,  "99,999,999,999.99",    "TOTDB",        "GTDB=GTDB+TOTDB",E
+~TOTCR:     0,  "99,999,999,999.99",    "TOTCR",        "GTCR=GTCR+TOTCR",F
+~GTDB:      0,  "99,999,999,999.99",    "GTDB",         "",E
+~GTCR:      0,  "99,999,999,999.99",    "GTCR",         "",F
+~POST:      0,  "",                     "POST",         "POST=IIF(GLJNL->DOCSTAT='C','C',IIF(GLJNL->TRNSTAT='U','U',IIF(is_audit=1.AND.GLJNLIT->ADJUST='Y','E',' ')))",H
+~A1:        0,  "",                     "",             "TAC=TAC+1"
+~A2:        0,  "",                     "",             "CNT=CNT+1"
+~RS:        0,  "99,999",               "CNT",          ""
+~TC:        0,  "99,999",               "TAC",          ""
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,130 @@
+* ARAGISLM.RWT - A/R Aging Report by Salesman, Customer
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานวิเคราะห์อายุหนี้ แยกตามพนักงานขาย(แบบสรุป)$E
+He:รหัสพนักงานขายจาก ~FROMSLM    ถึง  ~TOSLM                `วันที่ : \DATE
+He:รหัสลูกค้าจาก     ~FROMCUS    ถึง  ~TOCUS          เฉพาะวันที่ครบกำหนดไม่เกินวันที่  ~AGEDATE
+He:\LINE
+*He:            ลูกค้า                                           ................จะครบกำหนด...............  .......................เกินกำหนด........................     รวมยอดหนี้
+*He:                                                                เกิน~ND2วัน  ภายใน~ND2วัน  ภายใน~ND1วัน     ~PRD1   วัน   ~PRD2   วัน   ~PRD3   วัน  เกิน~PRD4วัน
+He:","ลูกค้า","","","จะครบกำหนด.......","","","เกินกำหนด","","",".....     รวมยอดหนี้
+He:","","","","เกิน~ND2วัน","ภายใน~ND2วัน","ภายใน~ND1วัน","~PRD1   วัน","~PRD2   วัน","~PRD3   วัน","เกิน~PRD4วัน
+**:   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx       999,999,999.99999,999,999.99999,999,999.99  999,999,999.99999,999,999.99999,999,999.99999,999,999.99
+He:\LINE
+Gh:พนักงานขาย : $B~SALESMAN                                                     $B~INIT_SLM ;1 SLMCOD
+Gh::  $B~CUSTOMER                                                       $B~INIT_CUS ;2 CUSCOD
+Bo::                                                         ~C~DUEOVR60     ~DUEIN60      ~DUEIN30        ~OVRDUE1      ~OVRDUE2      ~OVRDUE3      ~OVRDUE4
+Gf:   ~CUSNAME                                                 ~S_DUEOVR60   ~S_DUEIN60    ~S_DUEIN30      ~S_OVRDUE1    ~S_OVRDUE2    ~S_OVRDUE3    ~S_OVRDUE4    ~SUMTOT                      ;2
+Gf:","","","","-------------"," -------------"," -------------","  -------------"," -------------"," -------------"," -------------"," --------------              ;1
+Gf:          รวม ~SLMNAME                                      $B~TOT0         ~TOT1         ~TOT2           ~TOT3         ~TOT4         ~TOT5         ~TOT6         ~TOTAL          $B         ;1
+Gf:","","","","============="," ============="," ============="," ============="," ============="," ============="," ============="," ==============\FEED         ;1
+Su:   รวมทั้งสิ้น                                              $B~TOTAL0       ~TOTAL1       ~TOTAL2         ~TOTAL3       ~TOTAL4       ~TOTAL5       ~TOTAL6       ~GRAND          $B
+Su:","","","","============="," ============="," ============="," ============="," ============="," ============="," ============="," ==============
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=185
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARAGISLM.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\004
+Query=SLMCOD>='Slm1()'.AND. SLMCOD<='Slm2()'
+Query=.AND.CUSCOD>='Cus1()'.AND. CUSCOD<='Cus2()'.AND.CMPLAPP='N'
+Query=.AND.RECTYP#'0'.AND.RECTYP#'7'
+Sort=SLMCOD+CUSCOD+DTOS(DUEDAT)+DOCNUM
+
+[master file]
+File=ARTRN
+Alias=A
+Tag=ARTRN1
+System=DATA_PATH
+
+[relate file]
+File=ARMAS
+Alias=B
+Tag=ARMAS1
+System=DATA_PATH
+Master file=ARTRN
+Master-Related Field=CUSCOD
+
+File=OESLM
+Alias=C
+Tag=OESLM1
+System=DATA_PATH
+Master file=ARTRN
+Master-Related Field=SLMCOD
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",             "exp"
+~INIT:          0,      "",                 "",                 "total0=0;total1=0;total2=0;total3=0;total4=0;total5=0;total6=0;grand=0"
+~INIT_SLM:      0,      "",                 "init_tot()",       ""
+~INIT_CUS:      0,      "",                 "init_cus()",       "bal=ARMAS->BALANCE"
+~FROMSLM:       0,      "",                 "Slm1()",           ""
+~TOSLM:         0,      "",                 "Slm2()",           ""
+~FROMCUS:       0,      "",                 "Cus1()",           ""
+~TOCUS:         0,      "",                 "Cus2()",           ""
+~AGEDATE:       0,      "d ดดด yyyy",       "@date_age()",      ""
+~SALESMAN:      0,      "",                 "slm_nam",          "slm_nam = C->SLMNAM - ' /' - A->SLMCOD",C
+~SLMNAME:       0,      "",                 "slm_nam",          "",C
+~CUSTOMER:      0,      "",                 "cus_nam",          "cus_nam = B->CUSNAM - ' /' - A->CUSCOD",B
+~CUSNAME:       0,      "",                 "cus_nam",          "",B
+~ND1:           0,      "",                 "notdue1()",        ""
+~ND2:           0,      "",                 "notdue2()",        ""
+~PRD1:          0,      "",                 "ovrprd1()",        ""
+~PRD2:          0,      "",                 "ovrprd2()",        ""
+~PRD3:          0,      "",                 "ovrprd3()",        ""
+~PRD4:          0,      "",                 "ovrprd4()",        ""
+~C:             0,      "",                 "calprd()",         ""
+~DUEOVR60:      0,      "ZZZ,ZZZ,ZZZ.ZZ",   "prd0",             "prd0=@n_prd0()"
+~DUEIN60:       0,      "ZZZ,ZZZ,ZZZ.ZZ",   "prd1",             "prd1=@n_prd1()"
+~DUEIN30:       0,      "ZZZ,ZZZ,ZZZ.ZZ",   "prd2",             "prd2=@n_prd2()"
+~OVRDUE1:       0,      "ZZZ,ZZZ,ZZZ.ZZ",   "prd3",             "prd3=@n_prd3()"
+~OVRDUE2:       0,      "ZZZ,ZZZ,ZZZ.ZZ",   "prd4",             "prd4=@n_prd4()"
+~OVRDUE3:       0,      "ZZZ,ZZZ,ZZZ.ZZ",   "prd5",             "prd5=@n_prd5()"
+~OVRDUE4:       0,      "ZZZ,ZZZ,ZZZ.ZZ",   "prd6",             "prd6=@n_prd6()"
+~S_DUEOVR60:    0,      "999,999,999.99",   "cus0",             "cus0=@n_cus0()",E
+~S_DUEIN60:     0,      "999,999,999.99",   "cus1",             "cus1=@n_cus1()",F
+~S_DUEIN30:     0,      "999,999,999.99",   "cus2",             "cus2=@n_cus2()",G
+~S_OVRDUE1:     0,      "999,999,999.99",   "cus3",             "cus3=@n_cus3()",H
+~S_OVRDUE2:     0,      "999,999,999.99",   "cus4",             "cus4=@n_cus4()",I
+~S_OVRDUE3:     0,      "999,999,999.99",   "cus5",             "cus5=@n_cus5()",J
+~S_OVRDUE4:     0,      "999,999,999.99",   "cus6",             "cus6=@n_cus6()",K
+~SUMTOT:        0,      "9999,999,999.99",  "sum_tot",          "sum_tot=@n_sum_tot()",L
+*~CD:           0,      "ZZZ",              "B->PAYTRM",        ""
+*~CHQRCV:       0,      "999,999,999.99",   "B->CHQRCV",        ""
+*~CRLINE:       0,      "ZZZ,ZZZ,ZZZ.ZZ",   "B->CRLINE",        ""
+*~OVRLINE:      0,      "ZZZ,ZZZ,ZZZ.ZZ",   "ovrline",          "ovrline = IIF(B->CRLINE <= 0 .or. B->CRLINE > (B->BALANCE+B->CHQRCV), 0, (B->BALANCE+B->CHQRCV) - B->CRLINE )"
+
+~TOT0:          0,      "999,999,999.99",   "tot0",             "tot0=@n_tot0(); total0=total0+tot0",E
+~TOT1:          0,      "999,999,999.99",   "tot1",             "tot1=@n_tot1(); total1=total1+tot1",F
+~TOT2:          0,      "999,999,999.99",   "tot2",             "tot2=@n_tot2(); total2=total2+tot2",G
+~TOT3:          0,      "999,999,999.99",   "tot3",             "tot3=@n_tot3(); total3=total3+tot3",H
+~TOT4:          0,      "999,999,999.99",   "tot4",             "tot4=@n_tot4(); total4=total4+tot4",I
+~TOT5:          0,      "999,999,999.99",   "tot5",             "tot5=@n_tot5(); total5=total5+tot5",J
+~TOT6:          0,      "999,999,999.99",   "tot6",             "tot6=@n_tot6(); total6=total6+tot6",K
+~TOTAL:         0,      "9999,999,999.99",  "tot",              "tot=@n_total(); grand=grand+tot",L
+*~SUMCHQ:       0,      "999,999,999.99",   "sumchq",           ""
+
+~TOTAL0:        0,      "999,999,999.99",   "total0",           "",E
+~TOTAL1:        0,      "999,999,999.99",   "total1",           "",F
+~TOTAL2:        0,      "999,999,999.99",   "total2",           "",G
+~TOTAL3:        0,      "999,999,999.99",   "total3",           "",H
+~TOTAL4:        0,      "999,999,999.99",   "total4",           "",I
+~TOTAL5:        0,      "999,999,999.99",   "total5",           "",J
+~TOTAL6:        0,      "999,999,999.99",   "total6",           "",K
+~GRAND:         0,      "9999,999,999.99",  "grand",            "",L
+
+
+
+
+

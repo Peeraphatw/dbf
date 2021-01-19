@@ -1,0 +1,154 @@
+* STPRDSC.RWT - Sales Summary Report (6 Period) by Customer+Item Code
+*
+[report frame]
+Ti::~INIT_VAR ~INIT ~CLR_T
+He:\NAME                                                                                                   `หน้า   : \PAGE
+He:$Eรายงานสรุปยอดขาย แจกแจงเป็นงวด แยกตามลูกค้า,สินค้า$E  จากงวด ~P1 ถึง ~P6   ~INC_PM
+He:รหัสลูกค้า      ~FROMCUS             ถึง  ~TOCUS                                                        `วันที่ : \DATE
+H1:รหัสสินค้าจาก   ~FROMSTK             ถึง  ~TOSTK
+H1:หมวดสินค้าจาก   ~FROMGRP             ถึง  ~TOGRP
+H1:รหัสพนักงานขาย  ~FROMSLM             ถึง  ~TOSLM
+H1:คลังสินค้าจาก   ~FROMLOC             ถึง  ~TOLOC             เลือกแผนก  ~FROMDEP
+He:\LINE                                                                   <--------------------------------- ยอดขายสุทธิแยกตามงวด ----------------------------> <---------------------------------------   มูลค่าขายแยกตามงวด ------------------------------------------>
+*He:  รหัสสินค้า      รายละเอียด                                    หน่วยนับ        ~PRD1       ~PRD2       ~PRD3       ~PRD4       ~PRD5       ~PRD6         รวม           ~PRD1          ~PRD2          ~PRD3          ~PRD4          ~PRD5          ~PRD6          รวม
+He:รหัสสินค้า","รายละเอียด","หน่วยนับ","~PRD1","~PRD2","~PRD3","~PRD4","~PRD5","~PRD6","รวม","~PRD1","~PRD2","~PRD3","~PRD4","~PRD5","~PRD6","รวม
+He:\LINE
+*    xxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx xxxxxxxx 999,999.999 999,999.999 999,999.999 999,999.999 999,999.999 999,999.999 9999,999.999 999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 
+Gh:  ~CUSNAM                                                                ;1 PEOPLE
+Bo:: ~SQ ~SV ~SQV
+Bo:     ~STKCOD                ~STKDES                             ~QUDES   ~SQ01       ~SQ02       ~SQ03       ~SQ04       ~SQ05       ~SQ06       ~SQ00        ~SV01          ~SV02          ~SV03          ~SV04          ~SV05          ~SV06          ~SV00   
+Gf:                                                                         ----------- ----------- ----------- ----------- ----------- ----------- ------------ -------------- -------------- -------------- -------------- -------------- -------------- -------------- ; 1
+Gf:        รวม ~TCUSNAM                                                     $B~TSQ01      ~TSQ02      ~TSQ03      ~TSQ04      ~TSQ05      ~TSQ06      ~TSQ00       ~TSV01         ~TSV02         ~TSV03         ~TSV04         ~TSV05         ~TSV06         ~TSV00        $B  ~CLR_T
+*Gf:                                                                         =========== =========== =========== =========== =========== =========== ============ ============== ============== ============== ============== ============== ============== ==============
+Gf:
+Su:                                                                         ----------- ----------- ----------- ----------- ----------- ----------- ------------ -------------- -------------- -------------- -------------- -------------- -------------- --------------
+Su:                รวมทั้งสิ้น                                              $B~GSQ01      ~GSQ02      ~GSQ03      ~GSQ04      ~GSQ05      ~GSQ06      ~GSQ00       ~GSV01         ~GSV02         ~GSV03         ~GSV04         ~GSV05         ~GSV06         ~GSV00        $B
+Su:                                                                         =========== =========== =========== =========== =========== =========== ============ ============== ============== ============== ============== ============== ============== ==============
+Su:หมายเหตุ:    ยอดขายสุทธิ~INC_PM            = ปริมาณที่ขายสด+ขายเชื่อ-รับคืน
+Su:                      มูลค่าขาย            = จำนวนเงินขายสด+ขายเชื่อ-ลดหนี้รับคืน
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=262
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STPRDSC.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\005
+Query=STKGRP>='StkGrp1()'.AND. STKGRP<='StkGrp2()'
+
+[master file]
+File=A
+Alias=A
+Key=PEOPLE+STKCOD
+System=DATA_PATH
+
+[relate file]
+File=ARMAS
+Alias=R
+Tag=ARMAS1
+System=DATA_PATH
+Master file=A
+Master-Related Field=PEOPLE
+
+File=STMAS
+Alias=B
+Tag=STMAS1
+System=DATA_PATH
+Master file=A
+Master-Related Field=STKCOD
+
+[data spec]
+*~dat:      len,"pict",             "data",         "exp"
+~INIT_VAR:  0,  "",                 "",             "GSQ00=0;GSQ01=0;GSQ02=0;GSQ03=0;GSQ04=0;GSQ05=0;GSQ06=0;GSV00=0;GSV01=0;GSV02=0;GSV03=0;GSV04=0;GSV05=0;GSV06=0; PRTZERO=@n_prt0()"
+~INIT:      0,  "",                 "",             "noused=@s_initfld24(); P6=@n_period6();  P1=P6-5;P2=P6-4;P3=P6-3;P4=P6-2;P5=P6-1;  INC_PM=@n_inc_pm();inc_pm_st=IIF(INC_PM=1,'(รวมของแถมด้วย)','(ไม่รวมของแถม) ')"
+~CLR_T:     0,  "",                 "",             "TSQ00=0;TSQ01=0;TSQ02=0;TSQ03=0;TSQ04=0;TSQ05=0;TSQ06=0;TSV00=0;TSV01=0;TSV02=0;TSV03=0;TSV04=0;TSV05=0;TSV06=0"
+~P1:        0,  "99",               "P1",           ""
+~P6:        0,  "99",               "P6",           ""
+~INC_PM:    0,  "",                 "inc_pm_st",    ""
+~PRD1:      0,  "",                 "p_month( P1 )",    ""
+~PRD2:      0,  "",                 "p_month( P2 )",    ""
+~PRD3:      0,  "",                 "p_month( P3 )",    ""
+~PRD4:      0,  "",                 "p_month( P4 )",    ""
+~PRD5:      0,  "",                 "p_month( P5 )",    ""
+~PRD6:      0,  "",                 "p_month( P6 )",    ""
+~SQ:        0,  "",                 "",             "SQ01=@n_salq( P1 );SQ02=@n_salq( P2 );SQ03=@n_salq( P3 );SQ04=@n_salq( P4 );SQ05=@n_salq( P5 );SQ06=@n_salq( P6 )"
+~SV:        0,  "",                 "",             "SV01=@n_salv( P1 );SV02=@n_salv( P2 );SV03=@n_salv( P3 );SV04=@n_salv( P4 );SV05=@n_salv( P5 );SV06=@n_salv( P6 )"
+~SQV:       0,  "",                 "",             "SQ00=SQ01+SQ02+SQ03+SQ04+SQ05+SQ06; SV00=SV01+SV02+SV03+SV04+SV05+SV06"
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMSLM:   0,  "",                 "Slm1()",       ""
+~TOSLM:     0,  "",                 "Slm2()",       ""
+~FROMCUS:   0,  "",                 "Cus1()",       ""
+~TOCUS:     0,  "",                 "Cus2()",       ""
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMGRP:   0,  "",                 "StkGrp1()",    ""
+~TOGRP:     0,  "",                 "StkGrp2()",    ""
+~FROMLOC:   0,  "",                 "Loc1()",       ""
+~TOLOC:     0,  "",                 "Loc2()",       ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+
+~ARTICLE:   58, "",                 "ARTICLE",      "ARTICLE=A->STKDES-'/ '-A->STKCOD"
+~STKCOD:    0,  "",                 "A->STKCOD",    ""
+~STKDES:    0,  "",                 "A->STKDES",    "",B
+~TARTICLE:  0,  "",                 "ARTICLE",      ""
+*~QUDES:    0,  "",                 "p_istab(A->QUCOD,20,1,8)", "",C
+~QUDES:     0,  "",                 "p_cqu()",       "nouse=@save_cfactor()",C
+~CUSNAM:    0,  "",                 "cus_nam",      "cus_nam = ARMAS->CUSNAM -'/ '- A->PEOPLE"
+~TCUSNAM:   60, "",                 "cus_nam",      ""
+
+~SQ01:      0,  "",                 "Q",        "TSQ01=TSQ01+SQ01; Q=@s_cqu( SQ01,11 )",D
+~SQ02:      0,  "",                 "Q",        "TSQ02=TSQ02+SQ02; Q=@s_cqu( SQ02,11 )",E
+~SQ03:      0,  "",                 "Q",        "TSQ03=TSQ03+SQ03; Q=@s_cqu( SQ03,11 )",F
+~SQ04:      0,  "",                 "Q",        "TSQ04=TSQ04+SQ04; Q=@s_cqu( SQ04,11 )",G
+~SQ05:      0,  "",                 "Q",        "TSQ05=TSQ05+SQ05; Q=@s_cqu( SQ05,11 )",H
+~SQ06:      0,  "",                 "Q",        "TSQ06=TSQ06+SQ06; Q=@s_cqu( SQ06,11 )",I
+~SQ00:      0,  "",                 "Q",        "TSQ00=TSQ00+SQ00; Q=@s_cqu( SQ00,12 )",J
+~SV01:      0,  "999,999,999.99",   "SV01",     "TSV01=TSV01+SV01",K
+~SV02:      0,  "999,999,999.99",   "SV02",     "TSV02=TSV02+SV02",L
+~SV03:      0,  "999,999,999.99",   "SV03",     "TSV03=TSV03+SV03",M
+~SV04:      0,  "999,999,999.99",   "SV04",     "TSV04=TSV04+SV04",N
+~SV05:      0,  "999,999,999.99",   "SV05",     "TSV05=TSV05+SV05",O
+~SV06:      0,  "999,999,999.99",   "SV06",     "TSV06=TSV06+SV06",P
+~SV00:      0,  "999,999,999.99",   "SV00",     "TSV00=TSV00+SV00",Q
+*
+~TSQ01:     0,  "",                 "Q",        "GSQ01=GSQ01+TSQ01; Q=@s_cqu( TSQ01,11 )",D
+~TSQ02:     0,  "",                 "Q",        "GSQ02=GSQ02+TSQ02; Q=@s_cqu( TSQ02,11 )",E
+~TSQ03:     0,  "",                 "Q",        "GSQ03=GSQ03+TSQ03; Q=@s_cqu( TSQ03,11 )",F
+~TSQ04:     0,  "",                 "Q",        "GSQ04=GSQ04+TSQ04; Q=@s_cqu( TSQ04,11 )",G
+~TSQ05:     0,  "",                 "Q",        "GSQ05=GSQ05+TSQ05; Q=@s_cqu( TSQ05,11 )",H
+~TSQ06:     0,  "",                 "Q",        "GSQ06=GSQ06+TSQ06; Q=@s_cqu( TSQ06,11 )",I
+~TSQ00:     0,  "",                 "Q",        "GSQ00=GSQ00+TSQ00; Q=@s_cqu( TSQ00,12 )",J
+~TSV01:     0,  "999,999,999.99",   "TSV01",    "GSV01=GSV01+TSV01",K
+~TSV02:     0,  "999,999,999.99",   "TSV02",    "GSV02=GSV02+TSV02",L
+~TSV03:     0,  "999,999,999.99",   "TSV03",    "GSV03=GSV03+TSV03",M
+~TSV04:     0,  "999,999,999.99",   "TSV04",    "GSV04=GSV04+TSV04",N
+~TSV05:     0,  "999,999,999.99",   "TSV05",    "GSV05=GSV05+TSV05",O
+~TSV06:     0,  "999,999,999.99",   "TSV06",    "GSV06=GSV06+TSV06",P
+~TSV00:     0,  "999,999,999.99",   "TSV00",    "GSV00=GSV00+TSV00",Q
+*
+~GSQ01:     0,  "",                 "Q",        "Q=@s_cqu( GSQ01,11 )",D
+~GSQ02:     0,  "",                 "Q",        "Q=@s_cqu( GSQ02,11 )",E
+~GSQ03:     0,  "",                 "Q",        "Q=@s_cqu( GSQ03,11 )",F
+~GSQ04:     0,  "",                 "Q",        "Q=@s_cqu( GSQ04,11 )",G
+~GSQ05:     0,  "",                 "Q",        "Q=@s_cqu( GSQ05,11 )",H
+~GSQ06:     0,  "",                 "Q",        "Q=@s_cqu( GSQ06,11 )",I
+~GSQ00:     0,  "",                 "Q",        "Q=@s_cqu( GSQ00,12 )",J
+~GSV01:     0,  "999,999,999.99",   "GSV01",    "",K
+~GSV02:     0,  "999,999,999.99",   "GSV02",    "",L
+~GSV03:     0,  "999,999,999.99",   "GSV03",    "",M
+~GSV04:     0,  "999,999,999.99",   "GSV04",    "",N
+~GSV05:     0,  "999,999,999.99",   "GSV05",    "",O
+~GSV06:     0,  "999,999,999.99",   "GSV06",    "",P
+~GSV00:     0,  "999,999,999.99",   "GSV00",    "",Q
+
+
+

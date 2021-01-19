@@ -1,0 +1,83 @@
+* GLPTTSUM.RWT - Petty Cash Summary Tx.
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `Ë¹éÒ   : \PAGE
+He:$EÊÃØ»¡ÒÃ¨èÒÂà§Ô¹Ê´ÂèÍÂ µÒÁàÅ¢·ÕèºÑ­ªÕ$E
+He:ÇÑ¹·Õè¨Ò¡   ~FROMDATE     ¶Ö§  ~TODATE                   `ÇÑ¹·Õè : \DATE
+*He:\LINE
+He:ÅÓ´Ñº","àÅ¢·ÕèºÑ­ªÕ","á¼¹¡","ª×èÍºÑ­ªÕ","¨Ó¹Ç¹à§Ô¹
+*He:-----"," ---------------"," ----"," ------------------------------"," -----------------
+Gh::        ; 1 GLPTTIT->ACCNUM                         
+Gh::~S1     ; 2 GLPTTIT->DEPCOD
+Bo::~SUM1 ~SUM2
+Gf:~SEQ  ~ACCNUM         ~DEP  ~ACCNAM                         ~AMT             ~CLRAMT ;2
+*Su:","","",""," -----------------
+Su:                                              ÃÇÁ·Ñé§ÊÔé¹   ~TOTAMT
+*Su:","","",""," =================
+*Su:>>>> ¨ºÃÒÂ§Ò¹ <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=80
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=GLPTTSUM.TXT
+After Finish Show=OFF
+Report Type=Listing
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\001
+15_Inch=\027\033\001
+Query=GLPTT->RECTYP='1'
+Query=.AND.DTOS(GLPTT->DOCDAT)>='Date1()'.AND.DTOS(GLPTT->DOCDAT)<='Date2()'
+*Query=.AND.DOCNUM >='Doc1()'.AND.DOCNUM<='Doc2()'
+*Query=.AND.REFNUM='  '
+Sort=GLPTTIT->ACCNUM+GLPTTIT->DEPCOD
+Date Format=dd/mm/»»»»
+
+[master file]
+File=GLPTTIT
+Alias=P
+Tag=GLPTTIT1
+System=DATA_PATH
+
+[relate file]
+File=GLPTT
+Alias=I
+Tag=GLPTT1
+System=DATA_PATH
+Master file=GLPTTIT
+Master-Related Field=DOCNUM
+
+File=GLACC
+Alias=A
+Tag=GLACC1
+System=DATA_PATH
+Master file=GLPTTIT
+Master-Related Field=ACCNUM
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,    "pict",                 "data",         "exp"
+~INIT:      0,      "",                     "",             "AMT=0;TOTAMT=0;seq=0;d1='ŠŠŠŠŠŠŠŠŠŠŠŠ';d2='            '"
+~S1:        0,      "",                     "",             "ACNUM=GLPTTIT->ACCNUM;ACNAM=GLACC->ACCNAM;DPCOD=GLPTTIT->DEPCOD;COD=GLACC->ACCNUM"
+~ACCNUM:    0,      "",                     "ACNUM",        "",B
+~DEP:       0,      "",                     "DPCOD",        "",C
+~ACCNAM:    0,      "",                     "NAME",         "NAME=IIF(COD='   ','*** A/C Not Found ***                             ',ACNAM)",D
+~SUM1:      0,      "",                     "",             "AMT=AMT+GLPTTIT->AMOUNT"
+~SUM2:      0,      "",                     "",             "d1=IIF(GLPTT->DOCNUM<d1,GLPTT->DOCNUM,d1);d2=IIF(GLPTT->DOCNUM>d2,GLPTT->DOCNUM,d2)"
+~SEQ:       0,      "999",                  "seq",          "seq=seq+1"
+~AMT:       0,      "ZZ,ZZZ,ZZZ,ZZZ.ZZ",    "AMT",          "TOTAMT=TOTAMT+AMT",E
+~TOTAMT:    0,      "99,999,999,999.99",    "TOTAMT",       "",E
+~FROMDATE:  0,      "d ´´´ »»»»",           "@date1()",     ""
+~TODATE:    0,      "d ´´´ »»»»",           "@date2()",     ""
+~CLRAMT:    0,      "",                     "",             "AMT=0"
+~D1:        0,      "",                     "d1",           ""
+~D2:        0,      "",                     "d2",           ""
+
+
+

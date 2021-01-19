@@ -1,0 +1,127 @@
+* POCANPO.RWT - Cancel P/O Item Report by P/O No.
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    ","","","","","","","","","","","","","หน้า   : \PAGE
+He:$Eรายการสินค้าถูกยกเลิก เรียงตามใบสั่งซื้อ$E
+He:ยกเลิกวันที่     ~FROMDATE            ถึง  ~TODATE                ","","","","","","","","","","","","","วันที่ : \DATE
+He:ใบสั่งซื้อจาก    ~FROMDOC             ถึง  ~TODOC
+He:รหัสสินค้าจาก    ~FROMSTK             ถึง  ~TOSTK
+He:คลังสินค้าจาก    ~FROMLOC             ถึง  ~TOLOC
+He:ผู้จำหน่ายจาก    ~FROMSUP             ถึง  ~TOSUP
+He:เหตุผลที่ยกเลิก  ~FROMREAS            ถึง  ~TOREAS         เลือกแผนก  ~FROMDEP
+He:","\LINE
+He:","ใบสั่งซื้อ","คลัง "," วันที่สั่งซื้อ "," วันที่ยกเลิก ","  ผู้จำหน่าย","","รหัส","รายละเอียดสินค้า","","ยอดสั่ง","","ยอดยกเลิก","เหตุผล
+He:","\LINE
+**:POxxxxxxx1xx-nnn xxxx DD/MM/YY DD/YY/MM xxxxxxxxx1xxxxxxxxx2xx  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxx999,999.999 xx 999,999.999
+Bo:~PONUM           ~LOCCOD      ~PODAT          ~CANDAT          ~SUPNAM                   ~STOCK                             ~STOCK2                            ~ORDQTY     ~Q ~CANCELQTY    ~CANCELTYP
+*Su:                                                                                                               -----------    ----------- --------------
+*Su:รวมทั้งสิ้น  (จำนวนเงินเป็นยอดโดยประมาณ เพราะยังไม่ได้นำส่วนลดรวมมาหัก)                                        $B~SUB1QTY       ~SUB1CAN    ~SUB1VAL      $B
+*Su:                                                                                                               ===========    =========== ==============
+Su:",">>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=158
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=POCANPO.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=SUPCOD>='Sup1()'.AND. SUPCOD<='Sup2()'
+Query=.AND.DTOS(CANCELDAT)>='Date1()'.AND.DTOS(CANCELDAT)<='Date2()'
+Query=.AND.PONUM>='Doc1()'.AND. PONUM<='Doc2()'
+Query=.AND.STKCOD>='Stk1()'.AND. STKCOD<='Stk2()'.AND.CANCELQTY > 0
+Query=.AND.LOCCOD>='Loc1()'.AND. LOCCOD<='Loc2()'
+Query=.AND.CANCELTYP>='POCancel1()'.AND. CANCELTYP<='POCancel2()'
+*
+* canceltyp & department filter in program
+
+[master file]
+File=POPRIT
+Alias=A
+Tag=POPRIT1
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=B
+Tag=APMAS1
+System=DATA_PATH
+Master file=POPRIT
+Master-Related Field=SUPCOD
+
+File=STMAS
+Alias=C
+Tag=STMAS1
+System=DATA_PATH
+Master file=POPRIT
+Master-Related Field=STKCOD
+
+File=POPR
+Alias=D
+Tag=POPR1
+System=DATA_PATH
+Master file=POPRIT
+Master-Related Field=PONUM
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "sub1qty=0;sub1can=0;sub1val=0; totqty=0;totcan=0;totval=0"
+~FROMREAS:  0,  "",                 "POCancel1()",  ""
+~TOREAS:    0,  "",                 "POCancel2()",  ""
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMLOC:   0,  "",                 "Loc1()",       ""
+~TOLOC:     0,  "",                 "Loc2()",       ""
+~FROMSUP:   0,  "",                 "Sup1()",       ""
+~TOSUP:     0,  "",                 "Sup2()",       ""
+~FROMDOC:   0,  "",                 "Doc1()",       ""
+~TODOC:     0,  "",                 "Doc2()",       ""
+~FROMDATE:  0,  "วว ดดด ปปปป",       "@date1()",     ""
+~TODATE:    0,  "วว ดดด ปปปป",       "@date2()",     ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+
+*~LOC:       0,  "",                 "A->LOCCOD",    "", 0, 1,D
+~LOC:       0,  "",                 "A->LOCCOD",    "",C ,0 ,1
+~LOCCOD:    0,  "",                 "loc",               "loc=' '-''-A->LOCCOD",C ,0 ,1
+~PONUM:     0,  "",                 "num",          "num=A->PONUM-'-'-A->SEQNUM",B
+~PODAT:     0,  "วว/ดด/ปปปป",                 "D->PODAT",     "",D
+~SLMCOD:    0,  "",                 "D->SLMCOD",    ""
+~CANDAT:    0,  "วว/ดด/ปปปป",                 "A->CANCELDAT", "",E
+*~STOCKDES:  0, "",                 "stk_des",      "stk_des = A->STKDES - ' /' - A->STKCOD",H
+~STOCK:  0, "",                 "STKCOD",          "STKCOD=POPRIT->STKCOD",H
+~STOCK2:  0, "",                 "STKDES",         "STKDES=POPRIT->STKDES",I  
+~SUPNAM:    22, "",                 "B->SUPNAM",    "",F
+~ORDQTY:    0,  "qty(11)",          "A->ORDQTY",    "sub1qty=sub1qty+A->ORDQTY",K
+~CANCELQTY: 0,  "qty(11)",          "A->CANCELQTY", "sub1can=sub1can+A->CANCELQTY",M
+~CANCELTYP: 0,  "",                 "p_istab( A->CANCELTYP, 43, 1, 30 )",           "",N
+~Q:         0,  "",                 "A->TQUCOD",    "",L
+~UNITPR:    0,  "priZ(12)",         "A->UNITPR",    ""
+~DISC:      0,  "",                 "A->DISC",      ""
+~CANVAL:    0,  "999,999,999.99",   "canval",       "canval=A->CANCELQTY*A->UNITPR-(A->DISCAMT*A->CANCELQTY/A->ORDQTY); sub1val=sub1val+canval"
+
+~SUB1QTY:   0,  "qty(11)",          "sub1qty",      "",K
+~SUB1CAN:   0,  "qty(11)",          "sub1can",      "",M
+~SUB1VAL:   0,  "999,999,999.99",   "sub1val",      "",N
+~C_SUB1:    0,  "",                 "",             "totqty=totqty+sub1qty; sub1qty=0; totcan=totcan+sub1can; sub1can=0; totval=totval+sub1val; sub1val=0"
+~TOTQTY:    0,  "qty(11)",          "totqty",       "",K
+~TOTCAN:    0,  "qty(11)",          "totcan",       "",M
+~TOTVAL:    0,  "999,999,999.99",   "totval",       "",N
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,107 @@
+* APMASSTA.RWT - A/P Status Report For Period xx by Supplier
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานสถานะเจ้าหนี้$E
+He:วันที่จาก         ~FROMDATE     ถึง  ~TODATE             `วันที่ : \DATE
+H1:ประเภทผู้จำหน่าย  ~FROMSUPTYP   ถึง  ~TOSUPTYP
+H1:ผู้จำหน่ายจาก     ~FROMSUP      ถึง  ~TOSUP
+He::\LINE
+**He:  ชื่อเจ้าหนี้                                                  ยอดหนี้ยกมา        ยอดซื้อ        เพิ่มหนี้       ลดหนี้    จ่ายชำระหนี้    ยอดหนี้ยกไป
+He:  ชื่อเจ้าหนี้                                                    ~H1                ~H2            ~H3             ~H4       ~H5             ~H6
+He::\LINE
+**:  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5xxxxx 9999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 9999,999,999.99
+Gh:","$Bประเภทผู้จำหน่าย : ~TABLE1                                             $B~KEPT_TAB1 ~CLR_S ; 1 SUPTYP
+**Bo:~Z~SUPPLIER                                               ~A_BALFWD       ~A_PURCHASE    ~A_CP          ~A_GR          ~A_PAID        ~A_BALBWD
+Bo:~Z~SUPPLIER                                               ~A_BALFWD       ~A_PURCHASE    ~A_CP          ~A_GR          ~A_PAID        ~A_BALBWD
+**Gf:                                                          --------------- -------------- -------------- -------------- -------------- ---------------        ;1
+Gf::","","","---------------","--------------","--------------","--------------","--------------","---------------        ;1
+**Gf:  รวม ~TABLE1NAM                              ~SUMSUP ราย $B~S_BALFWD       ~S_PURCHASE    ~S_CP          ~S_GR          ~S_PAID        ~S_BALBWD      $B~SUM_S ;1
+Gf:  รวม ~TABLE1NAM                              ~SUMSUP ~M  $B~S_BALFWD       ~S_PURCHASE    ~S_CP          ~S_GR          ~S_PAID        ~S_BALBWD      $B~SUM_S ;1
+**Gf:                                                          =============== ============== ============== ============== ============== ===============        ;1
+Gf::","","","===============","==============","==============","==============","==============","===============        ;1
+Su:
+**Su:                          รวมทั้งสิ้น         ~TOTSUP ราย $B~G_BALFWD       ~G_PURCHASE    ~G_CP          ~G_GR          ~G_PAID        ~G_BALBWD      $B
+Su:                          รวมทั้งสิ้น         ~TOTSUP ~M  $B~G_BALFWD       ~G_PURCHASE    ~G_CP          ~G_GR          ~G_PAID        ~G_BALBWD      $B
+**Su:                                                          =============== ============== ============== ============== ============== ===============
+Su::","","","===============","==============","==============","==============","==============","===============        
+Su:
+[end frame]
+
+[print options]
+Top=0
+Right=150
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APMASSTA.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=SUPCOD>='Sup1()'.AND. SUPCOD<='Sup2()'
+Query=.AND.SUPTYP>='SupTyp1()'.AND. SUPTYP<='SupTyp2()'
+
+[master file]
+File=APMAS
+Alias=A
+Tag=APMAS5
+System=DATA_PATH
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,"pict",             "data",         "exp"
+~INIT:          0,  "",                 "init_var()",   "prn0=@n_prn0(); g_balfwd=0; g_purchase=0; g_cp=0; g_gr=0; g_paid=0; g_balbwd=0; sumsup=0; totsup=0"
+~FROMSUPTYP:    0,  "",                 "SupTyp1()",    ""
+~TOSUPTYP:      0,  "",                 "SupTyp2()",    ""
+~FROMSUP:       0,  "",                 "Sup1()",       ""
+~TOSUP:         0,  "",                 "Sup2()",       ""
+~FROMDATE:      0,  "d ดดด yyyy",       "@date1()",     ""
+~TODATE:        0,  "d ดดด yyyy",       "@date2()",     ""
+
+~TABLE1:        0,  "",                 "p_istab( A->SUPTYP,46,1,40)",      ""
+~KEPT_TAB1:     0,  "",                 "",             "tab1 = ISTAB->TYPDES"
+~TABLE1NAM:     0,  "",                 "tab1",         ""
+
+~Z:             0,  "",                 "chkprn",       "a_balfwd=@n_ap_balfwd(); a_purchase=@n_ap_rcvamt(); a_cp=@n_ap_cpamt(); a_gr=@n_ap_gramt(); a_paid=@n_ap_payamt(); a_balbwd=@n_ap_balbwd(); chkprn=IIF(prn0=0.and.a_balfwd=0.and.a_purchase=0.and.a_cp=0.and.a_gr=0.and.a_paid=0.and.a_balbwd=0, ':', ' ' )"
+~SUPPLIER:      0,  "",                 "sup_nam",      "sup_nam = A->SUPNAM - ' /' - A->SUPCOD; sumsup=sumsup+IIF(chkprn=':',0,1)"
+~A_BALFWD:      0,  "9999,999,999.99",  "a_balfwd",     "s_balfwd=s_balfwd+a_balfwd",D
+~A_PURCHASE:    0,  "999,999,999.99",   "a_purchase",   "s_purchase=s_purchase+a_purchase",E
+~A_CP:          0,  "999,999,999.99",   "a_cp",         "s_cp=s_cp+a_cp",F
+~A_GR:          0,  "999,999,999.99",   "a_gr",         "s_gr=s_gr+a_gr",G
+~A_PAID:        0,  "999,999,999.99",   "a_paid",       "s_paid=s_paid+a_paid",H
+~A_BALBWD:      0,  "9999,999,999.99",  "a_balbwd",     "s_balbwd=s_balbwd+a_balbwd",I
+
+~S_BALFWD:      0,  "9999,999,999.99",  "s_balfwd",     "",D
+~S_PURCHASE:    0,  "999,999,999.99",   "s_purchase",   "",E
+~S_CP:          0,  "999,999,999.99",   "s_cp",         "",F
+~S_GR:          0,  "999,999,999.99",   "s_gr",         "",G
+~S_PAID:        0,  "999,999,999.99",   "s_paid",       "",H
+~S_BALBWD:      0,  "9999,999,999.99",  "s_balbwd",     "",I
+~SUM_S:         0,  "",                 "",             "g_balfwd=g_balfwd+s_balfwd; g_purchase=g_purchase+s_purchase; g_cp=g_cp+s_cp; g_gr=g_gr+s_gr; g_paid=g_paid+s_paid; g_balbwd=g_balbwd+s_balbwd; totsup=totsup+sumsup"
+~CLR_S:         0,  "",                 "",             "s_balfwd=0; s_purchase=0; s_cp=0; s_gr=0; s_paid=0; s_balbwd=0; sumsup=0"
+~G_BALFWD:      0,  "9999,999,999.99",  "g_balfwd",     "",D
+~G_PURCHASE:    0,  "999,999,999.99",   "g_purchase",   "",E
+~G_CP:          0,  "999,999,999.99",   "g_cp",         "",F
+~G_GR:          0,  "999,999,999.99",   "g_gr",         "",G
+~G_PAID:        0,  "999,999,999.99",   "g_paid",       "",H
+~G_BALBWD:      0,  "9999,999,999.99",  "g_balbwd",     "",I
+
+~SUMSUP:        0,  "999,999",          "sumsup",       "",B
+~TOTSUP:        0,  "999,999",          "totsup",       "",B
+
+~HREM1:         0,  "",                 "x1",           "x1=@p_hrem( A->SUPCOD,1 )"
+~HREM2:         0,  "",                 "x2",           "x2=@p_hrem( A->SUPCOD,2 )"
+~HREM3:         0,  "",                 "x3",           "x3=@p_hrem( A->SUPCOD,3 )"
+~HREM4:         0,  "",                 "x4",           "x4=@p_hrem( A->SUPCOD,4 )"
+~HREM5:         0,  "",                 "x5",           "x5=@p_hrem( A->SUPCOD,5 )"
+~H1:            0,      "",                 "ยอดหนี้ยกมา",      "",D
+~H2:            0,      "",                 "ยอดซื้อ",           "",E
+~H3:            0,      "",                 "เพิ่มหนี้",        "",F
+~H4:            0,      "",                 "ลดหนี้",           "",G
+~H5:            0,      "",                 "จ่ายชำระหนี้",    "",H
+~H6:            0,      "",                 "ยอดหนี้ยกไป",    "",I
+~M:             0,      "",                  "ราย",           "",C
+

@@ -1,0 +1,185 @@
+* STCRDDOC.RWT
+*
+[report frame]
+Ti::~INIT~INIT1~INIT2
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานรับ-จ่ายสินค้าแยกตามแผนก+เอกสาร$E
+He:วันที่จาก       ~FROMDATE            ถึง  ~TODATE        `วันที่ : \DATE
+H1:รหัสสินค้าจาก   ~FROMSTK             ถึง  ~TOSTK
+*He:\LINE
+He:สินค้า","แผนก","รายการรับ","","","รายการจ่าย","","","คงเหลือ
+He:รายการ","จำนวน","ราคาต่อหน่วย","มูลค่ารับ","จำนวน","ราคาต่อหน่วย","มูลค่าจ่าย","จำนวน","ราคาต่อหน่วย","มูลค่าคงเหลือ
+*He:\LINE
+Gh::~GETOPNBAL~M10~M11~M12 ~SETQUCOD    ; 1 STKCOD
+Gh:~STKCOD                      ~STKDES                                  ~UOM   ~QUDES         ~BF         ~BAL         ~PRC          ~VAL            
+Gh::~M20~M21~M22            ; 2 DEPCOD
+Gh:     ~DEPC  ~DEPD
+Gh::~M30~M31                ; 3 DOCNUM 0 2
+Bo::~S0~S1~S2~S3~S4~S5~S6
+*Bo:~DOCNUM       ~TRNQTY        ~TRNVAL            (~POS)
+*      xxxxxxxxxxxxxxxxxxxx 9999,999.999 9999,999.99 99,999,999.99 9999,999.999 9999,999.99 99,999,999.99 99,999,999.999 9999,999.99 999,999,999.99
+*                                                                  9999,999.9--9999,999.9--999,999,999.9-
+Gf:~M50~POSDES              ~Q1         ~PRC1       ~V1            ~Q2         ~PRC2       ~V2            ~BAL         ~PRC          ~VAL          ;3
+Gf:   ;2
+*Gf:                                                                                              (Balance  ~CTOTBAL     ~CQUDES      ~XTOTBAL     ~XQUDES  ;2
+Gf:~X   รวมแผนก  ~DEPC        ~S_QTY1         ~S_PRC1         ~S_VAL1        ~S_QTY2     ~S_PRC2     ~S_VAL2
+Gf:~C   รวมแผนก  ~DEPC        ~S_QTY1         ~S_PRC1         ~S_VAL1        ~S_QTY2     ~S_PRC2     ~S_VAL2        ~CTOTBAL     ~CQUDES   ~XTOTBAL     ~XQUDES
+Gf:                 ;1
+Gf:~M60 รวม ~C1      แผนก     ~T_QTY1     ~T_PRC1     ~T_VAL1        ~T_QTY2     ~T_PRC2     ~T_VAL2        ~BAL         ~PRC          ~VAL        
+Gf:~C                                                                                                     ~CTOTBAL     ~CQUDES   ~XTOTBAL     ~XQUDES
+Gf:
+Gf:
+Su:รวมทั้งสิ้น ~C0  สินค้า  ~G_QTY1                 ~G_VAL1        ~G_QTY2                 ~G_VAL2        ~G_BAL                     ~G_VAL        
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=145
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STCRDDOC.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+15_Inch=\027\033\001
+8_Inch=\027\033\005
+Subgroup=OFF
+Query=STMAS->STKTYP='0'
+Query=.AND.DTOS(DOCDAT)>='Date1()'.AND.DTOS(DOCDAT)<='Date2()'
+Query=.AND.STKCOD>='Stk1()'.AND. STKCOD<='Stk2()'
+Query=.AND.STMAS->STKGRP>='StkGrp1()'.AND.STMAS->STKGRP<='StkGrp2()'
+*Query=.AND.((POSOPR # '3'.AND.POSOPR # '4'.AND.POSOPR # '2'.AND.POSOPR <= '9') .OR. (POSOPR ='2'.AND.RETSTK='Y'))
+Sort=STKCOD+DEPCOD+POSOPR+DOCNUM+DTOS(DOCDAT)
+
+[master file]
+File=STCRD
+Alias=B
+Tag=STCRD1
+System=DATA_PATH
+Filter=(POSOPR #'='.AND.POSOPR #'2').OR.(POSOPR ='2'.AND.RETSTK ='Y')
+
+[item file]
+File=ISTAB
+Alias=I
+Tag=ISTAB1
+System=DATA_PATH
+
+[relate file]
+File=STMAS
+Alias=A
+Tag=STMAS1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=STKCOD
+
+File=ISRUN
+Alias=R
+Tag=ISRUN2
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=DOCNUM
+
+[data spec]
+*~dat:          len,"pict",     "data",             "exp"
+~INIT:          0,  "",         "",                 "G_QTY1=0;G_PRC1=0;G_VAL1=0;G_QTY2=0;G_PRC2=0;G_VAL2=0;G_BAL=0;G_PRC=0;G_VAL=0;C0=0; p_cqucod=@n_isuse_cqu()"
+~INIT1:         0,  "",         "",                 ""
+~INIT2:         0,  "",         "",                 "S_QTY1=0;S_PRC1=0;S_VAL1=0;S_QTY2=0;S_PRC2=0;S_VAL2=0;S_BAL=0;S_PRC=0;S_VAL=0"
+~TAXID:         0,  "",         "p_taxid()",        ""
+~FROMSTK:       0,  "",         "Stk1()",           ""
+~TOSTK:         0,  "",         "Stk2()",           ""
+~FROMDATE:      0,  "d mmm ปปปป","@date1()",        ""
+~TODATE:        0,  "d mmm ปปปป","@date2()",        ""
+~GETOPNBAL:     0,  "",         "stmas_opnbald()",  "is_fifo=@n_isfifo(); is_avg=IIF(is_fifo=0, 1, 0)"
+~M10:           0,  "",         "",             "T_QTY1=0;T_PRC1=0;T_VAL1=0;T_QTY2=0;T_PRC2=0;T_VAL2=0;T_BAL=0;T_PRC=0;T_VAL=0;C1=0"
+~M11:           0,  "",         "",             ""
+~M12:           0,  "",         "",             "STKC=STCRD->STKCOD;STKD=STMAS->STKDES;BAL=STMAS->TOTBAL;VAL=STMAS->TOTVAL"
+~M20:           0,  "",         "p_isdep( STCRD->DEPCOD )",""
+~M21:           0,  "",         "",             "DEPC=STCRD->DEPCOD;DEPD=IIF(DEPC='  ','ไม่ระบุแผนก                                   ',ISTAB->TYPDES)"
+~M22:           0,  "",         "",             "S_QTY1=0;S_PRC1=0;S_VAL1=0;S_QTY2=0;S_PRC2=0;S_VAL2=0;S_BAL=0;S_PRC=0;S_VAL=0"
+~M30:           0,  "",         "",             "Q1=0;PRC1=0;V1=0;Q2=0;PRC2=0;V2=0"
+~M31:           0,  "",         "",             "POSD=ISRUN->POSDES"
+~M50:           0,  "",         "",             "BAL=BAL+Q1-Q2;VAL=VAL+V1-V2"
+~M60:           0,  "",         "",             "G_BAL=G_BAL+BAL;G_VAL=G_VAL+VAL"
+*~SEEK_STCRD:   0,  "",         "seek_begin()", ""
+~STOCK:         0,  "",         "stock",        "stock=STKC-'  '-STKD"
+~STKCOD:        0,  "",         "STKC",         "",A
+~STKDES:        0,  "",         "STKD",         "",B
+~QUDES:         8,  "",         "p_istab( STMAS->QUCOD, 20, 1, 8 )",       "",F
+~POSDES:       20,  "",         "POSD",         ""
+
+~BAL:       0,  "qty(13)",          "BAL",      "",H
+~PRC:       0,  "pri(13)",          "PRC",      "PRC=VAL/BAL",I
+~VAL:       0,  "999,999,999.99",   "VAL",      "",J
+~Q1:        0,  "qtyZ(12)",         "Q1",       "S_QTY1=S_QTY1+Q1",B
+~PRC1:      0,  "priZ(12)",         "PRC1",     "PRC1=V1/Q1",C
+~V1:        0,  "zzz,zzz,zzz.zz",   "V1",       "S_VAL1=S_VAL1+V1",D
+~Q2:        0,  "qtyZ(12)",         "Q2",       "S_QTY2=S_QTY2+Q2",E
+~PRC2:      0,  "priZ(12)",         "PRC2",     "PRC2=V2/Q2",F
+~V2:        0,  "zzz,zzz,zzz.zz",   "V2",       "S_VAL2=S_VAL2+V2",G
+
+~DEP:       0,  "",                 "dep1()",   ""
+~DEPC:      0,  "",                 "DEPC",     ""
+~DEPD:      0,  "",                 "DEPD",     "C1=C1+1",B
+~C1:        4,  "9999",             "C1",       "C0=C0+1"
+~S_QTY1:    0,  "qty(12)",          "S_QTY1",   "T_QTY1=T_QTY1+S_QTY1",B
+~S_VAL1:    0,  "999,999,999.99",   "S_VAL1",   "T_VAL1=T_VAL1+S_VAL1",D
+~S_PRC1:    0,  "priZ(12)",         "S_PRC1",   "S_PRC1=S_VAL1/S_QTY1",C
+~S_QTY2:    0,  "qty(12)",          "S_QTY2",   "T_QTY2=T_QTY2+S_QTY2",E
+~S_VAL2:    0,  "999,999,999.99",   "S_VAL2",   "T_VAL2=T_VAL2+S_VAL2",G
+~S_PRC2:    0,  "priZ(12)",         "S_PRC2",   "S_PRC2=S_VAL2/S_QTY2",F
+
+~T_QTY1:    0,  "qty(12)",          "T_QTY1",   "G_QTY1=G_QTY1+T_QTY1",B
+~T_VAL1:    0,  "999,999,999.99",   "T_VAL1",   "G_VAL1=G_VAL1+T_VAL1",D
+~T_PRC1:    0,  "priZ(12)",         "T_PRC1",   "T_PRC1=T_VAL1/T_QTY1",C
+~T_QTY2:    0,  "qty(12)",          "T_QTY2",   "G_QTY2=G_QTY2+T_QTY2",E
+~T_VAL2:    0,  "999,999,999.99",   "T_VAL2",   "G_VAL2=G_VAL2+T_VAL2",G
+~T_PRC2:    0,  "priZ(12)",         "T_PRC2",   "T_PRC2=T_VAL2/T_QTY2",F
+
+~C0:        4,  "9999",             "C0",       ""
+~G_BAL:     0,  "qty(13)",          "G_BAL",    "",H
+~G_VAL:     0,  "999,999,999.99",   "G_VAL",    "",J
+~G_QTY1:    0,  "qty(12)",          "G_QTY1",   "",B
+~G_VAL1:    0,  "999,999,999.99",   "G_VAL1",   "",D
+~G_PRC1:    0,  "zzzz,zzz.zz",      "G_PRC1",   "G_PRC1=G_VAL1/G_QTY1"
+~G_QTY2:    0,  "qty(12)",          "G_QTY2",   "",E
+~G_VAL2:    0,  "999,999,999.99",   "G_VAL2",   "",G
+~G_PRC2:    0,  "zzzz,zzz.zz",      "G_PRC2",   "G_PRC2=G_VAL2/G_QTY2"
+
+~POS:       0,  "",                 "STCRD->POSOPR",    ""
+~DOCNUM:    0,  "",                 "STCRD->DOCNUM",    ""
+~TRNQTY:    0,  "9999,999.99",      "STCRD->XTRNQTY",   ""
+~TRNVAL:    0,  "999,999,999.99",   "STCRD->XTRNVAL",   ""
+
+~S0:    0,  "",     "",     "POS=@n_posopr(STCRD->POSOPR); T=STCRD->XTRNQTY; V=STCRD->XTRNVAL; PR=STCRD->XUNITPR"
+~S1:    0,  "",     "",     "SIDE=IIF(POS<=3.OR.POS=10, 1, 2 );SIDE=IIF(POS=8 .AND. T>0,1,SIDE);SIDE=IIF(POS=5 .AND. V>0,1,SIDE)"
+~S2:    0,  "",     "",     "T=IIF(T<0,0-T,T);V=IIF(V<0,0-V,V)"
+~S3:    0,  "",     "",     "Q1=Q1+IIF(SIDE=1,T,0);V1=V1+IIF(SIDE=1,V,0)"
+~S4:    0,  "",     "",     "Q2=Q2+IIF(SIDE=2,T,0);V2=V2+IIF(SIDE=2,V,0)"
+~S5:    0,  "",     "",     "V1=V1+IIF(is_avg=1.and.STCRD->VALCHG>0, STCRD->VALCHG,0)"
+~S6:    0,  "",     "",     "V2=V2+IIF(is_avg=1.and.STCRD->VALCHG<0, STCRD->VALCHG*-1,0)"
+
+~SETQUCOD:  0,  "",                 "",                 "qu=@p_istab2( STMAS->QUCOD,20,1,8 ); cqu=@p_istab2( STMAS->CQUCOD,20,1,8 ); c_factor=STMAS->CFACTOR"
+~X:         0,  "",                 "PX",               "PX=IIF(p_cqucod=0,' ','}')"
+~C:         0,  "",                 "PC",               "PC=IIF(p_cqucod=0,'}',' ')"
+~CTOTBAL:   0,  "qtyZ(12)",         "ctotbal",          "ctotbal=IIF(c_factor>1, VAL(SUBSTR(STR(BAL/c_factor,15,4),1,10)), 0)",H
+~CQUDES:    0,  "",                 "cqu",              "cqu=IIF(ctotbal#0.or.c_factor>1, cqu-'x'-LTRIM(STR(c_factor,10,0)), '                       ')",I
+~CFACTOR:   0,  "facZ(10)",         "c_factor", ""
+~XTOTBAL:   0,  "qty(12)",          "xtotbal",          "xtotbal=BAL-(ctotbal*c_factor)",J
+~XQUDES:    0,  "",                 "xqu",              "xqu=IIF(p_cqucod=1,qu,'        ');xqu=xqu-')'",K
+
+~UOM:       0,  "",                 "OUM",              "OUB='UOM'",E
+~BF:        0,  "",                 "BF",               "BF='B/F'",G
+
+~SC:        0,  "",                 "SC",               "SC='Costing'",K
+~SC1:       0,  "",                 "SC1",              "SC1='Unit of Measure'",M
+~PA1:       0,  "",                 "PA1",              "PA1='PAGE'",M
+~BA:        0,  "",                 "BA",               "BA='Balance'",J
+
+
+
+
+

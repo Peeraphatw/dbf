@@ -1,0 +1,176 @@
+* APRCPDAT.RWT - Paid Slip Report and Postdate Cheque
+*
+[report frame]
+Ti::~INIT
+*He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานการจ่ายชำระหนี้ เรียงตามวันที่ทำเอกสาร$E
+He:วันที่จาก  ~FROMDATE     ถึง  ~TODATE                    `วันที่ : \DATE
+*He:\LINE
+He:วันที่ทำเอกสาร","","เลขที่","ผู้จำหน่าย","","เลขที่บิล","ตัดเงินมัดจำ","ยอดตามใบรับ","จ่ายเป็น ง/ส","เช็คจ่าย","ด/บ จ่าย","ส่วนลด","ภาษี ","","หมายเหตุ","เลขที่เช็ค","ลงวันที่ ","ธนาคาร","สถานะเช็ค
+He:~D","","","เลขที่ใบรับ","วันที่","","จ่ายชำระ","หมายเหตุ
+He:","","","","รายละเอียด","","","จำนวน","","ราคาต่อหน่วย","ส่วนลด","จำนวนเงิน
+*He:\LINE
+**:DD/MM/YY  xxxxxxxxx1xx xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3x xxxxxxxxx1xxxx5 999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 999,999.99 xxxxxxxxx1 999,999.99  *** xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3 xxxxxxxxxx DD/MM/YY  xxxxxxxxxx xxxxxxxxxx
+Bo:~RCPDAT      ~F~DOCNUM      ~SUPNAM                         ~REFNUM         ~ADVAMT        ~RCVAMT        ~CSHPAY        ~CHQPAY        ~INTPAY    ~DISC      ~TAX        ~CHK~YOUREF                       {1}
+Ih::                ;1 APRCPCQ->RCPNUM A->DOCNUM
+Ib:{1}                                                                                                                                                                                                   ~CHQNUM    ~CHQDAT      ~BANK      ~CHQSTAT   ;1
+Ih::                ;2 APRCPIT->RCPNUM A->DOCNUM
+Ib:                          ~IT_RCVNUM ~IT_RCVDAT      ~IT_REFNUM      ~IT_PAYAMT            ~IT_YOUREF    ;2
+Ih::               ;3 STCRD->DOCNUM APRCPIT->DOCNUM
+*Ib:                              ~N               ~STKCOD               ~STKDES                                                ~L        ~QTY           ~TQUCOD             ~UNITPR      ~DISC_I                ~NETAMT_I   ;3
+Ib:                                             ~ARTICLE                                                                        ~QTY           ~TQUCOD             ~UNITPR      ~DISC_I                ~NETAMT_I   ;3
+If:                ;3
+Ih::               ;4 artrnrm->docnum+artrnrm->seqnum stcrd->docnum+stcrd->seqnum
+Ib:                                                ~REMARK     ;4
+Ih:                     ","","หมายเหตุ:       ;5 artrnrm->docnum+'@' aptrn->docnum+'@'
+Ib:                        ~REMARK                  ~I;5
+If:                                     ;5
+*Su:                                                                       ","","","","","","-------------- ","-------------- ","--------------","--------------","----------","----------","----------
+Su:                                             รวมทั้งสิ้น ~CC ใบ        $B~SUMADV        ~SUMPAY        ~SUMCSH        ~SUMCHQ        ~SUMINT    ~SUMDIS    ~SUMTAX     $B
+*Su:                                                                       ","","","","","","==============","==============","==============","==============","==========","==========","==========
+Su:
+Su:หมายเหตุ:
+Su:  ใบจ่ายเงินที่มีเครื่องหมาย '*'   หน้าเลขที่ใบจ่ายเงิน  หมายถึงใบจ่ายเงินถูกยกเลิก
+Su:  ใบจ่ายเงินที่มีเครื่องหมาย '***' ในช่องหมายเหตุ  หมายถึงยอดจ่ายชำระหนี้ไม่เรียบร้อย
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=240
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APRCPDAT.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\005
+Query=DTOS(DUEDAT)>='Date1()'.AND.DTOS(DUEDAT)<='Date2()'
+Query=.AND.SUPCOD>='Sup1()'.AND. SUPCOD<='Sup2()'.AND.RECTYP='9'
+Sort=DTOS(DUEDAT)+DOCNUM
+
+[master file]
+File=APTRN
+Alias=A
+Tag=APTRN1
+System=DATA_PATH
+
+[item file]
+File=APRCPCQ
+Alias=C
+Tag=APRCPCQ1
+System=DATA_PATH
+
+File=APRCPIT
+Alias=F
+Tag=APRCPIT1
+System=DATA_PATH
+
+File=STCRD
+Alias=X
+Tag=STCRD5
+System=DATA_PATH
+
+File=artrnrm
+Alias=Y
+Tag=artrnrm1
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=B
+Tag=APMAS1
+System=DATA_PATH
+Master file=APTRN
+Master-Related Field=SUPCOD
+
+File=BKTRN
+Alias=D
+Tag=BKTRN3
+System=DATA_PATH
+Master file=APRCPCQ
+Master-Related Field=CHQNUM
+
+File=BKMAS
+Alias=K
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+File=APTRNX
+Clone From=APTRN
+Alias=W
+Tag=APTRN1
+System=DATA_PATH
+Master file=APRCPIT
+Master-Related Field=DOCNUM
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len "pict",             "data",             "exp"
+~INIT:          0,  "",                 "",                 "p_det=@n_prn_detail(); prn_detail=IIF(p_det=0,':',' '); sumadv=0;sumrcv=0;sumcsh=0;sumchq=0;sumint=0;sumdis=0;sumtax=0;cnt=0;seq=0"
+~FROMDATE:      0,  "d ดดด ปปปป",       "@date1()",         ""
+~TODATE:        0,  "d ดดด ปปปป",       "@date2()",         ""
+~PAYDAT:        0,  "dd/ดด/ปปปป",        "A->DOCDAT",        ""
+~RCPDAT:        0,  "dd/ดด/ปปปป",        "A->DUEDAT",        "",A 
+~F:             0,  "",                 "flag",             "flag=IIF(A->DOCSTAT='C',' *','  ' )",B
+~DOCNUM:        0,  "",                 "A->DOCNUM",        "cnt=cnt+1",C
+~SUPCOD:        0,  "",                 "A->SUPCOD",        "",D
+~SUPNAM:       31,  "",                 "APMAS->SUPNAM",    "",E
+~REFNUM:        0,  "",                 "A->REFNUM",        "",F
+~ADVAMT:        0,  "ZZZ,ZZZ,ZZZ.ZZ",   "A->ADVAMT",        "sumadv=sumadv+A->ADVAMT",G
+~RCVAMT:        0,  "999,999,999.99",   "A->RCVAMT",        "sumrcv=sumrcv+A->RCVAMT",H
+~CSHPAY:        0,  "ZZZ,ZZZ,ZZZ.ZZ",   "A->CSHPAY",        "sumcsh=sumcsh+A->CSHPAY",I
+~CHQPAY:        0,  "ZZZ,ZZZ,ZZZ.ZZ",   "A->CHQPAY",        "sumchq=sumchq+A->CHQPAY",J
+~INTPAY:        0,  "ZZZ,ZZZ.ZZ",       "A->INTPAY",        "sumint=sumint+A->INTPAY",K
+~DISC:          0,  "",                 "A->DISC",          "sumdis=sumdis+A->DISCAMT",L
+~TAX:           0,  "ZZZ,ZZZ.ZZ",       "A->TAX",           "sumtax=sumtax+A->TAX",M
+~CHK:           0,  "",                 "chkerr",           "chkerr=IIF(STR(A->RCVAMT,15,2) # STR(A->NETAMT,15,2),'***', '   ')",N
+~YOUREF:        0,  "",                 "A->YOUREF",        "",O
+
+~CHQNUM:        0,  "",                 "C->CHQNUM",        "",P
+~CHQDAT:        0,  "dd/ดด/ปปปป",       "D->CHQDAT",        "",Q
+~BANK:         10,  "",                 "BKMAS->SHORTNAM",  "",R
+~CHQAMT:        0,  "99999,999.99",     "amt",              "amt=IIF(BKTRN->CHQNUM#'  ', BKTRN->AMOUNT, APRCPCQ->PAYAMT)",U
+~CHQSTAT:       0,  "",                 "p_istab( BKTRN->CHQSTAT, 02, 1, 13 )",     "",S
+
+~IT_RCVNUM:     0,  "",                 "APRCPIT->DOCNUM",  "",D
+~IT_RCVDAT:     0,  "dd/ดด/ปปปป",       "APTRNX->DOCDAT",   "",E
+~IT_REFNUM:     0,  "",                 "APTRNX->REFNUM",   "",F
+~IT_YOUREF:     0,  "",                 "APTRNX->YOUREF",   "",H
+~IT_VATAMT:     0,  "",                 "APTRNX->VATAMT",   ""
+~IT_NETAMT:     0,  "",                 "APTRNX->NETAMT",   ""
+~IT_PAYAMT:     0,  "99,999,999.99",    "pay",              "pay = IIF(APRCPIT->RECTYP='0'.or.APRCPIT->RECTYP='5',APRCPIT->PAYAMT*-1,APRCPIT->PAYAMT)",G
+
+~SUMADV:        0,  "999,999,999.99",   "sumadv",           "",G
+~SUMPAY:        0,  "999,999,999.99",   "sumrcv",           "",H
+~SUMCSH:        0,  "999,999,999.99",   "sumcsh",           "",I
+~SUMCHQ:        0,  "999,999,999.99",   "sumchq",           "",J
+~SUMINT:        0,  "999,999.99",       "sumint",           "",K
+~SUMDIS:        0,  "999,999.99",       "sumdis",           "",L
+~SUMTAX:        0,  "999,999.99",       "sumtax",           "",M
+
+~CC:            0,  "999",              "cnt",              ""
+~I:             0,  "",                 "",                 "seq=0"
+~N:             0,  "99",               "seq",              "seq=seq+1",D
+~ARTICLE:      39,  "",                 "article",          "article=STCRD->STKCOD-'/'-STCRD->STKDES",E
+~STKCOD:        0,  "",                 "STCRD->STKCOD",    "",E
+~STKDES:        0,  "",                 "STCRD->STKDES",    "",F
+~L:             0,  "",                 "LOC",              "LOC=' '-''-STCRD->LOCCOD",G
+~QTY:           0,  "ZZ,ZZZ.ZZZ",       "STCRD->TRNQTY",    "",H
+~TQUCOD:        0,  "",                 "p_istab( STCRD->TQUCOD, 20, 1, 0 )",   "",I
+~UNITPR:        0,  "ZZZZZ,ZZZ.ZZ",     "STCRD->UNITPR",    "",J
+~DISC_I:        0,  "",                 "STCRD->DISC",      "",K
+~NETAMT_I:      0,  "ZZZ,ZZZ,ZZZ.ZZ",   "STCRD->TRNVAL",    "",L
+
+~D:             0,  "",                 "prn_detail",       ""
+~REMARK:        0,  "",                 "ARTRNRM->REMARK",  "",C
+
+
+
+
+
+
+

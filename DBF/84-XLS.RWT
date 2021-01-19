@@ -1,0 +1,99 @@
+* APMASUM2.RWT - A/P Summapy (Period7-12) Report by Supplier
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานสรุปยอดซื้อแยกตามผู้จำหน่าย (งวด7-12)$E
+He:ผู้จำหน่ายจาก  ~FROMSUP    ถึง  ~TOSUP                   `วันที่ : \DATE
+He:\LINE
+*He:                                                             ยอดยกมา <------  ~MONTH7    ------> <------  ~MONTH8    ------> <------  ~MONTH9    ------> <------  ~MONTH10   ------> <------  ~MONTH11   ------> <------  ~MONTH12   ------>    ยอดยกไป
+*He:  ชื่อผู้จำหน่าย                                                          ยอดซื้อ*     ยอดจ่าย*       ยอดซื้อ      ยอดจ่าย        ยอดซื้อ      ยอดจ่าย        ยอดซื้อ      ยอดจ่าย        ยอดซื้อ      ยอดจ่าย        ยอดซื้อ      ยอดจ่าย
+He:","ยอดยกมา","<------  ~MONTH7    ------>","","<------  ~MONTH8    ------>","","<------  ~MONTH9    ------>","","<------  ~MONTH10    ------>","","<------  ~MONTH11    ------>","","<------  ~MONTH12    ------>","","ยอดยกไป
+He:ชื่อผู้จำหน่าย","ยอดยกมา","ยอดซื้อ*","ยอดจ่าย*","ยอดซื้อ","ยอดจ่าย","ยอดซื้อ","ยอดจ่าย","ยอดซื้อ","ยอดจ่าย","ยอดซื้อ","ยอดจ่าย","ยอดซื้อ","ยอดจ่าย",
+He:\LINE
+**:  xxxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5xx 999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99999,999,999.99
+Bo::~GETAMT1 ~GETAMT2 ~GETAMT3 ~GETAMT4 ~Z
+Bo:~SUPPLIER                                             ~BALFWD       ~RCV07        ~PAY07        ~RCV08        ~PAY08        ~RCV09        ~PAY09        ~RCV10        ~PAY10        ~RCV11        ~PAY11        ~RCV12        ~PAY12        ~BALBWD
+Su:","--------------","-------------","-------------","-------------","--------------","--------------","-------------","-------------","-------------","--------------","-------------","-------------","-------------","--------------
+Su:                            รวมทั้งสิ้น               $B~S_BALFWD     ~S_RCV07      ~S_PAY07      ~S_RCV08      ~S_PAY08      ~S_RCV09      ~S_PAY09      ~S_RCV10      ~S_PAY10      ~S_RCV11      ~S_PAY11      ~S_RCV12      ~S_PAY12      ~S_BALBWD     $B
+Su:","==============","=============","=============","=============","==============","==============","=============","=============","=============","==============","=============","=============","==============","==============
+Su:หมายเหตุ:  ยอดซื้อ* คือ ยอดซื้อสินค้าที่บันทึกที่เมนู ซื้อเงินเชื่อ+ใบเพิ่มหนี้(เจ้าหนี้) (รวมVAT) 
+Su:           ยอดจ่าย* คือ ยอดจ่ายชำระ+ใบลดหนี้/ส่งคืนสินค้า
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=250
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APMASUM2.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\005
+Date format=วว/ดด/ปปปป
+
+[master file]
+File=APMAS
+Alias=A
+Tag=APMAS1
+System=DATA_PATH
+
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",         "exp"
+~INIT:          0,      "",                 "init_var()",   "prn0=@n_prn0()"
+~FROMSUP:       0,      "",                 "Sup1()",       ""
+~TOSUP:         0,      "",                 "Sup2()",       ""
+~Z:             0,      "",                 "chkprn",       "va=bfwd+rc7+cp7+gr7+py7+rc8+cp8+gr8+py8+rc9+cp9+gr9+py9+rc10+cp10+gr10+py10+rc11+cp11+gr11+py11+rc12+cp12+gr12+py12+balbwd; chkprn=IIF(prn0=0.and.va=0, '}', ' ' )"
+~SUPPLIER:     52,      "",                 "sup_nam",      "sup_nam = A->SUPNAM - ' /' - A->SUPCOD;sup_nam = IIF(chkprn='}','}'+sup_nam,sup_nam)"
+*~SUPPLIER:    52,      "",                 "sup_nam",      "sup_nam = A->SUPNAM - ' /' - A->SUPCOD"
+~GETAMT1:       0,      "",                 "",             "bfwd=@n_ap_balfwd7();rc7=@n_ap_rcvprd(7);rc8=@n_ap_rcvprd(8);rc9=@n_ap_rcvprd(9);rc10=@n_ap_rcvprd(10);rc11=@n_ap_rcvprd(11);rc12=@n_ap_rcvprd(12)"
+~GETAMT2:       0,      "",                 "",             "cp7=@n_ap_cpprd(7);cp8=@n_ap_cpprd(8);cp9=@n_ap_cpprd(9);cp10=@n_ap_cpprd(10);cp11=@n_ap_cpprd(11);cp12=@n_ap_cpprd(12)"
+~GETAMT3:       0,      "",                 "",             "gr7=@n_ap_grprd(7);gr8=@n_ap_grprd(8);gr9=@n_ap_grprd(9);gr10=@n_ap_grprd(10);gr11=@n_ap_grprd(11);gr12=@n_ap_grprd(12)"
+~GETAMT4:       0,      "",                 "",             "py7=@n_ap_payprd(7);py8=@n_ap_payprd(8);py9=@n_ap_payprd(9);py10=@n_ap_payprd(10);py11=@n_ap_payprd(11);py12=@n_ap_payprd(12);balbwd=@n_ap_balbwd()"
+~BALFWD:        0,      "999,999,999.99",   "bfwd",         "",B
+~RCV07:         0,      "999,999,999.99",   "rc",           "rc=rc7+cp7",C
+~PAY07:         0,      "999,999,999.99",   "py",           "py=py7+gr7",D
+~RCV08:         0,      "999,999,999.99",   "rc",           "rc=rc8+cp8",E
+~PAY08:         0,      "999,999,999.99",   "py",           "py=py8+gr8",F
+~RCV09:         0,      "999,999,999.99",   "rc",           "rc=rc9+cp9",G
+~PAY09:         0,      "999,999,999.99",   "py",           "py=py9+gr9",H
+~RCV10:         0,      "999,999,999.99",   "rc",           "rc=rc10+cp10",I
+~PAY10:         0,      "999,999,999.99",   "py",           "py=py10+gr10",J
+~RCV11:         0,      "999,999,999.99",   "rc",           "rc=rc11+cp11",K
+~PAY11:         0,      "999,999,999.99",   "py",           "py=py11+gr11",L
+~RCV12:         0,      "999,999,999.99",   "rc",           "rc=rc12+cp12",M
+~PAY12:         0,      "999,999,999.99",   "py",           "py=py12+gr12",N
+~BALBWD:        0,      "999,999,999.99",   "balbwd",       "",O
+
+~S_BALFWD:      0,      "999,999,999.99",   "s_balfwd",     "s_balfwd=@n_s_balfwd()",B
+~S_RCV07:       0,      "999,999,999.99",   "s",            "s_rcv07=@n_s_rcvprd( 7 ); s_cp07=@n_s_cpprd( 7 ); s=s_rcv07+s_cp07",C
+~S_PAY07:       0,      "999,999,999.99",   "s",            "s_pay07=@n_s_payprd( 7 ); s_gr07=@n_s_grprd( 7 ); s=s_pay07+s_gr07",D
+~S_RCV08:       0,      "999,999,999.99",   "s",            "s_rcv08=@n_s_rcvprd( 8 ); s_cp08=@n_s_cpprd( 8 ); s=s_rcv08+s_cp08",E
+~S_PAY08:       0,      "999,999,999.99",   "s",            "s_pay08=@n_s_payprd( 8 ); s_gr08=@n_s_grprd( 8 ); s=s_pay08+s_gr08",F
+~S_RCV09:       0,      "999,999,999.99",   "s",            "s_rcv09=@n_s_rcvprd( 9 ); s_cp09=@n_s_cpprd( 9 ); s=s_rcv09+s_cp09",G
+~S_PAY09:       0,      "999,999,999.99",   "s",            "s_pay09=@n_s_payprd( 9 ); s_gr09=@n_s_grprd( 9 ); s=s_pay09+s_gr09",H
+~S_RCV10:       0,      "999,999,999.99",   "s",            "s_rcv010=@n_s_rcvprd( 10 ); s_cp010=@n_s_cpprd( 10 ); s=s_rcv010+s_cp010",I
+~S_PAY10:       0,      "999,999,999.99",   "s",            "s_pay010=@n_s_payprd( 10 ); s_gr010=@n_s_grprd( 10 ); s=s_pay010+s_gr010",J
+~S_RCV11:       0,      "999,999,999.99",   "s",            "s_rcv011=@n_s_rcvprd( 11 ); s_cp011=@n_s_cpprd( 11 ); s=s_rcv011+s_cp011",K
+~S_PAY11:       0,      "999,999,999.99",   "s",            "s_pay011=@n_s_payprd( 11 ); s_gr011=@n_s_grprd( 11 ); s=s_pay011+s_gr011",L
+~S_RCV12:       0,      "999,999,999.99",   "s",            "s_rcv012=@n_s_rcvprd( 12 ); s_cp012=@n_s_cpprd( 12 ); s=s_rcv012+s_cp012",M
+~S_PAY12:       0,      "999,999,999.99",   "s",            "s_pay012=@n_s_payprd( 12 ); s_gr012=@n_s_grprd( 12 ); s=s_pay012+s_gr012",N
+~S_BALBWD:      0,      "999,999,999.99",   "s_balbwd",     "s_balbwd=@n_s_balbwd()",O
+
+~MONTH7:        0,      "",                 "p_month( 7 )",     ""
+~MONTH8:        0,      "",                 "p_month( 8 )",     ""
+~MONTH9:        0,      "",                 "p_month( 9 )",     ""
+~MONTH10:       0,      "",                 "p_month( 10 )",    ""
+~MONTH11:       0,      "",                 "p_month( 11 )",    ""
+~MONTH12:       0,      "",                 "p_month( 12 )",    ""
+
+
+
+
+
+

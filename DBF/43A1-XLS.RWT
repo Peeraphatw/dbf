@@ -1,0 +1,253 @@
+* STSUMDCD.RWT - Stock Movement Summary Report Order by Stock Code, Separated Department Balance
+*
+[report frame]
+Ti::~INIT ~CLR_GQ ~CLR_GV ~CLR_TQ ~CLR_TV ~CLR_SQ ~CLR_SV ~CLR_DQ ~CLR_DV ~CLR_C ~PRN_DV
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eสรุปยอดเคลื่อนไหวสินค้า เรียงตามรหัสสินค้า$E (สรุปตามแผนก)
+He:วันที่จาก       ~FROMDATE            ถึง  ~TODATE        `วันที่ : \DATE
+H1:รหัสสินค้าจาก   ~FROMSTK             ถึง  ~TOSTK
+H1:หมวดสินค้าจาก   ~FROMGRP             ถึง  ~TOGRP          เลือกแผนก  ~DEP
+*He:\LINE
+He:สินค้า","","","","ยอดยกมา","ซื้อ","ส่งคืน","ขาย","ของแถม","รับคืน","รับคืนของแถม","รับเข้า","จ่ายออก","โอนเข้า","โอนออก","ปรับต้นทุน","ยอดยกไป
+*He:\LINE
+*    xxxxxxxxxxxxxxx xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxx 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999 9999,999.999
+Gh:  ~ARTICLE                                                      ~GETSTAT ~QUDES              ;1 STKCOD
+Gh::   ~KEEP_DEP    ;2 DEPCOD
+Bo::~CI~0Q~7Q~9Q~9QF~2Q~2QF~1Q~68Q~3Q~4Q
+Bo:~DV ~0V~7V~9V~9VF~2V~2VF~1V~68V~3V~4V~5V
+Gf:      แผนก ~SUM_DEP                             ~C_ITEM ~ZZ                  ~D0Q         ~D7Q         ~D9Q         ~D9QF        ~D2Q         ~D2QF        ~D1Q         ~D68Q        ~D3Q         ~D4Q                                   ~CLR_DQ ;2
+Gf:~V                                                      ~YY                  ~D0V         ~D7V         ~D9V         ~D9VF        ~D2V         ~D2VF        ~D1V         ~D68V        ~D3V         ~D4V         ~D5V                      ~CLR_DV ;2
+*Gf:                                                                 ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------        ;1
+Gf:      รวม  ~TARTICLE                            ~S_ITEM ~ZZ     ~SBEGBAL     ~S0Q         ~S7Q         ~S9Q         ~S9QF        ~S2Q         ~S2QF        ~S1Q         ~S68Q        ~S3Q         ~S4Q                      ~STOTBAL     ~CLR_SQ ;1
+Gf:~V                                                      ~YY     ~SBEGVAL     ~S0V         ~S7V         ~S9V         ~S9VF        ~S2V         ~S2VF        ~S1V         ~S68V        ~S3V         ~S4V         ~S5V         ~STOTVAL     ~CLR_SV ;1
+*Su:                                                                 ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------ ------------
+Su:  รวมทั้งสิ้น                                   ~C_STK  ~SS     ~TBEGBAL     ~T0Q         ~T7Q         ~T9Q         ~T9QF        ~T2Q         ~T2QF        ~T1Q         ~T68Q        ~T3Q         ~T4Q                      ~TTOTBAL     
+Su:~V                                                      ~YY     ~TBEGVAL     ~T0V         ~T7V         ~T9V         ~T9VF        ~T2V         ~T2VF        ~T1V         ~T68V        ~T3V         ~T4V         ~T5V         ~TTOTVAL     
+*Su:                                                                 ============ ============ ============ ============ ============ ============ ============ ============ ============ ============ ============ ============ ============
+Su:  $_หมายเหตุ$_ ยอดรวมทั้งสิ้นในรายงานนี้ จะไม่รวมยอดของสินค้าที่ไม่ได้เคลื่อนไหวในช่วงวันที่ที่ออกรายงาน (ซึ่งอาจจะมียอดยกมา,ยกไป)
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=233
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STSUMDCD.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\004
+Query=STMAS->STKTYP='0'
+Query=.AND.DTOS(DOCDAT)>='Date1()'.AND. DTOS(DOCDAT)<='Date2()'
+Query=.AND.STKCOD>='Stk1()'.AND. STKCOD<='Stk2()'
+Query=.AND.STMAS->STKGRP>='StkGrp1()'.AND. STMAS->STKGRP<='StkGrp2()'
+Sort=STMAS->STKGRP+STKCOD+DEPCOD+DTOS(DOCDAT)+POSOPR+DOCNUM+SEQNUM
+
+[master file]
+File=STCRD
+Alias=B
+Tag=STCRD1
+System=DATA_PATH
+
+[relate file]
+File=STMAS
+Alias=M
+Tag=STMAS1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=STKCOD
+
+[data spec]
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "PRTZERO=@n_prt0(); p_val=@n_prtval(); p_det=@n_prtdet()"
+~CLR_GQ:    0,  "",                 "",             "GBEGBAL=0; G0Q=0; G1Q=0; G2Q=0; G2QF=0; G3Q=0; G4Q=0; G5Q=0; G68Q=0; G7Q=0; G9Q=0; G9QF=0; GTOTBAL=0"
+~CLR_GV:    0,  "",                 "",             "GBEGVAL=0; G0V=0; G1V=0; G2V=0; G2VF=0; G3V=0; G4V=0; G5V=0; G68V=0; G7V=0; G9V=0; G9VF=0; GTOTVAL=0"
+~CLR_TQ:    0,  "",                 "",             "TBEGBAL=0; T0Q=0; T1Q=0; T2Q=0; T2QF=0; T3Q=0; T4Q=0; T5Q=0; T68Q=0; T7Q=0; T9Q=0; T9QF=0; TTOTBAL=0; c_stk=0"
+~CLR_TV:    0,  "",                 "",             "TBEGVAL=0; T0V=0; T1V=0; T2V=0; T2VF=0; T3V=0; T4V=0; T5V=0; T68V=0; T7V=0; T9V=0; T9VF=0; TTOTVAL=0"
+~CLR_SQ:    0,  "",                 "",             "SBEGBAL=0; S0Q=0; S1Q=0; S2Q=0; S2QF=0; S3Q=0; S4Q=0; S5Q=0; S68Q=0; S7Q=0; S9Q=0; S9QF=0; STOTBAL=0; s_item=0"
+~CLR_SV:    0,  "",                 "",             "SBEGVAL=0; S0V=0; S1V=0; S2V=0; S2VF=0; S3V=0; S4V=0; S5V=0; S68V=0; S7V=0; S9V=0; S9VF=0; STOTVAL=0"
+~CLR_DQ:    0,  "",                 "",             "D0Q=0; D1Q=0; D2Q=0; D2QF=0; D3Q=0; D4Q=0; D5Q=0; D68Q=0; D7Q=0; D9Q=0; D9QF=0; c_item=0"
+~CLR_DV:    0,  "",                 "",             "D0V=0; D1V=0; D2V=0; D2VF=0; D3V=0; D4V=0; D5V=0; D68V=0; D7V=0; D9V=0; D9VF=0"
+~CLR_C:     0,  "",                 "",             "c_grp=0; c_stk=0; g_stk=0"
+
+~FROMGRP:   0,  "",                 "StkGrp1()",    ""
+~TOGRP:     0,  "",                 "StkGrp2()",    ""
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMDATE:  0,  "d ดดด yyyy",       "@date1()",     ""
+~TODATE:    0,  "d ดดด yyyy",       "@date2()",     ""
+~FROMACC:   0,  "",                 "Acc1()",       ""
+~TOACC:     0,  "",                 "Acc2()",       ""
+~DEP:       0,  "",                 "Dep1()",       ""
+
+~STKGRP:    0,  "",                 "stk_grp",      "stk_grp = @p_istab(STMAS->STKGRP,22,1,40)"
+~TSTKGRP:  40,  "",                 "stk_grp",      "c_grp=c_grp+1"
+*~ACCNUM:   0,  "",                 "acc_num",      "acc_num=ISACC->ACCNUM01-'/'-GLACC->ACCNAM"
+~ACCNUM:    0,  "",                 "acc_num",      "acc_num=ISACC->ACCNUM01"
+~TACCNUM:  40,  "",                 "acc_num",      "c_grp=c_grp+1"
+~ACCCOD:    0,  "",                 "acc_cod",      "acc_cod=STMAS->ACCCOD-'/'-ISACC->ACCDES"
+~TACCCOD:  40,  "",                 "acc_cod",      "c_grp=c_grp+1"
+~GETSTAT:   0,  "",                 "stmas_stat1()","nouse=@save_cfactor(); is_fifo=@n_isfifo(); is_avg=IIF(is_fifo=0, 1, 0)"
+*~Z1:       0,  "",                 "",             "prn=IIF( PRTZERO=0 .AND. A->TOTBAL=0 .AND. A->TOTVAL=0 ,'}', ' ' )"
+~Z:         0,  "",                 "prn",          ""
+~DV:        0,  "",                 "prndv",        ""
+~V:         0,  "",                 "prnval",       ""
+~PRN_DV:    0,  "",                 "",             "prndv=IIF(p_val=0,'}',':'); prnval=IIF( p_val=0,'}',' ')"
+
+~STKCOD:    0,  "",                 "STK_COD",      ""
+~STKDES:    0,  "",                 "STK_DES",      ""
+~ARTICLE:  58,  "",                 "ARTICLE",      "STK_COD=STMAS->STKCOD; STK_DES=STMAS->STKDES; ARTICLE=STK_COD-'  '-STK_DES; QU_DES=@p_istab(STMAS->QUCOD,20,1,8); c_stk=c_stk+1"
+~TARTICLE: 30,  "",                 "ARTICLE",      ""
+*~QUDES:    0,  "",                 "QU_DES",       "",E
+~QUDES:     0,  "",                 "p_cqu()",      "",E
+~KEEP_DEP:  0,  "",                 "",             "SUM_DEP=STCRD->DEPCOD"
+~SUM_DEP:   0,  "",                 "SUM_DEP",      ""
+~DOCDAT:    0,  "dd/mm/yyyy",                 "STCRD->DOCDAT",""
+~DOCNUM:    0,  "",                 "doc",          "doc=STCRD->DOCNUM-'-'-STCRD->SEQNUM"
+
+~D0Q:       0,  "qtyZ(13)",         "D0Q",          "S0Q=S0Q+D0Q",F
+~D1Q:       0,  "qtyZ(13)",         "D1Q",          "S1Q=S1Q+D1Q",L
+~D2Q:       0,  "qtyZ(13)",         "D2Q",          "S2Q=S2Q+D2Q",J
+~D2QF:      0,  "qtyZ(13)",         "D2QF",         "S2QF=S2QF+D2QF",K
+~D3Q:       0,  "qtyZ(13)",         "D3Q",          "S3Q=S3Q+D3Q",N
+~D4Q:       0,  "qtyZ(13)",         "D4Q",          "S4Q=S4Q+D4Q",O
+~D5Q:       0,  "qtyZ(13)",         "D5Q",          "S5Q=S5Q+D5Q",P
+~D68Q:      0,  "qtyZ(13)",         "D68Q",         "S68Q=S68Q+D68Q",M
+~D7Q:       0,  "qtyZ(13)",         "D7Q",          "S7Q=S7Q+D7Q",G
+~D9Q:       0,  "qtyZ(13)",         "D9Q",          "S9Q=S9Q+D9Q",H
+~D9QF:      0,  "qtyZ(13)",         "D9QF",         "S9QF=S9QF+D9QF",I
+
+~D0V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "D0V",          "S0V=S0V+D0V",F
+~D1V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "D1V",          "S1V=S1V+D1V",L
+~D2V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "D2V",          "S2V=S2V+D2V",J
+~D2VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "D2VF",         "S2VF=S2VF+D2VF",K
+~D3V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "D3V",          "S3V=S3V+D3V",N
+~D4V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "D4V",          "S4V=S4V+D4V",O
+~D5V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "D5V",          "S5V=S5V+D5V",P
+~D68V:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "D68V",         "S68V=S68V+D68V",M
+~D7V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "D7V",          "S7V=S7V+D7V",G
+~D9V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "D9V",          "S9V=S9V+D9V",H
+~D9VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "D9VF",         "S9VF=S9VF+D9VF",I
+
+~SBEGBAL:   0,  "",                 "Q",            "SBEGBAL=@n_begbal_dep(); TBEGBAL=TBEGBAL+SBEGBAL; Q=@s_cqu( SBEGBAL,13 )",E
+~S0Q:       0,  "",                 "Q",            "S0Q =@n_0q(); T0Q=T0Q+S0Q; Q=@s_cqu( S0Q,13,Z )",F
+~S1Q:       0,  "",                 "Q",            "S1Q =@n_1q(); T1Q=T1Q+S1Q; Q=@s_cqu( S1Q,13,Z )",L
+~S2Q:       0,  "",                 "Q",            "S2Q =@n_2q(); T2Q=T2Q+S2Q; Q=@s_cqu( S2Q,13,Z )",J
+~S2QF:      0,  "",                 "Q",            "S2QF=@n_2qf();T2QF=T2QF+S2QF; Q=@s_cqu( S2QF,13,Z )",K
+~S3Q:       0,  "",                 "Q",            "S3Q =@n_3q(); T3Q=T3Q+S3Q; Q=@s_cqu( S3Q,13,Z )",N
+~S4Q:       0,  "",                 "Q",            "S4Q =@n_4q(); T4Q=T4Q+S4Q; Q=@s_cqu( S4Q,13,Z )",O
+~S5Q:       0,  "",                 "Q",            "S5Q =@n_5q(); T5Q=T5Q+S5Q; Q=@s_cqu( S5Q,13,Z )",P
+~S68Q:      0,  "",                 "Q",            "S68Q=@n_68q();T68Q=T68Q+S68Q; Q=@s_cqu( S68Q,13,Z )",M
+~S7Q:       0,  "",                 "Q",            "S7Q =@n_7q(); T7Q=T7Q+S7Q; Q=@s_cqu( S7Q,13,Z )",G
+~S9Q:       0,  "",                 "Q",            "S9Q =@n_9q(); T9Q=T9Q+S9Q; Q=@s_cqu( S9Q,13,Z )",H
+~S9QF:      0,  "",                 "Q",            "S9QF=@n_9qf();T9QF=T9QF+S9QF; Q=@s_cqu( S9QF,13,Z )",I
+~STOTBAL:   0,  "",                 "Q",            "STOTBAL=@n_totbal_dep(); TTOTBAL=TTOTBAL+STOTBAL; Q=@s_cqu( STOTBAL,13 )",Q
+
+~SBEGVAL:   0,  "99,999,999.99",    "SBEGVAL",      "SBEGVAL=@n_begval_dep(); TBEGVAL=TBEGVAL+SBEGVAL",E
+~S0V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S0V",          "T0V=T0V+S0V",F
+~S1V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S1V",          "T1V=T1V+S1V",L
+~S2V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S2V",          "T2V=T2V+S2V",J
+~S2VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "S2VF",         "T2VF=T2VF+S2VF",K
+~S3V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S3V",          "T3V=T3V+S3V",N
+~S4V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S4V",          "T4V=T4V+S4V",O
+~S5V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S5V",          "T5V=T5V+S5V",P
+~S68V:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "S68V",         "T68V=T68V+S68V",M
+~S7V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S7V",          "T7V=T7V+S7V",G
+~S9V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "S9V",          "T9V=T9V+S9V",H
+~S9VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "S9VF",         "T9VF=T9VF+S9VF",I
+~STOTVAL:   0,  "99,999,999.99",    "STOTVAL",      "STOTVAL=@n_totval_dep(); TTOTVAL=TTOTVAL+STOTVAL",Q
+
+~TBEGBAL:   0,  "qty(13)",          "TBEGBAL",      "GBEGBAL=GBEGBAL+TBEGBAL",E
+~T0Q:       0,  "qtyZ(13)",         "T0Q",          "G0Q=G0Q+T0Q",F
+~T1Q:       0,  "qtyZ(13)",         "T1Q",          "G1Q=G1Q+T1Q",L
+~T2Q:       0,  "qtyZ(13)",         "T2Q",          "G2Q=G2Q+T2Q",J
+~T2QF:      0,  "qtyZ(13)",         "T2QF",         "G2QF=G2QF+T2QF",K
+~T3Q:       0,  "qtyZ(13)",         "T3Q",          "G3Q=G3Q+T3Q",N
+~T4Q:       0,  "qtyZ(13)",         "T4Q",          "G4Q=G4Q+T4Q",O
+~T5Q:       0,  "qtyZ(13)",         "T5Q",          "G5Q=G5Q+T5Q",P
+~T68Q:      0,  "qtyZ(13)",         "T68Q",         "G68Q=G68Q+T68Q",M
+~T7Q:       0,  "qtyZ(13)",         "T7Q",          "G7Q=G7Q+T7Q",G
+~T9Q:       0,  "qtyZ(13)",         "T9Q",          "G9Q=G9Q+T9Q",H
+~T9QF:      0,  "qtyZ(13)",         "T9QF",         "G9QF=G9QF+T9QF",I
+~TTOTBAL:   0,  "qty(13)",          "TTOTBAL",      "GTOTBAL=GTOTBAL+TTOTBAL",Q
+
+~TBEGVAL:   0,  "99,999,999.99",    "TBEGVAL",      "GBEGVAL=GBEGVAL+TBEGVAL",E
+~T0V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "T0V",          "G0V=G0V+T0V",F
+~T1V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "T1V",          "G1V=G1V+T1V",L
+~T2V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "T2V",          "G2V=G2V+T2V",J
+~T2VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "T2VF",         "G2VF=G2VF+T2VF",K
+~T3V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "T3V",          "G3V=G3V+T3V",N
+~T4V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "T4V",          "G4V=G4V+T4V",O
+~T5V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "T5V",          "G5V=G5V+T5V",P
+~T68V:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "T68V",         "G68V=G68V+T68V",M
+~T7V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "T7V",          "G7V=G7V+T7V",G
+~T9V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "T9V",          "G9V=G9V+T9V",H
+~T9VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "T9VF",         "G9VF=G9VF+T9VF",I
+~TTOTVAL:   0,  "99,999,999.99",    "TTOTVAL",      "GTOTVAL=GTOTVAL+TTOTVAL",Q
+
+~GBEGBAL:   0,  "qty(13)",          "GBEGBAL",      "",E
+~G0Q:       0,  "qtyZ(13)",         "G0Q",          "",F
+~G1Q:       0,  "qtyZ(13)",         "G1Q",          "",L
+~G2Q:       0,  "qtyZ(13)",         "G2Q",          "",J
+~G2QF:      0,  "qtyZ(13)",         "G2QF",         "",K
+~G3Q:       0,  "qtyZ(13)",         "G3Q",          "",N
+~G4Q:       0,  "qtyZ(13)",         "G4Q",          "",O
+~G5Q:       0,  "qtyZ(13)",         "G5Q",          "",P
+~G68Q:      0,  "qtyZ(13)",         "G68Q",         "",M
+~G7Q:       0,  "qtyZ(13)",         "G7Q",          "",G
+~G9Q:       0,  "qtyZ(13)",         "G9Q",          "",H
+~G9QF:      0,  "qtyZ(13)",         "G9QF",         "",I
+~GTOTBAL:   0,  "qty(13)",          "GTOTBAL",      "",Q
+
+~GBEGVAL:   0,  "99,999,999.99",    "GBEGVAL",      "",E
+~G0V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "G0V",          "",F
+~G1V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "G1V",          "",L
+~G2V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "G2V",          "",J
+~G2VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "G2VF",         "",K
+~G3V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "G3V",          "",N
+~G4V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "G4V",          "",O
+~G5V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "G5V",          "",P
+~G68V:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "G68V",         "",M
+~G7V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "G7V",          "",G
+~G9V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "G9V",          "",H
+~G9VF:      0,  "ZZ,ZZZ,ZZZ.ZZ",    "G9VF",         "",I
+~GTOTVAL:   0,  "99,999,999.99",    "GTOTVAL",      "",Q
+
+~CI:        0,  "",                 "",             "c_item=c_item+1"
+~0Q:        0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='0',STCRD->XTRNQTY,0); D0Q=D0Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~1Q:        0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='1',STCRD->XTRNQTY,0); D1Q=D1Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~2Q:        0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='2'.AND.STCRD->FREE#'Y',STCRD->XTRNQTY,0); D2Q=D2Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~2QF:       0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='2'.AND.STCRD->FREE='Y',STCRD->XTRNQTY,0); D2QF=D2QF+QQ; Q=@s_cqu( QQ,13,Z )"
+~3Q:        0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='3',STCRD->XTRNQTY,0); D3Q=D3Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~4Q:        0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='4',STCRD->XTRNQTY,0); D4Q=D4Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~5Q:        0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='5',STCRD->XTRNQTY,0); D5Q=D5Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~68Q:       0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='6',STCRD->XTRNQTY,IIF(STCRD->POSOPR='8'.AND.STCRD->XTRNQTY<0,STCRD->XTRNQTY*-1,0)); D68Q=D68Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~7Q:        0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='7',STCRD->XTRNQTY,0); D7Q=D7Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~9Q:        0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='9'.AND.STCRD->FREE#'Y',STCRD->XTRNQTY,0); D9Q=D9Q+QQ; Q=@s_cqu( QQ,13,Z )"
+~9QF:       0,  "",                 "Q",            "QQ=IIF(STCRD->POSOPR='9'.AND.STCRD->FREE='Y',STCRD->XTRNQTY,0); D9QF=D9QF+QQ; Q=@s_cqu( QQ,13,Z )"
+
+~0V:        0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='0',STCRD->XTRNVAL,0); D0V=D0V+v"
+~1V:        0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='1',STCRD->XTRNVAL,0); D1V=D1V+v"
+~2V:        0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='2'.AND.STCRD->FREE#'Y',STCRD->XTRNVAL,0); D2V=D2V+v"
+~2VF:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='2'.AND.STCRD->FREE='Y',STCRD->XTRNVAL,0); D2VF=D2VF+v"
+~3V:        0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='3',STCRD->XTRNVAL,0); D3V=D3V+v"
+~4V:        0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='4',STCRD->XTRNVAL,0); D4V=D4V+v"
+~5V:        0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='5', STCRD->XTRNVAL, IIF(is_avg=1 .AND.STCRD->POSOPR<='3', STCRD->VALCHG, 0)); D5V=D5V+v"
+~68V:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='6',STCRD->XTRNVAL,IIF(STCRD->POSOPR='8'.AND.STCRD->XTRNVAL<0,STCRD->XTRNVAL*-1,0)); D68V=D68V+v"
+~7V:        0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='7',STCRD->XTRNVAL,0); D7V=D7V+v"
+~9V:        0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='9'.AND.STCRD->FREE#'Y',STCRD->XTRNVAL,0); D9V=D9V+v"
+~9VF:       0,  "ZZ,ZZZ,ZZZ.ZZ",    "v",            "v=IIF(STCRD->POSOPR='9'.AND.STCRD->FREE='Y',STCRD->XTRNVAL,0); D9VF=D9VF+v"
+
+~C_GRP:     0,  "99,999",           "c_grp",        ""
+~C_STK:     0,  "99,999",           "c_stk",        "g_stk=g_stk+c_stk"
+~G_STK:     0,  "99,999",           "g_stk",        ""
+~C_ITEM:    0,  "99,999",           "c_item",       "s_item=s_item+c_item",C
+~S_ITEM:    0,  "99,999",           "s_item",       "",C
+
+~YY:        0,  "",                 "YY",           "YY='มูลค่า'",D  
+~ZZ:        0,  "",                 "ZZ",           "ZZ='รายการ'",D  
+~SS:        0,  "",                 "SS",           "SS='สินค้า'",D  
+

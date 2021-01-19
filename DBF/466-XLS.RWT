@@ -1,0 +1,105 @@
+* STRELO.RWT
+*   - Stock Relocation Report
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานโอนย้ายสินค้า$E
+He:วันที่จาก       ~FROMDATE            ถึง  ~TODATE        `วันที่ : \DATE
+H1:รหัสสินค้าจาก   ~FROMSTK             ถึง  ~TOSTK
+H1:คลังต้นทางจาก   ~FROMLOC             ถึง  ~TOLOC
+H1:คลังปลายทางจาก  ~FROMLOCD            ถึง  ~TOLOCD
+He:\LINE
+He:โอนจาก","ชื่อคลัง(ต้นทาง)","ไปที่","ชื่อคลัง(ปลายทาง)","วันที่","รหัสสินค้า","ชื่อสินค้า","จำนวน","หน่วยนับ","มูลค่า
+He:\LINE
+Gh: $B~LC1$B  ~LC1_T                            ; 1 STCRD->LOCCOD
+Gh:       $B~LC2$B  ~LC2_T          ~CLRSUM     ; 2 STCRD->PEOPLE 0 4
+Gh::                                            ; 3 STCRD->DOCDAT
+Gh:             ~DOCDAT  {1}
+Bo:{1}                    ~STKCOD              ~STKDES                                       ~TRNQTY      ~QUDES    ~XTRNVAL
+*               dd/mm/yy  xxxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 9999,999.999 xxxxxxxx  999,999,999.99
+Gf:~PRN_TTRN                                                                                 รวม                    $B~TTRNVAL      $B ;2
+*Gf:~PRN_TTRN                                                                        รวม      $B~TTRNQTY               ~TTRNVAL      $B ;2
+Su:                                                                                                                 --------------
+Su:                                                                                      รวมทั้งสิ้น                $B~GTRNVAL      $B
+*Su:                                                                             รวมทั้งสิ้น  $B~GTRNQTY               ~GTRNVAL      $B
+Su:                                                                                                                 ==============
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=129
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STRELO.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=POSOPR = '4'
+Query=.AND.DTOS(DOCDAT)>='Date1()'.AND.DTOS(DOCDAT)<='Date2()'
+Query=.AND.STKCOD>='Stk1()'.AND.STKCOD<='Stk2()'
+Query=.AND.LOCCOD>='Loc1()'.AND.LOCCOD<='Loc2()'
+Query=.AND.SUBSTR(PEOPLE,1,4) >='LocD1()'.AND.SUBSTR(PEOPLE,1,4) <='LocD2()'
+Sort=LOCCOD+PEOPLE+DTOS(DOCDAT)+STKCOD
+
+[master file]
+File=STCRD
+Alias=A
+Tag=STCRD3
+System=DATA_PATH
+
+[item file]
+File=ISTAB
+Alias=T
+Tag=ISTAB1
+System=DATA_PATH
+
+[relate file]
+File=STMAS
+Alias=M
+Tag=STMAS1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=STKCOD
+
+[data spec]
+*~dat:      len,"pict",             "data",             "exp"
+~INIT:      0,  "",                 "",                 "grandqty=0; grandval=0; cnt=0"
+~FROMSTK:   0,  "",                 "Stk1()",           ""
+~TOSTK:     0,  "",                 "Stk2()",           ""
+~FROMDATE:  0,  "dd/mm/ปปปป",       "@date1()",         ""
+~TODATE:    0,  "dd/mm/ปปปป",       "@date2()",         ""
+~FROMLOC:   0,  "",                 "Loc1()",           ""
+~TOLOC:     0,  "",                 "Loc2()",           ""
+~FROMLOCD:  0,  "",                 "LocD1()",          ""
+~TOLOCD:    0,  "",                 "LocD2()",          ""
+~DOCNUM:    0,  "",                 "STCRD->DOCNUM",    ""
+~DOCDAT:    0,  "dd/mm/ปปปป",       "STCRD->DOCDAT",    "",E
+~LC1:       0,  "",                 "STCRD->LOCCOD",    ""
+~LC1_T:     0,  "",                 "p_istab( STCRD->LOCCOD,21,1,30)",  "",B
+~LC2:       0,  "",                 "STCRD->PEOPLE",    "",C
+~LC2_T:     0,  "",                 "p_istab( STCRD->PEOPLE,21,1,30)",  "",D
+~NN:        0,  "",                 "STCRD->SEQNUM",    ""
+~STKCOD:    0,  "",                 "STCRD->STKCOD",    "",F
+~STKDES:    0,  "",                 "STMAS->STKDES",    "",G
+~TRNQTY:    0,  "qty(12)",          "STCRD->TRNQTY",    "qty=IIF(STMAS->STKTYP='1',0,STCRD->TRNQTY); sumqty=sumqty+qty",H
+~QUDES:     0,  "",                 "p_istab( STCRD->TQUCOD,20,1,8)",   "",I
+
+~XTRNVAL:   0,  "ZZZ,ZZZ,ZZZ.ZZ",   "STCRD->XTRNVAL",   "item=item+1; val=IIF(STMAS->STKTYP='1',0,STCRD->XTRNVAL); sumval=sumval+val; prn_ttrn=IIF(val>0.AND.item>1, ' ', prn_ttrn )",J
+~TTRNQTY:   0,  "qty(12)",          "sumqty",           "grandqty=grandqty+sumqty",H
+~TTRNVAL:   0,  "999,999,999.99",   "sumval",           "grandval=grandval+sumval",J
+~CLRSUM:    0,  "",                 "",                 "sumqty=0; sumval=0; prn_ttrn=':'; item=0"
+~GTRNQTY:   0,  "qty(12)",          "grandqty",         "",H
+~GTRNVAL:   0,  "999,999,999.99",   "grandval",         "",J
+~PRN_TTRN:  0,  "",                 "prn_ttrn",         ""
+
+
+
+
+
+
+

@@ -1,0 +1,131 @@
+* OECANSTK.RWT - Cancel S/O Item Report by Stock Code, Cancel Date, Customer
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายการสินค้าถูกยกเลิก แยกตามสินค้า$E
+He:ยกเลิกวันที่     ~FROMDATE            ถึง  ~TODATE       `วันที่ : \DATE
+H1:รหัสสินค้าจาก    ~FROMSTK             ถึง  ~TOSTK
+H1:คลังสินค้าจาก    ~FROMLOC             ถึง  ~TOLOC
+H1:ลูกค้าจาก        ~FROMCUS             ถึง  ~TOCUS
+H1:เหตุผลที่ยกเลิก  ~FROMREAS            ถึง  ~TOREAS            เลือกแผนก  ~FROMDEP
+He:\LINE
+*He:  คลัง  วันที่ยกเลิก ใบสั่งขาย   วันที่สั่งขาย     ลูกค้า                  พนักงานขาย      ยอดสั่ง     ยอดยกเลิก   จำนวนเงิน   เหตุผล
+**    C       D        E              F            G                            H                I            K            L          M
+He:รหัสสินค้า","รายละเอียดสินค้า","คลัง","วันที่ยกเลิก","ใบสั่งขาย","วันที่สั่งขาย","ลูกค้า","พนักงานขาย","ยอดสั่ง","","ยอดยกเลิก","จำนวนเงิน","เหตุผล",
+He:\LINE
+**:  xxxx DD/MM/YY OExxxxxxxxxx-nnn DD/MM/YY xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xx xxxxxx4xxx999,999.999 xx 999,999.999 999,999,999.99
+Gh:$B~STOCKCOD                 ~STOCKDES                                              $B   ; 1 STKCOD
+Bo:  ~LOC    ~CANDAT       ~SONUM           ~SODAT      ~CUSNAM                              ~SLMCOD                      ~ORDQTY     ~Q ~CANCELQTY  ~CANCELVAL     ~CANCELTYP
+Gf:","","","","","","","","------------","","-------------"," ------------- ;1
+Gf:รวม ~STKCOD                ~STKDES                                                                                   $B~SUB1QTY       ~SUB1CAN    ~SUB1VAL      $B ~C_SUB1 ;1
+Gf:","","","","","","","","======","","======="," ====== ;1
+Su:
+Su:รวมทั้งสิ้น  (จำนวนเงินเป็นยอดโดยประมาณ เพราะยังไม่ได้นำส่วนลดรวมมาหัก)                                               $B~TOTQTY         ~TOTCAN     ~TOTVAL       $B
+Su:","","","","","","","","======",""," ======="," ======
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=180
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=OECANSTK.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=DTOS(CANCELDAT)>='Date1()'.AND.DTOS(CANCELDAT)<='Date2()'
+Query=.AND.CANCELTYP>='SOCancel1()'.AND.CANCELTYP<='SOCancel2()'
+Query=.AND.STKCOD>='Stk1()'.AND. STKCOD<='Stk2()'
+Query=.AND.LOCCOD>='Loc1()'.AND. LOCCOD<='Loc2()'
+Query=.AND.CUSCOD>='Cus1()'.AND. CUSCOD<='Cus2()'
+Query=.AND.CANCELQTY > 0
+Sort=STKCOD+LOCCOD+DTOS(CANCELDAT)+SONUM
+
+[master file]
+File=OESOIT
+Alias=A
+Tag=OESOIT1
+System=DATA_PATH
+
+[relate file]
+File=ARMAS
+Alias=B
+Tag=ARMAS1
+System=DATA_PATH
+Master file=OESOIT
+Master-Related Field=CUSCOD
+
+File=STMAS
+Alias=C
+Tag=STMAS1
+System=DATA_PATH
+Master file=OESOIT
+Master-Related Field=STKCOD
+
+File=OESO
+Alias=D
+Tag=OESO1
+System=DATA_PATH
+Master file=OESOIT
+Master-Related Field=SONUM
+
+[data spec]
+*           len (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "sub1qty=0;sub1can=0;sub1val=0; totqty=0;totcan=0;totval=0"
+~FROMREAS:  0,  "",                 "SOCancel1()",  ""
+~TOREAS:    0,  "",                 "SOCancel2()",      ""
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMLOC:   0,  "",                 "Loc1()",       ""
+~TOLOC:     0,  "",                 "Loc2()",       ""
+~FROMCUS:   0,  "",                 "Cus1()",       ""
+~TOCUS:     0,  "",                 "Cus2()",       ""
+~FROMDATE:  0,  "d ดดด yyyy",       "@date1()",     ""
+~TODATE:    0,  "d ดดด yyyy",       "@date2()",     ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+
+~STOCKDES:  0,  "",                 "stk_des",      "stk_des = C->STKDES ",B
+~STKDES:    0,  "",                 "stk_des",      "",B
+~STOCKCOD:  0,  "",                 "stk_cod",      "stk_cod = A->STKCOD ",A
+~STKCOD:    0,  "",                 "stk_cod",      "",A
+
+
+~LOC:       0,  "",                 "A->LOCCOD",    "",C
+~CANDAT:    0,  "dd/mm/ปปปป",                 "A->CANCELDAT", "",D
+~SONUM:     0,  "",                 "num",          "num=A->SONUM-'-'-A->SEQNUM",E
+~SODAT:     0,  "dd/mm/ปปปป",                 "D->SODAT",     "",F
+~SLMCOD:    0,  "",                 "D->SLMCOD",    "",H
+~CUSNAM:   32,  "",                 "B->CUSNAM",    "",G
+~ORDQTY:    0,  "qty(11)",          "A->ORDQTY",    "sub1qty=sub1qty+A->ORDQTY",I
+~CANCELQTY: 0,  "qty(11)",          "A->CANCELQTY", "sub1can=sub1can+A->CANCELQTY",K
+~CANCELTYP: 0,  "",                 "p_istab( A->CANCELTYP, 42, 1, 30 )",           "",M
+~KEEPBAL:   0,  "",                 "",             "tot_bal=STMAS->TOTBAL; tot_reo=STMAS->TOTREO; qux=STMAS->QUCOD"
+~Q:         0,  "",                 "A->TQUCOD",    "",J
+~UNITPR:    0,  "priZ(12)",         "A->UNITPR",    ""
+~DISC:      0,  "",                 "A->DISC",      ""
+~CANCELVAL: 0,  "999,999,999.99",   "canval",       "canval=A->CANCELQTY*A->UNITPR-(A->DISCAMT*A->CANCELQTY/A->ORDQTY); sub1val=sub1val+canval",L
+~TOTBAL:    0,  "qty(12)",          "tot_bal",      ""
+~QX:        0,  "",                 "qux",          ""
+~TOTREO:    0,  "qty(11)",          "tot_reo",      ""
+
+~SUB1QTY:   0,  "qty(11)",          "sub1qty",      "",I
+~SUB1CAN:   0,  "qty(11)",          "sub1can",      "",K
+~SUB1VAL:   0,  "999,999,999.99",   "sub1val",      "",L
+~C_SUB1:    0,  "",                 "",             "totqty=totqty+sub1qty; sub1qty=0; totcan=totcan+sub1can; sub1can=0; totval=totval+sub1val; sub1val=0"
+~TOTQTY:    0,  "qty(11)",          "totqty",       "",I
+~TOTCAN:    0,  "qty(11)",          "totcan",       "",K
+~TOTVAL:    0,  "999,999,999.99",   "totval",       "",L
+
+
+
+
+
+

@@ -1,0 +1,101 @@
+* ARMAST.RWT -- Customer Detail Report by Customer Type
+*
+[report frame]
+He:\NAME                                                    `หน้า   : \PAGE
+He:รายละเอียดลูกค้า แยกตามประเภทลูกค้า
+He:ประเภทลูกค้าจาก  ~FROMCUSTYP     ถึง  ~TOCUSTYP          `วันที่ : \DATE
+H1:ลูกค้าจาก        ~FROMCUS        ถึง  ~TOCUS
+H1:เขตการขายจาก     ~FROMAREA       ถึง  ~TOAREA
+H1:พนักงานขายจาก    ~FROMSLM        ถึง  ~TOSLM
+*He:\LINE
+He:  รหัส   ","    คำนำหน้า+ชื่อลูกค้า  "," พนักงานขาย","  เขต ","  ประเภทราคา  ","   ส่วนลด ","   
+*He:\LINE
+Gh:  ~TB     ~TABLE1                                                ; 1 CUSTYP
+*               xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5xxxxxxxxx6xxxxxxxxx7xxxxxxxxx8xxxxxxxxx9
+Bo:  ~CUSCOD    ~CUSNAM                                                           ~SLMCOD     ~AREA    ~PRI    ~DISC
+Bo:              ~ADDR01                                                          ~B         ~CONTACT
+Bo:              ~ADDR02                                                          ~C         ~ACCNUM         ~F          ~DLVBY
+Bo:              ~ADDR03                                                          ~D         ~TRM            ~G          ~CRLINE
+Bo:              ~TELNUM                                                          ~E         ~PAYCOND
+Bo:~REMARK_NB           ~REMARK 
+*Gf:\FEED    ;1
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=122
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARMAST.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=CUSCOD>='Cus1()'.AND.CUSCOD<='Cus2()'
+Query=.AND.CUSTYP>='CusTyp1()'.AND.CUSTYP<='CusTyp2()'
+Query=.AND.AREACOD>='Area1()'.AND. AREACOD<='Area2()'
+Query=.AND.SLMCOD>='Slm1()'.AND.SLMCOD<='Slm2()'
+*Sort=CUSTYP+CUSCOD
+
+[master file]
+File=ARMAS
+Alias=A
+Tag=ARMAS5
+System=DATA_PATH
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,"pict",         "data",             "exp"
+~FROMAREA:      0,  "",             "Area1()",          ""
+~TOAREA:        0,  "",             "Area2()",          ""
+~FROMCUSTYP:    0,  "",             "CusTyp1()",        ""
+~TOCUSTYP:      0,  "",             "CusTyp2()",        ""
+~FROMCUS:       0,  "",             "Cus1()",           ""
+~TOCUS:         0,  "",             "Cus2()",           ""
+~FROMSLM:       0,  "",             "Slm1()",           ""
+~TOSLM:         0,  "",             "Slm2()",           ""
+
+~TABLE1:        0,  "",             "p_istab( A->CUSTYP,45,1,40)",  "",B
+
+~CUSCOD:        0,  "",             "A->CUSCOD",        "",A
+~CUSNAM:        0,  "",             "name",             "name = A->PRENAM - ' ' - A->CUSNAM",B
+~ADDR:          0,  "",             "addr",             "addr = A->ADDR01 - ' ' - A->ADDR02",
+~ADDR01:        0,  "",             "add1",              "add1='ที่อยู่ ' - ' ' - A->ADDR01",B
+~ADDR02:        0,  "",             "A->ADDR02",        "",B
+~ADDR03:        0,  "",             "ADDR03",        "ADDR03=A->ADDR03 - '  '- A->ZIPCOD",B
+~ZIPCOD:        0,  "",             "A->ZIPCOD",        "",
+~TELNUM:        0,  "",             "tel",           "tel='โทร ' - '  '- A->TELNUM",B
+~CONTACT:       0,  "",             "A->CONTACT",       "",D
+~PAYCOND:       0,  "",             "A->PAYCOND",       "",D
+~SLMCOD:        0,  "",             "A->SLMCOD",        "",C
+~AREA:          0,  "",             "A->AREACOD",       "",D
+~TRM:           0,  "",             "SS",               "SS=STR(A->PAYTRM,3,0) - ' วัน' ",D
+~PRI:           0,  "",             "A->TABPR",         "",E
+~DISC:          0,  "",             "A->DISC",          "",F
+~CRLINE:        0,  "99,999,999.99","A->CRLINE",        "",F
+~ACCNUM:        0,  "",             "A->ACCNUM",        "",D
+~DLVBY:         0,  "",             "A->DLVBY",         "",F
+~REMARK_NB:     0,  "",             "has_remark",       "has_remark=IIF(A->REMARK='          ',':',' ')",B
+~REMARK:        0,  "",             "A->REMARK",        "",C
+
+~HREM1:         0,  "",             "x1",               "x1=@p_hrem( A->CUSCOD,1 )"
+~HREM2:         0,  "",             "x2",               "x2=@p_hrem( A->CUSCOD,2 )"
+~HREM3:         0,  "",             "x3",               "x3=@p_hrem( A->CUSCOD,3 )"
+~HREM4:         0,  "",             "x4",               "x4=@p_hrem( A->CUSCOD,4 )"
+~HREM5:         0,  "",             "x5",               "x5=@p_hrem( A->CUSCOD,5 )"
+
+
+*~A:        0,  "",             "A",        "A='ที่อยู่  '",B
+*~AA:        0,  "",            "AA",       "AA='โทร     '",B
+~B:        0,  "",             "B",        "B='ผู้ติดต่อ  '",C
+~C:        0,  "",             "C",        "C='เลขที่บ/ช  '",C
+~D:        0,  "",             "D",        "D='เครดิต  '",C
+~E:        0,  "",             "E",        "E='เงื่อนไข '",C
+~F:        0,  "",             "F",        "F='ขนส่งโดย '",E
+~G:        0,  "",             "G",        "G='วงเงิน   '",E
+~TB:       0,  "",             "TB",        "TB='ประเภท '",A
+
+

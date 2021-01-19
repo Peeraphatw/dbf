@@ -1,0 +1,116 @@
+* STTRNR6.RWT
+*   - Stock Transaction Report
+*   - Internal Issue Report
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานจ่ายสินค้าภายใน$E
+He:วันที่จาก  ~FROMDATE       ถึง ~TODATE                   `วันที่ : \DATE
+H1:เลขที่จาก  ~FROMDOC        ถึง ~TODOC          เลือกแผนก  ~DEPT
+He:\LINE
+He:เอกสาร","วันที่เอกสาร","แผนก","หมายเหตุ","ลำดับ","รหัสสินค้า","รายละเอียด","คลังที่","จำนวน","หน่วยนับ","ราคาต่อหน่วย","มูลค่ารวม
+He:\LINE
+*   xx    xxxxxxxxx1xxxxxxxxx2 xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxx xxxx  999,999.999 xxxxxxxx999,999.999 99,999,999.99
+Bo:$B~DOCNUM      ~DOCDAT    $B ~DEP  ~REMARK
+*Ih:                                     หมายเหตุเพิ่มเติม:     ;1 artrnrm->docnum+'@' sttrn->docnum+'@'
+*Ib:                                        ~REMARK_H       ;1
+Ih::~CLRSUM                         ;2  stcrd->docnum   sttrn->docnum
+Ib:     ~NN   ~STKCOD       ~STKDES                                             ~LC   ~TRNQTY     ~QUDES  ~UNITPR     ~TRNVAL     ;2
+If:                                                                                                         รวม       $B~TTRNVAL     $B ;2
+Su:                                                                                                                   --------------
+Su:                                                              เอกสาร ~CNT   ใบ                       รวมทั้งสิ้น  $B~GTRNVAL      $B
+Su:                                                                                                                   ==============
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=124
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STTRNR6.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=DTOS(DOCDAT)>='Date1()'.AND.DTOS(DOCDAT)<='Date2()'
+Query=.AND.DOCNUM>='Doc1()'.AND. DOCNUM<='Doc2()'
+
+[master file]
+File=STTRN
+Alias=A
+Tag=STTRN1
+System=DATA_PATH
+
+[item file]
+File=STCRD
+Alias=I
+Tag=STCRD3
+System=DATA_PATH
+
+File=ISTAB
+Alias=T
+Tag=ISTAB1
+System=DATA_PATH
+
+File=artrnrm
+Alias=Z
+Tag=artrnrm1
+System=DATA_PATH
+
+[relate file]
+File=STMAS
+Alias=M
+Tag=STMAS1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=STKCOD
+
+[data spec]
+*~dat:      len,"pict",             "data",             "exp"
+~INIT:      0,  "",                 "",                 "grandval=0;cnt=0"
+~FROMDOC:   0,  "",                 "Doc1()",           ""
+~TODOC:     0,  "",                 "Doc2()",           ""
+~FROMDATE:  0,  "dd/mm/ปปปป",       "@date1()",         ""
+~TODATE:    0,  "dd/mm/ปปปป",       "@date2()",         ""
+~DOCNUM:    0,  "",                 "STTRN->DOCNUM",    "cnt=cnt+1"
+~DOCDAT:    0,  "dd/mm/ปปปป",       "STTRN->DOCDAT",    "",B
+~REMARK:    0,  "",                 "STTRN->REMARK",    "",D
+~CLRSUM:    0,  "",                 "",                 "sumval=0"
+~NN:        0,  "",                 "STCRD->SEQNUM",    "",E
+~STOCK:     0,  "",             "stock",            "stock=STCRD->STKCOD-'  '-STMAS->STKDES"
+*~STOCK:    0,  "",             "stock",            "stock=STCRD->STKCOD-'  '-STCRD->STKDES"
+~STKCOD:    0,  "",             "STCRD->STKCOD",    "",F
+~STKDES:    0,  "",             "STMAS->STKDES",    "",G
+~LC:        0,  "",                 "STCRD->LOCCOD",    "",H
+~QUDES:     0,  "",                 "p_istab( STCRD->TQUCOD,20,1,8)",   "",J
+~CNT:       0,  "99,999",           "cnt",              ""
+
+~TTRNVAL:   0,  "99,999,999.99",    "sumval",           "grandval=grandval+sumval",L
+~GTRNVAL:   0,  "999,999,999.99",   "grandval",         "",L
+~TRNQTY:    0,  "qty(11)",          "STCRD->TRNQTY",    "",I
+~UNITPR:    0,  "pri(11)",          "STCRD->UNITPR",    "",K
+~TRNVAL:    0,  "99,999,999.99",    "STCRD->TRNVAL",    "sumval=sumval+IIF(STMAS->STKTYP='1',0,STCRD->TRNVAL)",L
+~XTRNQTY:   0,  "qty(11)",          "STCRD->XTRNQTY",   ""
+~XUNITPR:   0,  "pri(11)",          "STCRD->XUNITPR",   ""
+
+~AREA:      0,  "",                 "STLOC->AREA",      ""
+~REMARK_H:  0,  "",                 "ARTRNRM->REMARK",  ""
+
+~DEPT:      0,  "",                 "Dep1()",           "",C
+~DEP:       0,  "",                 "STTRN->DEPCOD",    "",C
+~P_ISDEP:   0,  "",                 "p_isdep( STTRN->DEPCOD )",     "",C
+
+
+
+
+
+
+
+
+
+
+

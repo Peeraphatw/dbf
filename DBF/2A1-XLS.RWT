@@ -1,0 +1,129 @@
+* APBALSUM.RWT - A/P Balance Summary Report by Supplier
+*
+[report frame]
+Ti::~INIT ~INIT2 ~CLR_T
+He:\NAME                                                                     `หน้า   : \PAGE      
+He:$Eเจ้าหนี้คงค้างแบบสรุป$E  
+He:ณ วันที่  ~ASDATE                                                          `วันที่ : \DATE        
+H1:รหัสผู้จำหน่าย        ~FROMSUP       ถึง  ~TOSUP
+H1:ประเภทผู้จำหน่ายจาก   ~FROMSUPTYP    ถึง  ~TOSUPTYP   เลือกแผนก  ~DEP       
+He:: \LINE
+He:   ผู้จำหน่าย/รหัส                              เอกสาร       ยอดคงค้าง   
+**:   xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5xxxxxxxxx6xxxxx  999,999,999.99
+He::\LINE
+Gh:","$Bประเภทผู้จำหน่าย :"," ~TABLE1                                       ","  $B~KEPT_TAB1 "," ~CLR_S ; 1 APMAS->SUPTYP
+Gh::"," ~SUPPLIER","  ~SUPCOD               ;2 SUPCOD
+Bo:: ~DOCNUM   ~REMAMT       ~CHK
+Gf:  ~TSUPCOD     ~TSUPPLIER                                          ~C_DOC     ~B1                          ~T_REM               ~RCPERR  ~CLR_T ;2  
+Gf::                                                                   --------------                             ;1
+Gf:     ~TABLE1NAM                               ~C_SUP     ~B2       ~S_DOC     ~B3   $B~S_REM        $B  ~CLR_S ;1
+Gf::                                                                   ==============                             ;1
+Su:     ~B4                                      ~G_SUP     ~B2        ~G_DOC    ~B3   $B~G_REM        $B 
+Su::                                                                   ==============   
+Su:~W "," $_หมายเหตุ$_ ยอดคงค้างที่มีเครื่องหมาย $B***$B อยู่ด้านท้ายหมายถึงว่า
+Su:~W ","       มีใบเสร็จบางใบยอดเงินไม่เรียบร้อย  ตรวจสอบโดย ไปพิมพ์รายงานเจ้าหนี้คงค้างแบบละเอียด
+Su:~W ","       และกำหนดค่า Y เพื่อให้พิมพ์การตัดยอดบางส่วนออกมาด้วย จะพบใบเสร็จที่ผิดพลาด
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=85
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APBALSUM.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\001
+15_Inch=\027\033\001
+Query= SUPCOD>='Sup1()' .AND. SUPCOD<='Sup2()'
+Query= .AND. APMAS->SUPTYP>='SupTyp1()'.AND. APMAS->SUPTYP<='SupTyp2()'
+Query= .AND. DTOS(DOCDAT) <= 'AsDate()'
+Query= .AND. (DTOS(CMPLDAT) > 'AsDate()' .OR. DTOS(CMPLDAT) ='        ')
+Sort=APMAS->SUPTYP+SUPCOD+RECTYP+DTOS(DOCDAT)+DOCNUM
+
+[master file]
+File=APTRN
+Alias=A
+Tag=APTRN8
+System=DATA_PATH
+Filter=RECTYP='3'.OR.(RECTYP='4'.AND.DNTYP='2').OR.(RECTYP='5'.AND.DNTYP='2')
+
+[item file]
+File=APRCPIT
+Alias=F
+Tag=APRCPIT2
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=B
+Tag=APMAS1
+System=DATA_PATH
+Master file=APTRN
+Master-Related Field=SUPCOD
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "p_det=@n_prn_apbal_detail(); prn_detail=IIF(p_det=0,':',' '); prn_remark=':'"
+~INIT2:     0,  "",                 "",             "g_rem=0; g_doc=0; g_sup=0"
+~CLR_T:     0,  "",                 "",             "t_rem=0; c_doc=0; has_rcperr='   '"
+~CLR_S:     0,  "",                 "",             "s_rem=0; s_doc=0; c_sup=0"
+~ASDATE:    0,  "d ดดด yyyy",       "@date_as()",   "as_date=@AsDate()"
+~FROMSUP:   0,  "",                 "Sup1()",       ""
+~TOSUP:     0,  "",                 "Sup2()",       ""
+~FROMSUPTYP: 0, "",                 "SupTyp1()",    ""
+~TOSUPTYP:  0,  "",                 "SupTyp2()",    ""
+~DEP:       0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+
+~TABLE1:    0,  "",                 "p_istab( APMAS->SUPTYP,46,1,40)",      ""
+~KEPT_TAB1: 0,  "",                 "",             "tab1 ='รวมตามประเภท'-''- ISTAB->TYPDES"
+~TABLE1NAM: 0,  "",                 "tab1",         "",B
+
+~SUPPLIER:  0,  "",                 "",             "sup_nam = APMAS->SUPNAM"
+~SUPCOD:    0,  "",                 "",             "sup_cod = A->SUPCOD"
+
+~TSUPCOD:   0,  "",                 "sup_cod",       "",B
+~TSUPPLIER: 50,  "",                 "sup_nam",      "c_sup=c_sup+1",C
+
+
+~DUEDAT:    0,  "",                 "A->DUEDAT",    ""
+~DOCNUM:    0,  "",                 "A->DOCNUM",    "c_doc=c_doc+1"
+~DOCDAT:    0,  "",                 "A->DOCDAT",    ""
+~BILNUM:    0,  "",                 "A->BILNUM",    ""
+~NETAMT:    0,  "999,999,999.99",   "A->NETAMT",    ""
+~PAYAMT:    0,  "999,999,999.99",   "A->PAYAMT",    ""
+~REMAMT:    0,  "999,999,999.99",   "remain",       "remain=IIF(A->RECTYP='5',0-A->REMAMT,A->REMAMT); t_rem=t_rem+remain"
+~CHK:       0,  "",                 "",             "rcperr=@n_rcperr(); has_rcperr=IIF(rcperr=1,'***',has_rcperr)"
+~RCPERR:    0,  "",                 "has_rcperr",   "prn_remark=IIF(has_rcperr='***', ' ',prn_remark)",H
+~W:         0,  "",                 "prn_remark",   ""
+
+~D:         0,  "",                 "prn_detail",       ""
+~PRN:       0,  "",                 "prn",              "deduct=IIF( DTOS(APTRNX->DOCDAT) <= as_date, APRCPIT->PAYAMT, 0); prn=IIF(deduct=0,':',' ')"
+~IT_RCPNUM: 0,  "",                 "APRCPIT->RCPNUM",  ""
+~IT_DOCNUM: 0,  "",                 "APRCPIT->DOCNUM",  ""
+~IT_PAYDAT: 0,  "",                 "APTRNX->DOCDAT",   ""
+~IT_PAYAMT: 0,  "999,999,999.99",   "APRCPIT->PAYAMT",  ""
+
+~T_REM:     0,  "999,999,999.99",   "t_rem",        "s_rem = s_rem + t_rem",G
+~S_REM:     0,  "999,999,999.99",   "s_rem",        "g_rem = g_rem + s_rem",G
+~G_REM:     0,  "999,999,999.99",   "g_rem",        "",G
+
+~C_DOC:     0,  "99,999",           "c_doc",        "s_doc=s_doc+c_doc",E
+~S_DOC:     0,  "99,999",           "s_doc",        "g_doc=g_doc+s_doc",E
+~G_DOC:     0,  "99,999",           "g_doc",        "",E
+~C_SLM:     0,  "99,999",           "c_slm",        ""
+~C_SUP:     0,  "99,999",           "c_sup",        "g_sup=g_sup+c_sup",C
+~G_SUP:     0,  "99,999",           "g_sup",        "",C
+
+~B1:        0,   "",                "B1",           "B1='ใบ'",F
+~B2:        0,   "",                "B2",           "B2='ราย'",D
+~B3:        0,   "",                "B3",           "B3='ใบ'",F
+~B4:        0,   "",                "B4",           "B4='รวมทั้งสิ้น ผู้จำหน่าย'",B
+
+
+

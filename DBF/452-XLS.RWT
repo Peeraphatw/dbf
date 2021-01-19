@@ -1,0 +1,94 @@
+* STPRI1.RWT - Stock Selling Price Report (Price #1)
+*
+[report frame]
+Ti::~INIT_VAR
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานราคาขายสินค้า แยกตามหมวดสินค้า$E
+He:รหัสสินค้าจาก   ~FROMSTK             ถึง  ~TOSTK         `วันที่ : \DATE
+H1:หมวดสินค้าจาก   ~FROMGRP             ถึง  ~TOGRP
+He:\LINE
+*He: รหัส/ชื่อสินค้า                                       หน่วยย่อย            หน่วยขาย  อัตราส่วน %ส่วนลด?  ราคาขาย      วันเริ่ม  วันสิ้นสุด
+He:รหัส","หน่วยย่อย","หน่วยขาย","อัตราส่วน","ราคาขาย
+He:   ชื่อสินค้า","","","","","จำนวน(ตารางราคาเสริม)","หน่วยนับ","อัตราส่วน","%ส่วนลด?","ราคาขายเสริม","","","","","วันเริ่ม","วันสิ้นสุด
+He:\LINE
+*  xxxxxxxxx1xxxxxxxxx2                                    ชิ้น                 กล่อง   1,000.00          99,999,999.99
+*      xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5                       อน          1.00    Y     99,999,999.99  dd/mm/ปปปป  dd/mm/ปปปป
+Gh:$Bหมวดสินค้า : ~STKGRP                                                             $B ;1 STMAS->STKGRP
+Bo:~Z~STKCOD                                               ~QUCOD               ~SQU    ~SFACTOR          ~SELLPR1      
+Bo:~Z1 ~STKDES                                                      {1}
+Ih::                    ;1 stpri->stkcod stmas->stkcod
+Ib:{1}                                                               ~QTY       ~QU     ~FACTOR     ~PERC ~PR1           ~START    ~END     ;1
+If:                     ;1
+Gf:                     ;1
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=137
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STPRI1.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=STKCOD>='Stk1()'.AND. STKCOD<='Stk2()'
+Query=.AND.STMAS->STKGRP>='StkGrp1()'.AND. STMAS->STKGRP<='StkGrp2()'
+*Query=.AND.STMAS->STKTYP='0'
+
+[master file]
+File=STMAS
+Alias=A
+Tag=STMAS2
+System=DATA_PATH
+
+[item file]
+File=stpri
+Alias=B
+Tag=stpri2
+System=DATA_PATH
+
+[data spec]
+*~dat:      len,"pict",             "data",         "exp"
+~INIT_VAR:  0,  "",                 "",             "PRTZERO=@n_prt0()"
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMGRP:   0,  "",                 "StkGrp1()",    ""
+~TOGRP:     0,  "",                 "StkGrp2()",    ""
+
+~STKGRP:    0,  "",                 "stk_grp",      "stk_grp = @p_istab(STMAS->STKGRP,22,1,40)"
+~TSTKGRP:  40,  "",                 "stk_grp",      "c_grp=c_grp+1"
+~STKCOD:    0,  "",                 "A->STKCOD",    ""
+~STKDES:    0,  "",                 "A->STKDES",    ""
+~QUCOD:     0,  "",                 "p_istab( A->QUCOD,20,1,8)",    "",B
+~SQU:       0,  "",                 "p_istab( A->SQUCOD,20,1,8)",   "",C
+~SFACTOR:   0,  "fac(8)",           "A->SFACTOR",       "",D
+~SELLPR1:   0,  "priZ(13)",         "A->SELLPR1",       "",E
+~SELLPR2:   0,  "priZ(13)",         "A->SELLPR2",       "",F
+~SELLPR3:   0,  "priZ(13)",         "A->SELLPR3",       "",G
+~SELLPR4:   0,  "priZ(13)",         "A->SELLPR4",       "",H
+~SELLPR5:   0,  "priZ(13)",         "A->SELLPR5",       "",I
+
+~Z:         0,  "",                 "Z",                "Z=iif( PRTZERO=0 .and. A->SELLPR1=0 .and. A->SELLPR2=0 .and. A->SELLPR3=0 .and. A->SELLPR4=0 .and. A->SELLPR5=0, '}', ' ' )"
+~Z1:        0,  "",                 "Z",                ""
+
+~QTY:       0,  "qty(8)",           "STPRI->QTY",       "",F
+~QU:        0,  "",                 "p_istab( STPRI->QU,20,1,8)",   "",G
+~FACTOR:    0,  "fac(8)",           "STPRI->FACTOR",    "",H
+~PERC:      0,  "",                 "STPRI->PERCENT",   "",I
+~PR1:       0,  "priZ(13)",         "STPRI->SELLPR1",   "",J
+~PR2:       0,  "priZ(13)",         "STPRI->SELLPR2",   "",J
+~PR3:       0,  "priZ(13)",         "STPRI->SELLPR3",   "",J
+~PR4:       0,  "priZ(13)",         "STPRI->SELLPR4",   "",J
+~PR5:       0,  "priZ(13)",         "STPRI->SELLPR5",   "",J
+~START:     0,  "dd/mm/ปปปป",       "STPRI->START",     "",O
+~END:       0,  "dd/mm/ปปปป",       "STPRI->END",       "",P
+
+
+
+
+

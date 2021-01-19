@@ -1,0 +1,146 @@
+* BKPCQSUP.RWT - Status of Posted Date Cheque by Supplier
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานเช็คจ่าย แยกตามเจ้าหนี้,สถานะเช็ค$E
+He:รหัสเจ้าหนี้จาก  ~FROMSUP      ถึง  ~TOSUP               `วันที่ : \DATE
+H1:วันที่เช็คจาก    ~FROMDATE     ถึง  ~TODATE
+H1:สถานะเช็คจาก     ~FROMCHQSTAT  ถึง  ~TOCHQSTAT          เลือกแผนก  ~DEP
+He::\LINE
+He:","วันที่เช็ค","จ่ายจากบัญชี","เลขที่เช็ค","จำนวนเงิน"," ยอดเหลือในเช็ค","วันที่ผ่าน","หมายเหตุ","ใบสำคัญ#","ใบจ่าย#","จำนวนเงิน
+He:","~D","","","","","","รายละเอียด (หมายเหตุของใบจ่ายเงิน)
+He::\LINE
+**:      DD/MM/YY   xxxxxxxxxx xxxxxxxxxx 999,999,999.99 999,999,999.99  DD/MM/YY  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5 xxxxxxxxxx   xxxxxxxxxx 99,999,999.99
+Gh:$B~SUPPLIER                                                                  $B  ; 1 CUSCOD
+Gh:","   สถานะ~CHQSTATUS                           ~KEEP_STAT      ; 2 CHQSTAT
+Bo:      ~CHQDAT    ~BNKACC    ~CHQNUM    ~AMOUNT        ~REMAMT         ~PASSDAT      ~REMARK                                            ~VOUCHER     {1}
+Ih::                  ;1 APRCPCQ->CHQNUM A->CHQNUM
+Ib:{1}                                                                                                                                             ~RCPNUM    ~PAYAMT ;1
+Ih::                                                                                            ;2 artrnrm->docnum+'@' aprcpcq->rcpnum+'@'
+Ib:                                                                                   ~REMARK_R ;2
+Gf::","","","","-----------------------------","-----------------------------; 2
+Gf:","  รวม ~CHQ_STAT ","","","          $B~SUMAMT        ","            ~SUMREM          ","        $B   จำนวน~CNT    ใบ  ~CLR_SUM ;2
+Gf::                                      -------------- --------------; 1
+Gf::    รวมของผู้จำหน่ายรายนี้            $B~SUBAMT        ~SUBREM        $B  ~CLR_SUB ;1
+Gf::","","","","=============="," ==============; 1
+Su::","","","","-----------------------------","-----------------------------
+Su:","  รวมทั้งสิ้น ","","","             $B~TOTAMT    ","        ~TOTREM        $B
+Su::","","","","==============","==============
+Su::
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Left=0
+Right=170
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=BKPCQSUP.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+*8_Inch=\027\033\005
+15_Inch=\027\033\000\027\103
+Query=CUSCOD>='Sup1()'.AND.CUSCOD<='Sup2()'
+Query=.AND.CHQSTAT>='ChqStat1()'.AND.CHQSTAT<='ChqStat2()'
+Query=.AND.DTOS(CHQDAT)>='Date1()'.AND.DTOS(CHQDAT)<='Date2()'
+Query=.AND.BKTRNTYP='QP'
+*Sort=CUSCOD+CHQSTAT+DTOS(CHQDAT)+CHQNUM
+
+[master file]
+File=BKTRN
+Alias=A
+Tag=BKTRN8
+System=DATA_PATH
+
+[item file]
+File=APRCPCQ
+Alias=D
+Tag=APRCPCQ2
+System=DATA_PATH
+
+File=ARTRNRM
+Alias=X
+Tag=ARTRNRM1
+System=DATA_PATH
+
+[relate file]
+File=BKMAS
+Alias=B
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+File=APMAS
+Alias=C
+Tag=APMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=CUSCOD
+
+File=APTRN
+Alias=Z
+Tag=APTRN1
+System=DATA_PATH
+Master file=APRCPCQ
+Master-Related Field=RCPNUM
+
+*File=ISRUN
+*Alias=Y
+*Tag=ISRUN2
+*System=DATA_PATH
+*Master file=BKTRN
+*Master-Related Field=VOUCHER
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",                 "exp"
+~INIT:          0,      "",                 "",                     "p_det=@n_prn_detail();prn_detail=IIF(p_det=0,':',' '); sumamt=0;sumrem=0; subamt=0;subrem=0; totamt=0;totrem=0;cnt=0"
+~CLR_SUM:       0,      "",                 "",                     "subamt=subamt+sumamt;sumamt=0;  subrem=subrem+sumrem;sumrem=0; cnt=0"
+~CLR_SUB:       0,      "",                 "",                     "totamt=totamt+subamt;subamt=0;  totrem=totrem+subrem;subrem=0; cnt=0"
+~FROMSUP:       0,      "",                 "Sup1()",               ""
+~TOSUP:         0,      "",                 "Sup2()",               ""
+~FROMDATE:      0,      "d ดดด yyyy",       "@date1()",             ""
+~TODATE:        0,      "d ดดด yyyy",       "@date2()",             ""
+~FROMCHQSTAT:   0,      "",                 "ChqStat1()",           ""
+~TOCHQSTAT:     0,      "",                 "ChqStat2()",           ""
+~DEP:           0,      "",                 "Dep1()",               ""
+~SUPPLIER:      0,      "",                 "cus_nam",              "cus_nam = C->SUPNAM - ' /' - A->CUSCOD",B
+~CHQSTATUS:     0,      "",                 "p_istab( A->CHQSTAT, 02, 1, 17 )",         ""
+~KEEP_STAT:     0,      "",                 " ",                    "chq_stat = ISTAB->TYPDES",F
+~CHQ_STAT:      0,      "",                 "chq_stat",             ""
+~CHQDAT:        0,      "dd/mm/yyyy",                 "A->CHQDAT",            "",B
+~BANK:          0,      "",                 "p_istab( A->BNKCOD, 01, 0, 6 )",   ""
+~CHQNUM:        0,      "",                 "A->CHQNUM",            "cnt=cnt+1",D
+~AMOUNT:        0,      "999,999,999.99",   "A->AMOUNT",            "sumamt=sumamt+A->AMOUNT",E
+~REMAMT:        0,      "999,999,999.99",   "A->REMAMT",            "rem=IIF(A->REMAMT=-1,0,A->REMAMT); sumrem=sumrem+rem",F
+*~VOUCHER:      0,      "",                 "vv",                   "vv=IIF(ISRUN->DOCTYP='GL', A->VOUCHER, '            ' )"
+~VOUCHER:       0,      "",                 "vv",                   "vv=IIF(A->CHQNUM=A->VOUCHER, '            ', A->VOUCHER )",I
+~BNKACC:        0,      "",                 "BKMAS->SHORTNAM",      "",C
+~PASSDAT:       0,      "dd/mm/yyyy",                 "pass_dat",             "pass_dat=IIF(A->CHQSTAT='1',A->TRNDAT,STOD('        '))",G
+~REMARK:       50,      "",                 "A->REMARK",            "",H
+
+~RCPNUM:        0,      "",                 "APRCPCQ->RCPNUM",      "",J
+~PAYAMT:        0,      "99,999,999.99",    "APRCPCQ->PAYAMT",      "",K
+~REFNUM:        0,      "",                 "APTRN->REFNUM",        ""
+~YOUREF:        0,      "",                 "APTRN->YOUREF",        ""
+
+~SUMAMT:        0,      "999,999,999.99",   "sumamt",               "",
+~SUMREM:        0,      "999,999,999.99",   "sumrem",               "",
+~SUBAMT:        0,      "999,999,999.99",   "subamt",               "",
+~SUBREM:        0,      "999,999,999.99",   "subrem",               "",
+~TOTAMT:        0,      "999,999,999.99",   "totamt",               "",
+~TOTREM:        0,      "999,999,999.99",   "totrem",               "",
+
+~D:             0,      "",                 "prn_detail",           ""
+~REMARK_R:      0,      "",                 "ARTRNRM->REMARK",      "",H
+~CNT:           0,      "999,999",          "cnt",                  ""
+
+
+
+
+
+

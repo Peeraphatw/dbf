@@ -1,0 +1,120 @@
+* FADPRCOD.RWT - F/A Listing Report By FASCOD
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    ","","","","","","","หน้า : \PAGE
+He:รายละเอียดค่าสึกหรอและค่าเสื่อมราคาที่หักได้ตามพระราชกฤษฎีกาฯ 
+He:รอบระยะเวลาบัญชีตั้งแต่  ~FROMDATE     ถึง  ~TODATE          ","","","","","","","วันที่ : \WDATE
+*He:---------------------------------------------------------------------------------------------------------------------------------------------------
+He:","รายการทรัพย์สิน","วันที่ซื้อ","ราคาทรัพย์สิน","ยอดยกมา","ร้อยละ","ค่าสึกหรอ","ยอดยกไป","วันที่ขาย
+*He:---------------------------------------------------------------------------------------------------------------------------------------------------
+*    999 xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5  dd/mm/yy  999,999,999.99 999,999,999.99 100.00 999,999,999.99 999,999,999.99   dd/mm/yyyy
+Bo::~Z1 ~Z2
+Bo:~K~N  ~ASSET                                              ~PURDAT   ~COSVAL        ~BALBF         ~RATE  ~DPR           ~BALFWD          ~SALDAT
+Bo:~L  ~SUMSALE
+Ih::                            ;1 artrnrm->docnum+substr(artrnrm->seqnum,1,3)  famas->fascod
+Ib:             ~REMARK         ;1
+*Su:","",""," --------------"," --------------",""," --------------"," --------------
+Su:                            รวมทั้งสิ้น                             ~SCOS          ~SBAL                 ~SDPR          ~SFWD
+Su:                            ทรัพย์สินที่ขายระหว่างงวดบัญชี          ~XCOS          ~XBAL                 ~XDPR          ~XFWD
+*Su:","",""," --------------"," --------------",""," --------------"," --------------
+Su:                            รวมทรัพย์สินที่ยังเหลืออยู่             ~BCOS          ~BBAL                 ~BDPR          ~BFWD  
+*Su:","",""," =============="," ==============",""," =============="," ==============
+Fo:
+Fo:
+Fo:                                    ^ขอรับรองว่าเป็นรายการที่ถูกต้อง^
+Fo:
+Fo:
+Fo:                            ^ลายมือชื่อ__________________________กรรมการ^
+[end frame]
+
+[print options]
+Top=0
+Right=135
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=FAFASCOD.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=FASCOD>='Fas1()'.AND. FASCOD<='Fas2()'
+Query=.AND.FASGRP>='FasGrp1()'.AND. FASGRP<='FasGrp2()'
+
+[master file]
+File=FAMAS
+Alias=A
+Tag=FAMAS1
+System=DATA_PATH
+
+[item file]
+File=artrnrm
+Alias=C
+Tag=artrnrm1
+System=DATA_PATH
+
+[data spec]
+*           len (0)default,(>0)cut,(<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "prn=@p_all();scos=0;sbal=0;sdpr=0;sfwd=0;xcos=0;xbal=0;xdpr=0;xfwd=0;cnt=0"
+~FROMDATE:  0,  "d ดดด ปปปป",       "@date1()",     ""
+~TODATE:    0,  "d ดดด ปปปป",       "@date2()",     ""
+~Z1:        0,  "",                 "",             "bf=@nBalBF();dpr=@nYTD_depr();balfwd=@n_balfwd()"
+~Z2:        0,  "",                 "",             "d2=@date2();sdat=IIF(DTOS(A->SALDAT)#' '.AND.A->SALDAT <= d2,A->SALDAT,STOD('  '))"
+~K:         0,  "",                 "SK",           "SK=IIF(prn='N'.and.bf=0.and.dpr=0,'}',' ')"
+~L:         0,  "",                 "SK",           "SK=IIF(SK='}'.OR.DTOS(sdat)=' ','}',':')"
+~SUMSALE:   0,  "",                 "",             "xcos=xcos+A->COSVAL;xbal=xbal+bf;xdpr=xdpr+dpr;xfwd=xfwd+balfwd",B
+
+~N:         0,  "999",              "cnt",          "cnt=cnt+1"
+~ASSET:     50, "",                 "asset",        "asset=A->FASCOD - ' - ' - A->FASDES",B
+~COSVAL:    0,  "999,999,999.99",   "A->COSVAL",    "scos=scos+A->COSVAL",D
+~BALBF:     0,  "999,999,999.99",   "bf",           "sbal=sbal+bf",E
+~DPR:       0,  "999,999,999.99",   "dpr",          "sdpr=sdpr+dpr",G
+~BALFWD:    0,  "999,999,999.99",   "balfwd",       "sfwd=sfwd+balfwd",H
+~SALDAT:    0,  "dd/mm/ปปปป",       "sdat",         "",I
+~SCOS:      0,  "999,999,999.99",   "scos",         "",D
+~SBAL:      0,  "999,999,999.99",   "sbal",         "",E
+~SDPR:      0,  "999,999,999.99",   "SDPR",         "",G
+~SFWD:      0,  "999,999,999.99",   "sfwd",         "",H
+~XCOS:      0,  "999,999,999.99",   "xcos",         "",D
+~XBAL:      0,  "999,999,999.99",   "xbal",         "",E
+~XDPR:      0,  "999,999,999.99",   "xdpr",         "",G
+~XFWD:      0,  "999,999,999.99",   "xfwd",         "",H
+~BCOS:      0,  "999,999,999.99",   "bcos",         "bcos=scos-xcos",D
+~BBAL:      0,  "999,999,999.99",   "bbal",         "bbal=sbal-xbal",E
+~BDPR:      0,  "999,999,999.99",   "bdpr",         "bdpr=sdpr-xdpr",G
+~BFWD:      0,  "999,999,999.99",   "bfwd",         "bfwd=sfwd-xfwd",H
+
+*………… FAMAS
+~FASCOD:    0,  "",                 "A->FASCOD",    ""
+~FASDES:   30,  "",                 "A->FASDES",    ""
+~FASTYP:    0,  "",                 "A->FASTYP",    ""
+~FASGRP:    0,  "",                 "A->FASGRP",    ""
+~FASGRP_T:  0,  "",                 "p_istab(A->FASGRP,22,1)",      ""
+~DEPCOD:    0,  "",                 "A->DEPCOD",    ""
+~ACCNUM:    0,  "",                 "S->ACCNUM01",  ""
+~ACCNUMDP:  0,  "",                 "S->ACCNUM02",  ""
+~ACCNUMAC:  0,  "",                 "S->ACCNUM03",  ""
+~PURDAT:    0,  "DD/MM/ปปปป",       "A->PURDAT",    "",C
+~LASTDAT:   0,  "",                 "A->LASTDAT",   ""
+~METHOD:    0,  "",                 "A->METHOD",    ""
+~METHOD_T:  0,  "",                 "mt_msg",       "mt_msg=IIF(A->METHOD='0','วิธีผลผลิต ',IIF(A->METHOD='1','วิธีเส้นตรง','วิธีลดยอด  '))"
+~RATE:      0,  "999.99",           "A->RATE",      "",F
+~LIFE:      0,  "99",               "A->LIFE",      ""
+
+~REMARK:    0,  "",                 "ARTRNRM->REMARK",  ""
+~HREM1:     0,  "",                 "p_hrem( FAMAS->FASCOD,1 )",  ""
+~HREM2:     0,  "",                 "p_hrem( FAMAS->FASCOD,2 )",  ""
+~HREM3:     0,  "",                 "p_hrem( FAMAS->FASCOD,3 )",  ""
+~HREM4:     0,  "",                 "p_hrem( FAMAS->FASCOD,4 )",  ""
+~HREM5:     0,  "",                 "p_hrem( FAMAS->FASCOD,5 )",  ""
+~HREM6:     0,  "",                 "p_hrem( FAMAS->FASCOD,6 )",  ""
+~HREM7:     0,  "",                 "p_hrem( FAMAS->FASCOD,7 )",  ""
+~HREM8:     0,  "",                 "p_hrem( FAMAS->FASCOD,8 )",  ""
+~HREM9:     0,  "",                 "p_hrem( FAMAS->FASCOD,9 )",  ""
+~HREM10:    0,  "",                 "p_hrem( FAMAS->FASCOD,10 )",  ""
+
+
+

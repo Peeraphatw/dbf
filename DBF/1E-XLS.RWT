@@ -1,0 +1,123 @@
+* ARMASOVR.RWT - A/R Over Credit Limit Report by Customer
+*
+[report frame]
+Ti::~INIT ~C_SUB1 ~C_TOT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานลูกหนี้เกินวงเงิน$E
+He:ประเภทลูกค้าจาก  ~FROMCUSTYP     ถึง  ~TOCUSTYP          `วันที่ : \DATE
+H1:ลูกค้าจาก        ~FROMCUS        ถึง  ~TOCUS
+H1:เขตการขายจาก     ~FROMAREA       ถึง  ~TOAREA
+H1:พนักงานขายจาก    ~FROMSLM        ถึง  ~TOSLM
+He:\LINE
+He:","ชื่อลูกค้า","","","","","","","ยอดหนี้","","เช็คในมือ","","ยอดวงเงิน","","เกินวงเงิน","","","ราคา","เครดิต
+He:","~O","เลขที่","วันที่","พนักงานขาย","V","ส่วนลด","มูลค่าสินค้า","","VAT.","","รวมทั้งสิ้น","","ครบกำหนด","","ใบสั่งขาย","เก็บเงิน
+He:\LINE
+**:  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5xxxxx9999,999,999.99 9999,999,999.99 9999,999,999.99 9999,999,999.99  9   999
+Gh:","$Bประเภทลูกค้า : ~TABLE1                                             $B~KEPT_TAB1 ; 1 CUSTYP
+Bo:  ~CUSTOMER                                              ~BALANCE        ~CHQRCV         ~CRLINE         ~OVRLINE         ~PRI~PAYTRM
+Ih::        ;1 artrn->cuscod armas->cuscod
+Ib:  ~F~DOCNUM    ~DOCDAT  ~SLMCOD    ~V~DISC     ~VALAMT       ~VATAMT      ~NETAMT         ~DUEDAT  ~SONUM      ~Y
+Gf:","","","","","","","","---------------","","---------------","","---------------",""," --------------- ;1
+Gf: รวม ~TABLE1NAM                                         ~SUB1BAL        ~SUB1CHQ        ~SUB1CR         ~SUB1OVR        ~C_SUB1 ;1
+Gf:","","","","","","","","---------------","","---------------","","---------------",""," --------------- ;1
+Gf:\FEED    ;1
+Su:","","","","","","","","===============","","===============","","===============","","===============
+Su:รวมทั้งสิ้น                                              ~TOTBAL         ~TOTCHQ         ~TOTCR          ~TOTOVR
+Su:","","","","","","","","===============","","===============","","===============","","===============
+Su:
+Su:~Oหมายเหตุ:  เอกสารที่มีเครื่องหมาย '>' นำหน้า คือ เอกสารที่รออนุมัติให้เกินวงเงิน
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=132
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARMASOVR.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=CUSCOD>='Cus1()'.AND. CUSCOD<='Cus2()'
+Query=.AND.CUSTYP>='CusTyp1()'.AND. CUSTYP<='CusTyp2()'
+Query=.AND.AREACOD>='Area1()'.AND. AREACOD<='Area2()'
+Query=.AND.SLMCOD>='Slm1()'.AND. SLMCOD<='Slm2()'
+
+[master file]
+File=ARMAS
+Alias=A
+Tag=ARMAS5
+System=DATA_PATH
+
+[item file]
+File=ARTRN
+Alias=B
+Tag=ARTRN8
+System=DATA_PATH
+Filter=RECTYP='3'.and.DOCSTAT='O'
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len "pict",             "data",             "exp"
+~INIT:      0,  "",                 "",                 "p_ovr=@n_prn_authovr(); authovr=IIF(p_ovr=0,':',' ')"
+~FROMAREA:  0,  "",                 "Area1()",          ""
+~TOAREA:    0,  "",                 "Area2()",          ""
+~FROMCUSTYP: 0, "",                 "CusTyp1()",        ""
+~TOCUSTYP:  0,  "",                 "CusTyp2()",        ""
+~FROMCUS:   0,  "",                 "Cus1()",           ""
+~TOCUS:     0,  "",                 "Cus2()",           ""
+~FROMSLM:   0,  "",                 "Slm1()",           ""
+~TOSLM:     0,  "",                 "Slm2()",           ""
+
+~TABLE1:    0,  "",                 "p_istab( A->CUSTYP,45,1,40)",      ""
+~KEPT_TAB1: 0,  "",                 "",                 "tab1 = ISTAB->TYPDES"
+~TABLE1NAM: 0,  "",                 "tab1",             "",
+
+~CUSTOMER:  0,  "",                 "cus_nam",          "cus_nam = A->CUSNAM - ' /' - A->CUSCOD",B
+~BALANCE:   0,  "9999,999,999.99",  "A->BALANCE",       "sub1bal=sub1bal+A->BALANCE",I
+~CHQRCV:    0,  "9999,999,999.99",  "A->CHQRCV",        "sub1chq=sub1chq+A->CHQRCV",K
+~CRLINE:    0,  "9999,999,999.99",  "A->CRLINE",        "sub1cr=sub1cr+A->CRLINE",M
+~OVRLINE:   0,  "9999,999,999.99",  "over",             "over=A->BALANCE + A->CHQRCV - A->CRLINE; sub1ovr=sub1ovr+over",O
+~PRI:       0,  "",                 "A->TABPR",         "",R
+~PAYTRM:    0,  "",                 "A->PAYTRM",        "",S
+
+~SUB1BAL:   0,  "9999,999,999.99",  "sub1bal",          "totbal=totbal+sub1bal",I
+~SUB1CHQ:   0,  "9999,999,999.99",  "sub1chq",          "totchq=totchq+sub1chq",K
+~SUB1CR:    0,  "9999,999,999.99",  "sub1cr",           "totcr =totcr +sub1cr",M
+~SUB1OVR:   0,  "9999,999,999.99",  "sub1ovr",          "totovr=totovr+sub1ovr",O
+~C_SUB1:    0,  "",                 "",                 "sub1bal=0; sub1chq=0; sub1cr=0; sub1ovr=0"
+~TOTBAL:    0,  "9999,999,999.99",  "totbal",           "",I
+~TOTCHQ:    0,  "9999,999,999.99",  "totchq",           "",K
+~TOTCR:     0,  "9999,999,999.99",  "totcr",            "",M
+~TOTOVR:    0,  "9999,999,999.99",  "totovr",           "",O
+~C_TOT:     0,  "",                 "",                 "totbal=0; totchq=0; totcr=0; totovr=0"
+
+~F:         0,  "",                 "cancel",           "cancel=IIF(ARTRN->DOCSTAT='C',' *',IIF(ARTRN->DOCSTAT='O',' >','  ' ))",B
+~DOCNUM:    0,  "",                 "ARTRN->DOCNUM",    "",C
+~DOCDAT:    0,  "วว/ดด/ปปปป",      "ARTRN->DOCDAT",    "",D
+~SLMCOD:    0,  "",                 "ARTRN->SLMCOD",    "",E
+~CUSCOD:    0,  "",                 "ARTRN->CUSCOD",    ""
+~CUSNAM:    0,  "",                 "ARMAS->CUSNAM",""
+~V:         0,  "",                 "ARTRN->FLGVAT",    "",F
+~AMOUNT:    0,  "99,999,999.99",    "ARTRN->AMOUNT",    ""
+~DISC:      0,  "",                 "ARTRN->DISC",      "",G 
+~AFTAMT:    0,  "999,999,999.99",   "ARTRN->AFTDISC",   ""
+~ADVAMT:    0,  "999,999,999.99",   "ARTRN->ADVAMT",    ""
+~VALAMT:    0,  "999,999,999.99",   "ARTRN->NETVAL",    "",H
+~VATAMT:    0,  "99,999,999.99",    "ARTRN->VATAMT",    "",J
+~NETAMT:    0,  "999,999,999.99",   "ARTRN->NETAMT",    "",L
+~DUEDAT:    0,  "วว/ดด/ปปปป",       "ARTRN->DUEDAT",    "",N
+~SONUM:     0,  "",                 "ARTRN->SONUM",     "",P
+~Y:         0,  "",                 "ARTRN->CMPLAPP",   "",Q
+~O:         0,  "",                 "authovr",          ""
+
+~HREM1:     0,  "",                 "x1",               "x1=@p_hrem( A->CUSCOD,1 )"
+~HREM2:     0,  "",                 "x2",               "x2=@p_hrem( A->CUSCOD,2 )"
+~HREM3:     0,  "",                 "x3",               "x3=@p_hrem( A->CUSCOD,3 )"
+~HREM4:     0,  "",                 "x4",               "x4=@p_hrem( A->CUSCOD,4 )"
+~HREM5:     0,  "",                 "x5",               "x5=@p_hrem( A->CUSCOD,5 )"
+
+

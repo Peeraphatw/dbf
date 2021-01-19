@@ -1,0 +1,149 @@
+* BKRCQPSA.RWT - Posted Date Cheque by Account No, Passing Date
+* ใช้อักษร 2 ตัวแรกของเลขที่เช็ค ไปเทียบกับค่าที่กำหนดใน 'วิธีการรับชำระหนี้'
+*   เพื่อดึงเลขที่บัญชีของเช็คมาใช้
+*
+[report frame]
+Ti::~INIT ~CLRSUB ~CLR_BQ
+He:\NAME                                                    `หน้า    : \PAGE
+He:$Eรายงานเช็ครับ เรียงตามวันที่ผ่านเช็ค $E         (ตรวจกับบัญชีแยกประเภทด้านเครดิต)
+He:วันที่ผ่านเช็คจาก       ~FROMDATE     ถึง   ~TODATE            `วันที่    : \DATE
+H1:ผ่านเข้าบัญชีจาก       ~FB           ถึง   ~TB          เลือกแผนก   ~DEP
+He:\LINE
+He:วันผ่าน","เลขที่เอกสาร","เลขที่เช็ค","เงินที่นำฝาก","จำนวนเงินทั้งสิ้น","วันนำฝาก","วันที่เช็ค","ธ.","สาขา","รับจาก","หมายเหตุ","ใบเสร็จ#
+He:~D ","","","","","","","","","","รายละเอียด  (หมายเหตุของใบเสร็จ)
+He:\LINE
+**:   DD/MM/YY  xxxxxxxxx1xx xxxxxxxxx1xx 999,999,999.99 999,999,999.99  DD/MM/YY   DD/MM/YY  xxxx xxxxxxxxx1xxxxx xxxxxxxxxx xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxx xxxxxxxxxx
+Gh:$Bเลขที่บัญชี :     ~ACCNUM                                                            $B ;1 ISRUN->ACCNUM01
+Gh::  ***รวมย่อยของใบนำฝาก    ~IS_SUB_BQ     ;2 REFDOC
+Bo:   ~PASSDAT  ~DOC_NUM     ~CHQ_NUM     ~IN_BQ         ~AMOUNT         ~PAYIN     ~CHQDAT   ~BNK ~BRANCH         ~CUSCOD    ~REMARK                                       {1}
+Ih::                    ;1 ARRCPCQ->CHQNUM A->CHQNUM
+Ib:{1}                                                                                                                                                                      ~REFNUM ;1
+Ih::                    ;2 artrnrm->docnum+'@' arrcpcq->rcpnum+'@'
+Ib:                                                                                                                           ~REMARK_R ;2
+Gf:~P_SUB_BQ                                     รวมย่อย*~SUB_BQ         ~CLR_BQ ;2
+Gf:","","",""," -------------- ;1
+Gf:   รวมบัญชี   ~TACCNUM                  ~CNT     รายการ $B~SUBAMT       $B ~CLRSUB ;1
+Gf:                                                     ;1
+Su:","","",""," ============== 
+Su:รวมทั้งสิ้น      ~C_GRP บัญชี               ~G_CNT   รายการ $B~TOTAMT       $B
+Su:","","",""," ==============
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Left=0
+Right=180
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=BKRCQDEP.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\000\027\103
+Query=DTOS(TRNDAT)>='Date1()'.AND.DTOS(TRNDAT)<='Date2()'
+Query=.AND.BNKACC>='Bank1()'.AND.BNKACC<='Bank2()'
+*Query=.AND.CHQSTAT='10'.AND. (BKTRNTYP='QR'.OR.BKTRNTYP='BQ') .AND. (REFDOC='~'.OR.REFDOC=' ')
+Query=.AND.CHQSTAT='10'.AND. BKTRNTYP='QR'
+*Sort=IIF(BKTRN->BKTRNTYP='QR',ISRUN->ACCNUM01,ISRUN->ACCNUM04)+DTOS(TRNDAT)+REFDOC+CHQNUM
+Sort=ISRUN->ACCNUM01+DTOS(TRNDAT)+REFDOC+CHQNUM
+Date Format=วว/ดด/ปปปป
+
+[master file]
+File=BKTRN
+Alias=A
+Tag=BKTRN1
+System=DATA_PATH
+
+[relate file]
+File=BKMAS
+Alias=B
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+File=ISRUN
+Alias=R
+Tag=ISRUN2
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=CHQNUM
+
+File=GLACC
+Alias=Y
+Tag=GLACC1
+System=DATA_PATH
+Master file=ISRUN
+Master-Related Field=ACCNUM01
+
+[item file]
+File=ARRCPCQ
+Alias=C
+Tag=ARRCPCQ2
+System=DATA_PATH
+
+File=ARTRNRM
+Alias=X
+Tag=ARTRNRM1
+System=DATA_PATH
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",                 "exp"
+~INIT:          0,      "",                 "",                     "p_det=@n_prn_detail();prn_detail=IIF(p_det=0,':',' '); totamt=0;totchr=0;totnet=0; c_grp=0; g_cnt=0"
+~FB:            0,      "",                 "Bank1()",              ""
+~TB:            0,      "",                 "Bank2()",              ""
+~DEP:           0,      "",                 "Dep1()",               ""
+~FROMDATE:      0,      "d ดดด yyyy",       "@date1()",             ""
+~TODATE:        0,      "d ดดด yyyy",       "@date2()",             ""
+~ACCNUM:        0,      "",                 "acc_num",              "acc_num=ISRUN->ACCNUM01-'  '-GLACC->ACCNAM; acc_num1=GLACC->ACCNAM"
+~TACCNUM:      23,      "",                 "acc_num1",             "c_grp=c_grp+1"
+~REFDOC:        0,      "",                 "A->REFDOC",            ""
+~PAYIN:         0,      "",                 "A->PAYINDAT",          ""  ,F
+~CHQDAT:        0,      "",                 "A->CHQDAT",            ""  ,G
+~BNK:           0,      "",                 "p_istab( A->BNKCOD, 01, 0, 6 )",           ""  ,H
+~BRANCH:       15,      "",                 "A->BRANCH",            ""  ,I
+~DOC_NUM:       0,      "",                 "doc_num",              "doc_num=IIF(A->REFDOC#'~'.AND.A->REFDOC#' ', A->REFDOC, A->CHQNUM)"   ,B
+~CHQ_NUM:       0,      "",                 "chq_num",              "chq_num=IIF(A->REFDOC#'~'.AND.A->REFDOC#' ', A->CHQNUM,'            '); cnt=cnt+1"  ,C
+~CUSCOD:        0,      "",                 "A->CUSCOD",            ""   ,J
+~IN_BQ:         0,      "ZZZ,ZZZ,ZZZ.ZZ",   "in_bq",                "in_bq=IIF(A->REFDOC#'~'.AND.A->REFDOC#' ', A->AMOUNT, 0); cnt_bq=cnt_bq+IIF(A->REFDOC#'~'.AND.A->REFDOC#' ', 1, 0)"  ,D
+~AMOUNT:        0,      "ZZZ,ZZZ,ZZZ.ZZ",   "amt",                  "subamt=subamt+A->AMOUNT; sub_bq=sub_bq+A->AMOUNT; amt=IIF(A->REFDOC#'~'.AND.A->REFDOC#' ', 0, A->AMOUNT)"  ,E
+~CHARGE:        0,      "Z,ZZZ,ZZZ.ZZ",     "A->CHARGE",            "subchr=subchr+A->CHARGE"
+~NETAMT:        0,      "999,999,999.99",   "A->NETAMT",            "subnet=subnet+A->NETAMT"
+*~REMAMT:       0,      "999,999,999.99",   "A->REMAMT",            ""
+~CHQSTAT:       0,      "",                 "p_istab( A->CHQSTAT, 02, 1, 15 )",         ""
+~PASSDAT:       0,      "",                 "pass_dat",             "pass_dat=IIF(A->CHQSTAT='1',A->TRNDAT,STOD('        '))"  ,A
+~REMARK:       45,      "",                 "re_mark",              "re_mark = A->NAME-' '-A->REMARK"  ,K
+~BANK:          0,      "",                 "bank",                 "bank = BKMAS->BNKNAM"
+~BANKNAME:      0,      "",                 "bank",                 ""
+~B:             0,      "",                 "BKMAS->BNKACC",        ""
+
+~REFNUM:        0,      "",                 "ARRCPCQ->RCPNUM",      ""  ,L
+~RCVAMT:        0,      "99,999,999.99",    "ARRCPCQ->RCVAMT",      ""
+
+~IS_SUB_BQ:     0,      "",                 "",                     "p_sub_bq=IIF(A->REFDOC#'~'.AND.A->REFDOC#' ', ' ',':')"
+*~P_SUB_BQ:     0,      "",                 "p_sub_bq",             "p_sub_bq=IIF(cnt_bq>1, ' ', ':')"
+~P_SUB_BQ:      0,      "",                 "p_sub_bq",             ""
+~SUB_BQ:        0,      "999,999,999.99",   "sub_bq",               "cnt=cnt-IIF(cnt_bq>1,cnt_bq-1,0)"  ,E
+~CLR_BQ:        0,      "999,999,999.99",   "",                     "sub_bq=0; cnt_bq=0"
+~SUBAMT:        0,      "999,999,999.99",   "subamt",               "totamt=totamt+subamt"  ,E
+~SUBCHR:        0,      "9,999,999.99",     "subchr",               "totchr=totchr+subchr"
+~SUBNET:        0,      "999,999,999.99",   "subnet",               "totnet=totnet+subnet"
+~CLRSUB:        0,      "",                 "",                     "subamt=0;subchr=0;subnet=0;cnt=0"
+~TOTAMT:        0,      "999,999,999.99",   "totamt",               "" ,E
+~TOTCHR:        0,      "9,999,999.99",     "totchr",               ""
+~TOTNET:        0,      "999,999,999.99",   "totnet",               ""
+
+~D:             0,      "",                 "prn_detail",           ""
+~REMARK_R:      0,      "",                 "ARTRNRM->REMARK",      ""   ,K
+~CNT:           0,      "999,999",          "cnt",                  "g_cnt=g_cnt+cnt"
+~G_CNT:         0,      "999,999",          "g_cnt",                ""
+~C_GRP:         0,      "99,999",           "c_grp",                ""
+
+
+
+
+
+

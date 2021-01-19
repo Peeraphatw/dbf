@@ -1,0 +1,156 @@
+* ARSALSTK.RWT - Sales Report by Stock Code, Invoice Date
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eประวัติการขาย แยกตามสินค้า$E
+H1:รหัสสินค้าจาก  ~FROMSTK             ถึง  ~TOSTK          `วันที่ : \DATE
+H1:จากวันที่      ~FROMDATE            ถึง  ~TODATE
+H1:รหัสลูกค้าจาก  ~FROMCUS             ถึง  ~TOCUS
+H1:พนักงานขาย     ~FROMSLM             ถึง  ~TOSLM             ","เลือกแผนก  ~FD
+He:\LINE
+He:","วันที่","เลขที่เอกสาร","รหัสลูกค้า","จำนวน","หน่วยนับ","คืน","ราคาต่อหน่วย","VAT","ส่วนลด","รวมเงิน","ส่วนลดรวม","ยอดขายสุทธิ","อ้างอิง","หมายเหตุ
+*He:\LINE
+**:  DD/MM/YY IVxxxxxxx1xx xxxxxxxxx1 99,999.999 xx Y99,999,999.99  9 xxxxxxxxx1999,999,999.99 xxxxxxxxx1999,999,999.99 XXXXXXXXXXXX ***
+Gh:~STOCKDES                                                        ; 1 STKCOD
+Gh::~WHATREC                                                        ; 2 DOCNUM 0 2
+Bo:  ~DOCDAT    ~DOCNUM        ~PEOPLE             ~QTY       ~Q  ~R   ~UNITPR         ~V    ~DISC        ~TRNVAL         ~G_DISC     ~NETVAL        ~RDOCNUM     ~LOSS
+Gf:      รวมตาม ~RECTYP        ~SUMQTY             ~QX                                ~SUMAMT             ~SUMNET         ~SUMQ       ~SUMS          ~SUMN ;2
+Gf:","","",""," -----------","","","","",""," --------------",""," --------------;1
+Gf:  รวม ~STKDES                                   ~SUBQTY             ~QX            ~SUBTOT             ~SUBNET         ~SUM_GRAND
+Gf:","","",""," ===========","","","","",""," ==============",""," ==============
+Gf:   ;1
+Su:                 รวมทั้งสิ้น                                                       ~G_TOT              ~G_NET        
+Su:","","","","","","","","",""," ==============",""," ==============
+Su:
+Su:หมายเหตุ:  รายการขายที่มีเครื่องหมาย '***' อยู่ในช่องหมายเหตุ คือ รายการที่ยอดขายสุทธิต่ำกว่าต้นทุน
+Su:                    "            !    อยู่หน้าหน่วยนับ    คือ รายการที่ป้อนอัตราส่วนต่อหน่วยหลักผิด (ไม่เท่ากับ 1)
+*Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=150
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARSALSTK.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=DTOS(DOCDAT)>='Date1()'.AND.DTOS(DOCDAT)<='Date2()'
+Query=.AND.PEOPLE>='Cus1()'.AND. PEOPLE<='Cus2()'
+Query=.AND.STKCOD>='Stk1()'.AND. STKCOD<='Stk2()'
+Query=.AND.SLMCOD>='Slm1()'.AND. SLMCOD<='Slm2()'
+Query=.AND.PSTKCOD='  '
+Query=.AND.(POSOPR='9'.OR.POSOPR='2'.OR.POSOPR='<'.OR.POSOPR='=')
+*Sort=STKCOD+SUBSTR(DOCNUM,1,2)+DTOS(DOCDAT)+DOCNUM
+Date format=วว/ดด/ปปปป
+
+[master file]
+File=STCRD
+Alias=A
+Tag=STCRD4
+System=DATA_PATH
+
+[relate file]
+File=ARMAS
+Alias=B
+Tag=ARMAS1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=PEOPLE
+
+File=ARTRN
+Alias=X
+Tag=ARTRN1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=DOCNUM
+
+File=STMAS
+Alias=C
+Tag=STMAS1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=STKCOD
+
+File=OESLM
+Alias=D
+Tag=OESLM1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=SLMCOD
+
+[data spec]
+*               len     (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",             "exp"
+~INIT:          0,      "",                 "",                 "sumqty=0;subqty=0;sumamt=0;sumnet=0;subtot=0;g_qty=0;g_tot=0;subnet=0;g_net=0"
+~FROMSTK:       0,      "",                 "Stk1()",           ""
+~TOSTK:         0,      "",                 "Stk2()",           ""
+~FROMDATE:      0,      "d ดดด yyyy",       "@date1()",         ""
+~TODATE:        0,      "d ดดด yyyy",       "@date2()",         ""
+~FROMCUS:       0,      "",                 "Cus1()",           ""
+~TOCUS:         0,      "",                 "Cus2()",           ""
+~FROMSLM:       0,      "",                 "Slm1()",           ""
+~TOSLM:         0,      "",                 "Slm2()",           ""
+~FD:            0,      "",                 "Dep1()",           ""
+~TD:            0,      "",                 "Dep2()",           ""
+
+~DOCDAT:        0,      "",                 "A->DOCDAT",        "",B
+~DOCNUM:        0,      "",                 "A->DOCNUM",        "",C
+~STOCKDES:      0,      "",                 "stk_des",          "stk_des = C->STKDES - ' /' - A->STKCOD; qu_cod=C->QUCOD; s_des = A->STKCOD"
+~STKDES:        0,      "",                 "s_des",            ""
+~PEOPLE:        0,      "",                 "A->PEOPLE",        "",D
+~CUSNAM:        0,      "",                 "ARMAS->CUSNAM",    "",D
+~SALESMAN:      0,      "",                 "slm_nam",          "slm_nam = OESLM->SLMNAM - ' /' - A->SLMCOD"
+~SLMNAME:       0,      "",                 "slm_nam",          ""
+~SLMCOD:        0,      "",                 "A->SLMCOD",        ""
+*~QTY:          0,      "qty(10)",          "A->TRNQTY",        "sumqty=sumqty+(A->TRNQTY*A->TFACTOR)",E
+~QTY:           0,      "qty(10)",          "A->TRNQTY",        "sumqty=sumqty+A->XTRNQTY",E
+~Q:             0,      "",                 "qu",               "qu=IIF(A->TQUCOD=qu_cod .and. A->TFACTOR # 1, '!'+A->TQUCOD, ' '+A->TQUCOD)",F
+~QX:            0,      "",                 "qu_cod",           "",F
+~R:             0,      "",                 "ret",              "ret=IIF(STCRD->POSOPR#'2','  ',IIF(STCRD->RETSTK='Y', ' Y', ' N'))",G
+~UNITPR:        0,      "pri(13)",          "A->UNITPR",        "",H
+~V:             0,      "",                 "ARTRN->FLGVAT",    "",I
+~DISC:          0,      "",                 "A->DISC",          "",J
+~TRNVAL:        0,      "999,999,999.99",   "A->TRNVAL",        "sumamt=sumamt+A->TRNVAL",K
+~G_DISC:        0,      "",                 "ARTRN->DISC",      "",L
+~NETVAL:        0,      "999,999,999.99",   "A->NETVAL",        "sumnet=sumnet+A->NETVAL",M
+~RDOCNUM:       0,      "",                 "rdoc_no",          "rdoc_no = IIF(RDOCNUM='  ','               ', SUBSTR(A->RDOCNUM,1,12) - '-' - SUBSTR(A->RDOCNUM,13,3))",N
+~YOUREF:        0,      "",                 "ARTRN->YOUREF",    "",N
+
+~LOSS:          0,      "",                 "is_loss",          "is_loss=IIF((X->RECTYP='1'.OR.X->RECTYP='3').AND.A->NETVAL < A->XTRNVAL, '***', '   ')",O
+~XTRNVAL:       0,      "999,999,999.99",   "A->XTRNVAL",       "",K
+
+~WHATREC:       0,      "",                 "",                 "rec_typ=IIF(X->RECTYP='3','ใบกำกับ     ',IIF(X->RECTYP='4','ใบเพิ่มหนี้ ',IIF(X->RECTYP='5','ใบลดหนี้    ',IIF(X->RECTYP='1','บิลเงินสด   ',IIF(X->RECTYP='7','รายได้อื่น ๆ','            ')))))"
+~RECTYP:        0,      "",                 "rec_typ",          ""
+~SUMQTY:        0,      "qty(13)",          "sumqty",           "sumqty=IIF(rec_typ='ใบลดหนี้', sumqty*-1, IIF(rec_typ='ใบเพิ่มหนี้',0,sumqty))",E
+~SUMAMT:        0,      "999,999,999.99",   "sumamt",           "sumamt=IIF(rec_typ='ใบลดหนี้', sumamt*-1, sumamt)",K
+~SUMNET:        0,      "999,999,999.99",   "sumnet",           "sumnet=IIF(rec_typ='ใบลดหนี้', sumnet*-1, sumnet)",M
+~SUMQ:          0,      "",                 "",                 "subqty=subqty+sumqty; sumqty=0"
+~SUMS:          0,      "",                 "",                 "subtot=subtot+sumamt; sumamt=0"
+~SUMN:          0,      "",                 "",                 "subnet=subnet+sumnet; sumnet=0"
+~SUBQTY:        0,      "qty(13)",          "subqty",           "",E
+~SUBTOT:        0,      "999,999,999.99",   "subtot",           "",K
+~SUBNET:        0,      "999,999,999.99",   "subnet",           "",M
+~SUM_GRAND:     0,      "",                 "",                 "g_qty=g_qty+subqty; g_tot=g_tot+subtot; g_net=g_net+subnet; subqty=0; subtot=0; subnet=0"
+~G_QTY:         0,      "9,999,999.999",    "g_qty",            "",E
+~G_TOT:         0,      "999,999,999.99",   "g_tot",            "",K
+~G_NET:         0,      "999,999,999.99",   "g_net",            "",M
+
+
+
+
+
+
+
+
+
+
+
+
+

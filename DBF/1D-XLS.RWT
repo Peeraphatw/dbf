@@ -1,0 +1,145 @@
+* ARCRD.RWT - A/R Movement by Customer, Date
+*
+[report frame]
+Ti::~INIT1 ~INIT2
+He:"," \NAME                                    "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","            ","  `หน้า   : \PAGE    ","
+He:"," $Eรายการเคลื่อนไหวลูกหนี้$E       ","
+He:"," วันที่จาก       ","    ~FROMDATE          "," ถึง  ","  ~TODATE        "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","  `วันที่ : \DATE  ","
+H1:"," รหัสลูกค้าจาก    ","    ~FROMCUS   "," ถึง  ","  ~TOCUS
+He:"," \LINE
+He:","  วันที่ "," "," เลขที่  ","  เก็บเงิน  "," ขาย  ","  ลดหนี้/รับคืน   ","  รับชำระหนี้    ","  ยอดคงเหลือ  ","  เงินสดรับ    ","  เช็ครับ   ","  หักเงินมัดจำ   ","  ด/บ รับ     ","  ส่วนลด  ","  ภาษีล่วงหน้า    "," หมายเหตุ   "," เลขที่เช็ค  ","  ลงวันที่  "," ธนาคาร   "," สถานะเช็ค   "," F  "," เลขที่ใบกำกับ    "," วันที่    "," ยอดชำระ
+He:"," \LINE
+**: DD/MM/YY ?IVxxxxxxxx   Y 99,999,999.99 99,999,999.99 99,999,999.99 99,999,999.99 99,999,999.99 99,999,999.99 99,999,999.99   999,999.99   xxxxxxxxx1   999,999.99   ***      xxxxxxxxxx DD/MM/YY xxxxxxxxxx xxxxxxxxxx ! IVxxxxxxxx  DD/MM/YY 99,999,999.99
+Gh::~PRN_THISCUS    ; 1 CUSCOD
+Gh:~Z "," $B~CUSTOMER                                                            $B
+Bo:~Z "," ยอดยกมา               "," "," "," "," "," ","      ","         ~BALFWD         ","
+Ih::                ;1 ARTRN->CUSCOD ARMAS->CUSCOD
+Ib:","  ~DOCDAT   "," ~F  ","   ~DOCNUM     ","  ~Y ","     ~NETAMT      ","    ~RETAMT     ","     ~RCVAMT    ","     ~BALANCE     ","    ~CSHRCV      ","     ~CHQRCV     ","     ~ADVAMT      ","       ~INTRCV     ","      ~DISC      ","      ~TAX      ","      ~REMARK   {1}    ;1
+Ih::                ;2 ARRCPCQ->RCPNUM A->DOCNUM
+Ib:{1}                                                                                                                                                                           ","     ~CHQNUM      ","     ~CHQDAT       ","    ~BANK      ","       ~CHQSTAT ;2
+Ih::                ;3 ARRCPIT->RCPNUM A->DOCNUM
+Ib:                                    "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","                                                                                                                                                                        ","   ~W   ","   ~IT_IVCNUM     ","    ~IT_DATE    ","     ~IT_RCVAMT ;3
+Gf:~Z   "," "," "," ","                     ","------------- ","------------- ","-------------      ","       ","  ------------- ","-------------"," -------------"," ------------"," ------------ ","------------    "," ; 1
+Gf:~Z "," รวม ~CUSNAME          "," "," "," ","   $B~SUMNET       ","      ~SUMRET     ","     ~SUMRCV          ","         ","  ~SUMCSH      ","     ~SUMCHQ       "," ~SUMADV       ","    ~SUMINT      ","     ~SUMDISC     ","    ~SUMTAX      $B~CLRSUM1 ~CLRSUM2 ~CLRSUM3 ;1
+Gf:~Z   "," "," "," ","                     ","============="," ============= ","=============      ","      ","   ============= ","============="," ============="," ============"," ============"," ============    ","   ; 1
+Gf:~Z   ;1
+Su:","ยอดยกมารวมทั้งสิ้น       $B ","     "," "," "," "," ","                               ","     ~TOTFWD       $B
+Su:","รวมทั้งสิ้น       "," "," ","  ","    $B~TOTNET     ","      ~TOTRET    ","      ~TOTRCV     ","    ~TOTBAL       ","    ~TOTCSH     ","      ~TOTCHQ      ","     ~TOTADV      ","      ~TOTINT     ","     ~TOTDISC     ","    ~TOTTAX      $B      ","
+Su:     "," "," "," ","                     ","============="," ============= "," ============="," ============="," ============="," ============="," ============="," ============"," ============"," ============   ","
+Su:","หมายเหตุ
+Su:","  ใบเสร็จที่มีเครื่องหมาย '***' ในช่องหมายเหตุ  หมายถึงทำรายการรับชำระหนี้ไม่เรียบร้อย
+Su:","  ในช่อง F อาจมีเครื่องหมายพิเศษ ได้แก่ :-
+Su:","           ! หมายถึง มีการรับชำระหนี้เต็มจำนวน  แต่ค่าในช่อง'เก็บเงิน'ของเอกสารที่ถูกรับชำระ เช่นในใบ IV,SR มีค่าเป็น N (แทนที่จะเป็น Y)
+Su:","           ? หมายถึง มีการรับชำระหนี้เพียงบางส่วนหรือหาเอกสารที่รับชำระไม่พบ  ต้องตรวจสอบรายการนี้เอง (เพราะโปรแกรมไม่สามารถตรวจสอบให้ได้ว่ารับเงินครบหรือไม่)
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=253
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARCRD.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\005
+
+[master file]
+File=ARMAS
+Alias=C
+Tag=ARMAS1
+System=DATA_PATH
+
+[item file]
+File=ARTRN
+Alias=A
+Tag=ARTRN8
+System=DATA_PATH
+Filter=RECTYP#'0'
+
+File=ARRCPCQ
+Alias=B
+Tag=ARRCPCQ1
+System=DATA_PATH
+
+File=ARRCPIT
+Alias=F
+Tag=ARRCPIT1
+System=DATA_PATH
+
+[relate file]
+File=BKTRN
+Alias=D
+Tag=BKTRN3
+System=DATA_PATH
+Master file=ARRCPCQ
+Master-Related Field=CHQNUM
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",                 "data",                     "exp"
+~CUSTOMER:      0,      "",                     "cus_nam",                  "cus_nam = C->CUSNAM - ' /' - C->CUSCOD"
+~CUSNAME:      12,      "",                     "cus_nam",                  ""
+~INIT1:         0,      "",                     "",                         "prn_thiscus=' '; sumnet=0;sumret=0;sumrcv=0;sumcsh=0;sumchq=0;sumadv=0;sumint=0;sumdisc=0;sumtax=0; bal=0;net=0;ret=0;rcv=0;totfwd=0;totbal=0"
+~INIT2:         0,      "",                     "",                         "totnet=0;totret=0;totrcv=0;totcsh=0;totchq=0;totadv=0;totint=0;totdisc=0;tottax=0"
+~FROMCUS:       0,      "",                     "Cus1()",                   ""
+~TOCUS:         0,      "",                     "Cus2()",                   ""
+~FROMDATE:      0,      "d ดดด yyyy",           "@date1()",                 ""
+~TODATE:        0,      "d ดดด yyyy",           "@date2()",                 ""
+~PRN_THISCUS:   0,      "",                     "prn_cus",                  "bal=@n_ar_balfwd(); prn_cus=@arcrd_prn0()"
+~Z:             0,      "",                     "prn_cus",                  ""
+~Y:             0,      "",                     "collected",                "collected=' '+IIF(A->RECTYP#'9',A->CMPLAPP,' ')"
+~F:             0,      "",                     "is_ok",                    "is_ok=' '+IIF(A->RECTYP#'9'.AND.A->CMPLAPP='N'.AND. (STR(A->NETAMT,12,2)#STR(A->REMAMT,12,2)),'?',' ')"
+~DOCDAT:        0,      "วว ดด ปปปป",           "A->DOCDAT",                ""
+~DOCNUM:        0,      "",                     "A->DOCNUM",                ""
+~BALFWD:        0,      "999,999,999.99",       "bal",                      "totfwd=totfwd+bal"
+~NETAMT:        0,      "ZZ,ZZZ,ZZZ.ZZ",        "net",                      "net=IIF(A->RECTYP#'3'.and.A->RECTYP#'4',0,A->NETAMT); sumnet=sumnet+net"
+~RETAMT:        0,      "ZZ,ZZZ,ZZZ.ZZ",        "ret",                      "ret=IIF(A->RECTYP#'5',0,A->NETAMT); sumret=sumret+ret"
+~RCVAMT:        0,      "ZZ,ZZZ,ZZZ.ZZ",        "rcv",                      "rcv=IIF(A->RECTYP#'9',0,A->NETAMT+A->ADVAMT); sumrcv=sumrcv+rcv"
+~BALANCE:       0,      "999,999,999.99",       "bal",                      "bal = bal+net-ret-rcv; bal=IIF(bal>-0.01.and.bal<0,0,bal)"
+~CSHRCV:        0,      "ZZ,ZZZ,ZZZ.ZZ",        "A->CSHRCV",                "sumcsh=sumcsh+A->CSHRCV"
+~CHQRCV:        0,      "ZZ,ZZZ,ZZZ.ZZ",        "A->CHQRCV",                "sumchq=sumchq+A->CHQRCV"
+~ADVAMT:        0,      "ZZ,ZZZ,ZZZ.ZZ",        "adv",                      "adv=IIF(A->RECTYP='9',A->ADVAMT,0); sumadv=sumadv+adv"
+~INTRCV:        0,      "ZZZ,ZZZ.ZZ",           "A->INTRCV",                "sumint=sumint+A->INTRCV"
+~DISC:          0,      "",                     "discount",                 "discount=IIF(A->RECTYP='9',A->DISC,'          '); sumdisc=sumdisc+IIF(A->RECTYP='9',A->DISCAMT, 0)"
+~TAX:           0,      "ZZZ,ZZZ.ZZ",           "A->TAX",                   "sumtax=sumtax+A->TAX"
+~REMARK:        0,      "",                     "chkerr",                   "chkerr=IIF(A->RECTYP='5',A->SONUM,IIF((A->RECTYP='9'.and.STR(A->IVCAMT,15,2) # STR(A->NETAMT,15,2)), '***       ', IIF(A->DOCSTAT='C'.and.A->NETAMT # 0,'***ยอดค้าง', '          ')))"
+
+~CHQNUM:        0,      "",                     "B->CHQNUM",                ""
+~CHQDAT:        0,      "วว ดด ปปปป",           "D->CHQDAT",                ""
+~BANK:          4,      "",                     "p_istab( D->BNKCOD, 01, 0, 6 )",               ""
+~CHQSTAT:       0,      "",                     "p_istab( BKTRN->CHQSTAT, 02, 1, 13 )",         ""
+
+~IT_IVCNUM:     0,      "",                     "F->DOCNUM",                ""
+~IT_DATE:       0,      "",                     "arrcpit_get_ivcdat()",     ""
+~IT_DUE:        0,      "",                     "arrcpit_get_duedat()",     ""
+~W:             0,      "",                     "arrcpit_chk_cmplapp()",    ""
+~IT_RCVAMT:     0,      "99,999,999.99",        "rcv",                      "rcv = IIF(ARRCPIT->RECTYP='0'.or.ARRCPIT->RECTYP='5',ARRCPIT->RCVAMT*-1,ARRCPIT->RCVAMT)"
+
+~SUMNET:        0,      "999,999,999.99",       "sumnet",                   ""
+~SUMRET:        0,      "999,999,999.99",       "sumret",                   ""
+~SUMRCV:        0,      "999,999,999.99",       "sumrcv",                   ""
+~SUMCSH:        0,      "999,999,999.99",       "sumcsh",                   ""
+~SUMCHQ:        0,      "999,999,999.99",       "sumchq",                   ""
+~SUMADV:        0,      "999,999,999.99",       "sumadv",                   ""
+~SUMINT:        0,      "99,999,999.99",        "sumint",                   ""
+~SUMDISC:       0,      "99,999,999.99",        "sumdisc",                  ""
+~SUMTAX:        0,      "99,999,999.99",        "sumtax",                   ""
+~CLRSUM1:       0,      "",                     "",                         "totnet=totnet+sumnet;sumnet=0;totret=totret+sumret;sumret=0;totrcv=totrcv+sumrcv;sumrcv=0; totbal=totbal+bal; bal=0"
+~CLRSUM2:       0,      "",                     "",                         "totcsh=totcsh+sumcsh;sumcsh=0;totchq=totchq+sumchq;sumchq=0;totadv=totadv+sumadv;sumadv=0;totint=totint+sumint;sumint=0"
+~CLRSUM3:       0,      "",                     "",                         "totdisc=totdisc+sumdisc;sumdisc=0;tottax=tottax+sumtax;sumtax=0"
+~TOTFWD:        0,      "999,999,999.99",       "totfwd",                   ""
+~TOTNET:        0,      "999,999,999.99",       "totnet",                   ""
+~TOTRET:        0,      "999,999,999.99",       "totret",                   ""
+~TOTRCV:        0,      "999,999,999.99",       "totrcv",                   ""
+~TOTBAL:        0,      "999,999,999.99",       "totbal",                   ""
+~TOTCSH:        0,      "999,999,999.99",       "totcsh",                   ""
+~TOTCHQ:        0,      "999,999,999.99",       "totchq",                   ""
+~TOTADV:        0,      "999,999,999.99",       "totadv",                   ""
+~TOTINT:        0,      "99,999,999.99",        "totint",                   ""
+~TOTDISC:       0,      "99,999,999.99",        "totdisc",                  ""
+~TOTTAX:        0,      "99,999,999.99",        "tottax",                   ""
+
+

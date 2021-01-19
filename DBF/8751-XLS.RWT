@@ -1,0 +1,82 @@
+* STTOPAPS.RWT - Top Purchases by Supplier Report
+*
+[report frame]
+Ti::~INIT_VAR
+He:\NAME                                                   ","","","","","","","","","","","","","","","","หน้า   : \PAGE
+He:$Eจัดลำดับยอดซื้อ รวมจากบิลผู้จำหน่าย$E   (~TOP ลำดับแรก)
+He:ตั้งแต่              ","","~FROMDATE   ถึง  ~TODATE           ","","","","","","","","","","","","","","วันที่ : \DATE
+He:รหัสผู้จำหน่าย จาก   ","","~SUPCOD1          ถึง  ~SUPCOD2           
+H1:ประเภทผู้จำหน่ายจาก  ","","~FROMSUPTYP       ถึง  ~TOSUPTYP   ","","","","","","","","","","","","","","เลือกแผนก  ~FROMDEP
+*He:\LINE
+He:ลำดับ","รหัสผู้จำหน่าย"," ชื่อผู้จำหน่าย","ซื้อสด","ซื้อเชื่อ","เพิ่มหนี้","ลดหนี้","ยอดซื้อสุทธิ
+*He:\LINE
+*  xxxx  xxxxxxxxxx  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 999,999,999.99 
+Bo:~NN   ~SUPCOD     ~SUPNAM                                      ~CSHPUR        ~CREPUR        ~DNVAL         ~RETPUR        ~PURVAL        
+Su:                                                               -------------- -------------- -------------- -------------- -------------- 
+Su:                      รวมทั้งสิ้น                              ~TCSHPUR       ~TCREPUR       ~TDNVAL        ~TRETPUR       ~TPURVAL       
+Su:                                                               ============== ============== ============== ============== ============== 
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=139
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STTOPAPS.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+*Select Paper=15_Inch, 8_Inch, Default
+Select Paper=15_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+
+[master file]
+File=A
+Alias=A
+Key=PURVAL
+Descending=Y
+*Filter=STKGRP='00'
+*** the field STKGRP in this specially case is mean to SUPTYP
+System=DATA_PATH
+
+[data spec]
+*~dat:      len,"pict",             "data",         "exp"
+~INIT_VAR:  0,  "",                 "",             "TCSHPUR=0;TCREPUR=0;TDNVAL=0;TRETPUR=0;TPURVAL=0;TRCPVAL=0;TTRNVAL=0;TPROFIT=0"
+~TOP:       0,  "9999",             "prntop()",     ""
+~NN:        4,  "",                 "prncount_pur()",   ""
+~SUPCOD1:   0,  "",                 "Sup1()",       ""
+~SUPCOD2:   0,  "",                 "Sup2()",       ""
+~FROMSUPTYP: 0, "",                 "SupTyp1()",    ""
+~TOSUPTYP:  0,  "",                 "SupTyp2()",    ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+~FROMDATE:  0,  "d ดดด ปปปป",       "@date1()",     ""
+~TODATE:    0,  "d ดดด ปปปป",       "@date2()",     ""
+~SUPCOD:    0,  "",                 "A->PEOPLE",    "",B
+~SUPNAM:    0,  "",                 "A->STKDES",    "",C
+
+~CSHPUR:    0,  "999,999,999.99",   "A->VAL1",      "TCSHPUR=TCSHPUR+A->VAL1",D
+~TCSHPUR:   0,  "999,999,999.99",   "TCSHPUR",      "",D
+~CREPUR:    0,  "999,999,999.99",   "A->VAL2",      "TCREPUR=TCREPUR+A->VAL2",E
+~TCREPUR:   0,  "999,999,999.99",   "TCREPUR",      "",E
+~DNVAL:     0,  "999,999,999.99",   "A->VAL3",      "TDNVAL=TDNVAL+A->VAL3",F
+~TDNVAL:    0,  "999,999,999.99",   "TDNVAL",       "",F
+~RETPUR:    0,  "999,999,999.99",   "A->VAL4",      "TRETPUR=TRETPUR+A->VAL4",G
+~TRETPUR:   0,  "999,999,999.99",   "TRETPUR",      "",G
+~RCPVAL:    0,  "999,999,999.99",   "A->VAL5",      "TRCPVAL=TRCPVAL+A->VAL5"
+~TRCPVAL:   0,  "999,999,999.99",   "TRCPVAL",      ""
+~PURVAL:    0,  "999,999,999.99",   "A->PURVAL",    "TPURVAL=TPURVAL+A->PURVAL",H
+~TPURVAL:   0,  "999,999,999.99",   "TPURVAL",      "",H
+~TRNVAL:    0,  "999,999,999.99",   "A->TRNVAL",    "TTRNVAL=TTRNVAL+A->TRNVAL; PROFIT=A->PURVAL - A->TRNVAL; PFRAT= PROFIT*100/A->PURVAL"
+~PROFIT:    0,  "999,999,999.99",   "PROFIT",       "TPROFIT=TPROFIT+PROFIT"
+~PFRAT:     0,  "99,999.99",        "PFRAT",        ""
+~TTRNVAL:   0,  "999,999,999.99",   "TTRNVAL",      ""
+~TPROFIT:   0,  "999,999,999.99",   "TPROFIT",      "TPF=TPROFIT*100/TPURVAL"
+~TPF:       0,  "99,999.99",        "TPF",          ""
+
+
+
+
+

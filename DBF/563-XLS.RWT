@@ -1,0 +1,116 @@
+* GLTRIAL.RWT - Trial Balance 12 Period
+*
+[report frame]
+Ti::~INIT_VAR ~INIT2
+He:\NAME                                                    ","","","","","","","","","","","","","Ë¹éÒ : \PAGE
+He:§º·´ÅÍ§áÂ¡ 12 à´×Í¹
+He:àÅ¢·ÕèºÑ­ªÕ  ~FROMACC         ¶Ö§  ~TOACC                ","","","","","","","","","","","","","ÇÑ¹·Õè : \DATE
+H1:àÅ×Í¡á¼¹¡    ~D1        ÃÇÁºÑ­ªÕÂÍ´à»ç¹ 0  ~Y
+*He:\LINE
+He:àÅ¢·ÕèºÑ­ªÕ","á¼¹¡","ª×èÍºÑ­ªÕ ","~M1","~M2","~M3 ","~M4 ","~M5","~M6 ","~M7","~M8","~M9","~M10","~M11","~M12
+*He:-------------","----","------------------------------------------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------
+*  9999-9999-99999xxxx  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5 9999,999,999.99 9999,999,999.99 9999,999,999.99 9999,999,999.99
+Bo::~Z1  ~Z2  ~Z3  ~Z4  ~ZZ
+Bo:~NUM           ~DEP  ~ACCNAM                                            ~PTD1           ~PTD2           ~PTD3           ~PTD4           ~PTD5           ~PTD6           ~PTD7           ~PTD8           ~PTD9           ~PTD10          ~PTD11          ~PTD12         ~N
+*Su:","","","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------","---------------
+Su:                                     ÃÇÁ ~TC    ºÑ­ªÕ                   ~TOT1           ~TOT2           ~TOT3           ~TOT4           ~TOT5           ~TOT6           ~TOT7           ~TOT8           ~TOT9           ~TOT10          ~TOT11          ~TOT12         
+*Su:","","","===============","===============","===============","===============","===============","===============","===============","===============","===============","===============","===============","===============
+*Su:>>>> ¨ºÃÒÂ§Ò¹ <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=263
+Output=Select, Printer, Screen, File,
+File Name=GLTRIAL.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+15_Inch=\027\033\005
+Query=ACCNUM>='Acc1()'.AND.ACCNUM<='Acc2()' .AND. GLACC->ACCTYP='0'
+*Sort=ACCNUM+DEPCOD
+
+[master file]
+File=GLBAL
+Alias=B
+Tag=GLBAL1
+System=DATA_PATH
+
+[relate file]
+File=GLACC
+Alias=A
+Tag=GLACC1
+System=DATA_PATH
+Master file=GLBAL
+Master-Related Field=ACCNUM
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT_VAR:  0,  "",                 "",             "CNT=0;P0=@yesno()"
+~INIT2:     0,  "",                 "",             "TOT1=0;TOT2=0;TOT3=0;TOT4=0;TOT5=0;TOT6=0;TOT7=0;TOT8=0;TOT9=0;TOT10=0;TOT11=0;TOT12=0"
+~ACCNUM:    0,  "",                 "B->ACCNUM",    "",C
+~DEP:       0,  "",                 "B->DEPCOD",    "",B
+~ACCNAM:    0,  "",                 "A->ACCNAM",    "",C
+~TODATE:    0,  "d ´´´ yyyy",       "@date2()",     ""
+~Z1:        0,  "",                 "",             "PTD1=@nPtd(1);PTD2=@nPtd(2);PTD3=@nPtd(3);PTD4=@nPtd(4)"
+~Z2:        0,  "",                 "",             "PTD5=@nPtd(5);PTD6=@nPtd(6);PTD7=@nPtd(7);PTD8=@nPtd(8)"
+~Z3:        0,  "",                 "",             "PTD9=@nPtd(9);PTD10=@nPtd(10);PTD11=@nPtd(11);PTD12=@nPtd(12)"
+~Z4:        0,  "",                 "",             "SK=IIF(PTD1=0.and.PTD2=0.and.PTD3=0.and.PTD4=0.and.PTD5=0.and.PTD6=0,'}',' ')"
+~ZZ:        0,  "",                 "",             "SK=IIF(SK='}'.and.PTD7=0.and.PTD8=0.and.PTD9=0.and.PTD10=0.and.PTD11=0.and.PTD12=0,'}',' ')"
+~NUM:       0,  "",                 "NUM",          "NUM=IIF(P0='N'.AND.SK='}','}              ',B->ACCNUM)"
+
+~PTD1:      0,  "9999,999,999.99",  "PTD1",     "TOT1=TOT1+PTD1",D
+~PTD2:      0,  "9999,999,999.99",  "PTD2",     "TOT2=TOT2+PTD2",E
+~PTD3:      0,  "9999,999,999.99",  "PTD3",     "TOT3=TOT3+PTD3",F
+~PTD4:      0,  "9999,999,999.99",  "PTD4",     "TOT4=TOT4+PTD4",G
+~PTD5:      0,  "9999,999,999.99",  "PTD5",     "TOT5=TOT5+PTD5",H
+~PTD6:      0,  "9999,999,999.99",  "PTD6",     "TOT6=TOT6+PTD6",I
+~PTD7:      0,  "9999,999,999.99",  "PTD7",     "TOT7=TOT7+PTD7",J
+~PTD8:      0,  "9999,999,999.99",  "PTD8",     "TOT8=TOT8+PTD8",K
+~PTD9:      0,  "9999,999,999.99",  "PTD9",     "TOT9=TOT9+PTD9",L
+~PTD10:     0,  "9999,999,999.99",  "PTD10",    "TOT10=TOT10+PTD10",M
+~PTD11:     0,  "9999,999,999.99",  "PTD11",    "TOT11=TOT11+PTD11",N
+~PTD12:     0,  "9999,999,999.99",  "PTD12",    "TOT12=TOT12+PTD12",O
+
+~TOT1:      0,  "9999,999,999.99",  "TOT1",     "",D
+~TOT2:      0,  "9999,999,999.99",  "TOT2",     "",E
+~TOT3:      0,  "9999,999,999.99",  "TOT3",     "",F
+~TOT4:      0,  "9999,999,999.99",  "TOT4",     "",G
+~TOT5:      0,  "9999,999,999.99",  "TOT5",     "",H
+~TOT6:      0,  "9999,999,999.99",  "TOT6",     "",I
+~TOT7:      0,  "9999,999,999.99",  "TOT7",     "",J
+~TOT8:      0,  "9999,999,999.99",  "TOT8",     "",K
+~TOT9:      0,  "9999,999,999.99",  "TOT9",     "",L
+~TOT10:     0,  "9999,999,999.99",  "TOT10",    "",M
+~TOT11:     0,  "9999,999,999.99",  "TOT11",    "",N
+~TOT12:     0,  "9999,999,999.99",  "TOT12",    "",O
+
+~N:         0,  "",             "",             "CNT=CNT+1"
+~TC:        0,  "99,999",       "CNT",          ""
+~FROMACC:   0,  "",             "Acc1()",       ""
+~TOACC:     0,  "",             "Acc2()",       ""
+~D1:        0,  "",             "Dep1()",       ""
+~D2:        0,  "",             "Dep2()",       ""
+~D3:        0,  "",             "Dep3()",       ""
+~D4:        0,  "",             "Dep4()",       ""
+~D5:        0,  "",             "Dep5()",       ""
+~D6:        0,  "",             "Dep6()",       ""
+~Y:         0,  "",             "P0",           ""
+
+~M1:        0,  "",             "p_month(1)",   ""
+~M2:        0,  "",             "p_month(2)",   ""
+~M3:        0,  "",             "p_month(3)",   ""
+~M4:        0,  "",             "p_month(4)",   ""
+~M5:        0,  "",             "p_month(5)",   ""
+~M6:        0,  "",             "p_month(6)",   ""
+~M7:        0,  "",             "p_month(7)",   ""
+~M8:        0,  "",             "p_month(8)",   ""
+~M9:        0,  "",             "p_month(9)",   ""
+~M10:       0,  "",             "p_month(10)",  ""
+~M11:       0,  "",             "p_month(11)",  ""
+~M12:       0,  "",             "p_month(12)",  ""
+
+
+

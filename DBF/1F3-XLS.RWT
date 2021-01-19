@@ -1,0 +1,99 @@
+* ARMASSA.RWT -- Customer Detail Report by Customer's Area and Salesman
+*
+[report frame]
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายละเอียดลูกค้า แยกตามพนักงานขาย,เขตการขาย$E
+He:พนักงานขายจาก    ~FROMSLM        ถึง  ~TOSLM             `วันที่ : \DATE
+H1:เขตการขายจาก     ~FROMAREA       ถึง  ~TOAREA
+H1:ประเภทลูกค้าจาก  ~FROMCUSTYP     ถึง  ~TOCUSTYP
+H1:ลูกค้าจาก        ~FROMCUS        ถึง  ~TOCUS
+He:\LINE
+**He:  รหัสลูกค้า คำนำหน้า+ชื่อลูกค้า                                                           เครดิต ประเภท-  ส่วนลด     ยอดวงเงิน
+He:","รหัสลูกค้า","คำนำหน้า+ชื่อลูกค้า                                       ","เครดิต","ประเภท-","ส่วนลด","ยอดวงเงิน
+He:","","ที่อยู่                                                                         ","(วัน)","ราคา","เลขที่บัญชี","ขนส่งโดย
+He:","","เบอร์โทรศัพท์","ชื่อผู้ติดต่อ","เงื่อนไขการชำระเงิน
+He:\LINE
+Gh:$Bพนักงานขาย    :~SALESMAN                                                          $B ; 1 SLMCOD
+Gh: $Bเขตการขาย    : ~TABLE1                                                            $B ; 2 AREACOD
+Gh:  $Bประเภทลูกค้า : ~TABLE2                                                           $B ; 3 CUSTYP
+Bo:  ~CUSCOD    ~CUSNAM                                                                        ~TRM  ~PRI~DISC      ~CRLINE
+Bo:                ~ADDR                                                                                  ~ACCNUM        ~DLVBY
+Bo:                     ~TELNUM                                  ~CONTACT                                 ~PAYCOND
+Bo:~REMARK_NB           ~REMARK 
+Gf:\FEED    ;1
+Gf:         ;3
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=132
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARMASSA.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=CUSCOD>='Cus1()'.AND.CUSCOD<='Cus2()'
+Query=.AND.CUSTYP>='CusTyp1()'.AND.CUSTYP<='CusTyp2()'
+Query=.AND.AREACOD>='Area1()'.AND. AREACOD<='Area2()'
+Query=.AND.SLMCOD>='Slm1()'.AND.SLMCOD<='Slm2()'
+Sort=SLMCOD+AREACOD+CUSTYP+CUSCOD
+
+[master file]
+File=ARMAS
+Alias=A
+Tag=ARMAS1
+System=DATA_PATH
+
+[relate file]
+File=OESLM
+Alias=C
+Tag=OESLM1
+System=DATA_PATH
+Master file=ARMAS
+Master-Related Field=SLMCOD
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",             "exp"
+~FROMAREA:      0,      "",                 "Area1()",          ""
+~TOAREA:        0,      "",                 "Area2()",          ""
+~FROMCUSTYP:    0,      "",                 "CusTyp1()",        ""
+~TOCUSTYP:      0,      "",                 "CusTyp2()",        ""
+~FROMCUS:       0,      "",                 "Cus1()",           ""
+~TOCUS:         0,      "",                 "Cus2()",           ""
+~FROMSLM:       0,      "",                 "Slm1()",           ""
+~TOSLM:         0,      "",                 "Slm2()",           ""
+
+~SALESMAN:      0,      "",                 "slm_nam",          "slm_nam = OESLM->SLMNAM - ' /' - A->SLMCOD",B
+~TABLE1:        0,      "",                 "p_istab( A->AREACOD,40,1,40)",     "",B
+~TABLE2:        0,      "",                 "p_istab( A->CUSTYP,45,1,40)",      "",B
+
+~CUSCOD:        0,      "",                 "A->CUSCOD",        "",B
+~CUSNAM:        0,      "",                 "name",             "name = A->PRENAM - ' ' - A->CUSNAM",C
+~ADDR:          0,      "",                 "addr",             "addr = A->ADDR01 - ' ' - A->ADDR02",C
+~TELNUM:        0,      "",                 "A->TELNUM",        "",C
+~CONTACT:       0,      "",                 "A->CONTACT",       "",D
+~PAYCOND:       0,      "",                 "A->PAYCOND",       "",E
+~SLMCOD:        0,      "",                 "A->SLMCOD",        ""
+~AREA:          0,      "",                 "A->AREACOD",       ""
+~TRM:           0,      "",                 "A->PAYTRM",        "",D
+~PRI:           0,      "",                 "A->TABPR",         "",E
+~DISC:          0,      "",                 "A->DISC",          "",F
+~CRLINE:        0,      "99,999,999.99",    "A->CRLINE",        "",G
+~ACCNUM:        0,      "",                 "A->ACCNUM",        "",F
+~DLVBY:         0,      "",                 "A->DLVBY",         "",G
+~REMARK_NB:     0,      "",                 "has_remark",       "has_remark=IIF(A->REMARK='          ',':',' ')"
+~REMARK:        0,      "",                 "A->REMARK",        "",C
+
+~HREM1:         0,      "",                 "x1",               "x1=@p_hrem( A->CUSCOD,1 )"
+~HREM2:         0,      "",                 "x2",               "x2=@p_hrem( A->CUSCOD,2 )"
+~HREM3:         0,      "",                 "x3",               "x3=@p_hrem( A->CUSCOD,3 )"
+~HREM4:         0,      "",                 "x4",               "x4=@p_hrem( A->CUSCOD,4 )"
+~HREM5:         0,      "",                 "x5",               "x5=@p_hrem( A->CUSCOD,5 )"
+

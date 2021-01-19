@@ -1,0 +1,122 @@
+* BKRCQDAT.RWT - Posted Date Cheque by Cheque Date
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานเช็ครับ เรียงตามวันที่เช็ค$E
+He:วันที่เช็คจาก  ~FROMDATE      ถึง  ~TODATE               `วันที่ : \DATE
+H1:สถานะเช็คจาก   ~FQ            ถึง  ~TQ          เลือกแผนก  ~DEP
+He:
+He::  วันที่   เลขที่เช็ค  ธ.    สาขา            รับจาก          จำนวนเงิน เข้าบัญชี   สถานะเช็ค       วันที่ผ่านหรือ หมายเหตุ                             ใบเสร็จ#
+HE:  ~A1       ~B1        ~C1       ~D1        ~E1             ~F1          ~G1        ~H1             ~I1                                                 ~K1  
+*He:~D                                                                                               วันที่เช็คคืน    รายละเอียด (หมายเหตุของใบเสร็จ)
+He:~D                                                                                                 ~I2           ~J2 
+He:
+**:DD/MM/YY xxxxxxxxx1xx xxxx  xxxxxxxxx1xxxxx xxxxxxxxxx999,999,999.99  xxxxxxxxxx  xxxxxxxxxxxxxxx DD/MM/YY  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4x xxxxxxxxxx
+Bo:~CHQDAT   ~CHQNUM      ~BANK ~BRANCH         ~CUSCOD   ~AMOUNT         ~BNKACC     ~CHQSTAT        ~PASSDAT  ~REMARK                                   {1}
+Ih::                    ;1 ARRCPCQ->CHQNUM A->CHQNUM
+Ib:{1}                                                                                                                                                  ~REFNUM ;1
+Ih::                    ;2 artrnrm->docnum+'@' arrcpcq->rcpnum+'@'
+Ib:                                                                                                              ~REMARK_R  ;2
+*Su:                                                      --------------
+SU:
+*Su:                      รวมทั้งสิ้น ~CNT    ใบ          $B~TOTAL        $B
+Su:                     ~C5          ~CNT    ~E5         $B~TOTAL        $B
+*Su:                                                      ==============
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Left=0
+Right=161
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=BKRCQDAT.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=DTOS(CHQDAT)>='Date1()'.AND.DTOS(CHQDAT)<='Date2()'
+Query=.AND.CHQSTAT>='ChqStat1()'.AND.CHQSTAT<='ChqStat2()'
+Query=.AND.BKTRNTYP='QR'
+
+[master file]
+File=BKTRN
+Alias=A
+Tag=BKTRN1
+System=DATA_PATH
+
+[relate file]
+File=BKMAS
+Alias=B
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+[item file]
+File=ARRCPCQ
+Alias=C
+Tag=ARRCPCQ2
+System=DATA_PATH
+
+File=ARTRNRM
+Alias=X
+Tag=ARTRNRM1
+System=DATA_PATH
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,"pict",             "data",                 "exp"
+~INIT:          0,  "",                 "",                     "p_det=@n_prn_detail();prn_detail=IIF(p_det=0,':',' '); grand=0;cnt=0"
+~FROMDATE:      0,  "วว/ดด/ปปปป",       "@date1()",             ""
+~TODATE:        0,  "วว/ดด/ปปปป",       "@date2()",             ""
+~FQ:            0,  "",                 "ChqStat1()",           ""
+~TQ:            0,  "",                 "ChqStat2()",           ""
+~DEP:           0,  "",                 "Dep1()",               ""
+~CHQDAT:        0,  "วว/ดด/ปปปป",                 "A->CHQDAT",            "",A
+~BANK:          0,  "",                 "p_istab( A->BNKCOD, 01, 0, 6)",    "",C
+~BRANCH:       15,  "",                 "A->BRANCH",            "",D
+~CHQNUM:        0,  "",                 "A->CHQNUM",            "cnt=cnt+1",B
+~CUSCOD:        0,  "",                 "A->CUSCOD",            "",E
+~AMOUNT:        0,  "999,999,999.99",   "A->AMOUNT",            "grand=grand+A->AMOUNT",F
+*~REMAMT:       0,  "999,999,999.99",   "A->REMAMT",            ""
+~BNKACC:        0,  "",                 "BKMAS->SHORTNAM",      "",G
+~CHQSTAT:       0,  "",                 "p_istab( A->CHQSTAT, 02, 1, 15 )",         "",H
+~PASSDAT:       0,  "วว/ดด/ปปปป",                 "pass_dat",             "pass_dat=IIF(A->CHQSTAT='1'.OR.A->CHQSTAT='20',A->TRNDAT,STOD('        '))",I
+~REMARK:       45,  "",                 "re_mark",              "re_mark = A->NAME-' '-A->REMARK",J
+*~REMARK:       0,  "",                 "rem",                  "rem = SUBSTR(A->NAME,1,39)+' '+A->VOUCHER"
+
+~REFNUM:        0,  "",                 "ARRCPCQ->RCPNUM",      "",K
+~RCVAMT:        0,  "99,999,999.99",    "ARRCPCQ->RCVAMT",      ""
+~TOTAL:         0,  "999,999,999.99",   "grand",                "",F
+~D:             0,  "",                 "prn_detail",           ""
+~REMARK_R:      0,  "",                 "ARTRNRM->REMARK",      "",J
+~CNT:           0,  "999,999",          "cnt",                  "",D
+
+~A1:        0,   "",   "A1",    "A1 = 'วันที่  '",A
+~B1:        0,   "",   "B1",    "B1 = 'เลขที่เช็ค  '",B
+~C1:        0,   "",   "C1",    "C1 = 'ธนาคาร  '",C
+~D1:        0,   "",   "D1",    "D1 = 'สาขา '",D
+~E1:        0,   "",   "E1",    "E1 = 'รับจาก  '",E
+~F1:        0,   "",   "F1",    "F1 = 'จำนวนเงิน   '",F
+~G1:        0,   "",   "G1",    "G1 = 'เข้าบัญชี  '",G
+~H1:        0,   "",   "H1",    "H1 = 'สถานะเช็ค  '",H
+~I1:        0,   "",   "I1",    "I1 = 'วันที่ผ่านหรือหมายเหตุ  '",I
+~I2:        0,   "",   "I2",    "I2 = 'วันที่เช็คคืน  '",I
+~J2:        0,   "",   "J2",    "J2 = 'รายละเอียด(หมายเหตุใบเสร็จ)    '",J
+~K1:        0,   "",   "K1",    "K1 = 'ใบเสร็จ#   '",K
+
+
+
+~C5:        0,   "",   "C1",    "C1 = 'รวมทั้งสิ้น   '",C
+~E5:        0,   "",   "E1",    "E1 = 'ใบ  '",E
+
+
+
+
+
+

@@ -1,0 +1,159 @@
+* ARSTATE.RWT - A/R Statement Report by Customer
+*
+[report frame]
+Ti::~INIT
+He:$E\NAME                                         $E
+He:~ADDR
+He:โทร.~TEL
+He:                                                                 `หน้า      ~PAGE
+Gh:: ~INIT_CUS          ;1 CUSCOD
+Gh:                                                                 `วันที่ \DATE
+Gh:                          $Bรายการบัญชีสอบทาน (มิใช่ใบทวงหนี้)$B
+Gh:
+Gh:เรียน ผู้จัดการฝ่ายบัญชี
+Gh:     ~CUSTOMER
+Gh:     ~ADDR01
+Gh:     ~ADDR_02                                            ~CUSCOD
+Gh:
+Gh:     เพื่อประโยชน์ในการตรวจสอบบัญชี  บริษัทจึงได้ส่งยอดคงเหลือบัญชีแสดงท่านเป็นลูกหนี้ของ
+Gh:บริษัทดังรายการต่อไปนี้  (การซื้อหรือการชำระเงินหลังจากวันที่ตรวจสอบไม่รวมอยู่ในรายการนี้)
+Gh:
+Gh:\LINE
+*Gh:     วันครบกำหนด เอกสาร#       วันที่  พนักงานขาย ใบวางบิล           ยอดคงค้าง
+Gh:"วันครบกำหนด,"เอกสาร#","วันที่","พนักงานขาย","ใบวางบิล","ยอดคงค้าง",
+Gh:     ----------- ------------ -------- ---------- ----------     -------------
+Bo:     ~DUEDAT      ~DOCNUM      ~DOCDAT     ~SLMCOD    ~BILNUM       ~REMAMT
+Ih::                    ;1 stcrd->docnum artrn->docnum
+Ib:                 ~N   ~ARTICLE                                      ~QTY    ~TQUCOD ~UNITPR      ~NETAMT_I       ;1
+Ih::                    ;2 artrnrm->docnum+artrnrm->seqnum stcrd->rdocnum
+Ib:                      ~REMARK        ;2
+Ih::                    ;3 artrnrm->docnum+artrnrm->seqnum stcrd->docnum+stcrd->seqnum
+Ib:                      ~REMARK        ;3
+Gf:                                                                 -------------                   ;1
+Gf:     จำนวนเงินรวมทั้งสิ้น                                       $B~SUB1REM       $B ~C_SUB1  ;1
+Gf:                                                                 =============               ;1
+Gf:     โปรดตรวจสอบรายการบัญชีข้างบนนี้ของท่าน  หากรายการใดที่แจ้งข้างต้นนี้ไม่ถูกต้อง          ;1
+Gf:กรุณาติดต่อสมุห์บัญชีภายใน 7 วัน มิฉะนั้นจะถือว่าเป็นการถูกต้อง                              ;1
+Gf: \FEED       ;1
+Su:
+Su:สรุป:
+Su: สิ้นสุดวันที่  ~ASDATE          ~REM_ASDATE
+Su: รหัสลูกค้าจาก  ~FROMCUS    ถึง  ~TOCUS
+Su: พนักงานขายจาก  ~FROMSLM    ถึง  ~TOSLM
+Su: เขตการขายจาก   ~FROMAREA   ถึง  ~TOAREA
+Su: แผนกจาก        ~FROMDEP    ถึง  ~TODEP
+Su:                                                                 -------------
+Su:     รวมยอดหนี้ทั้งสิ้น                                         $B~TOTREM        $B
+Su:                                                                 =============
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=5
+Right=90
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARSTATE.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=8_Inch, Default
+8_Inch=\027\033\001
+15_Inch=\027\033\001
+Query=SLMCOD>='Slm1()'.AND. SLMCOD<='Slm2()'
+Query=.AND.CUSCOD>='Cus1()'.AND. CUSCOD<='Cus2()'
+Query=.AND.(RECTYP='3'.or.RECTYP='4'.or.RECTYP='5')
+Query=.AND.DOCSTAT # 'C'.AND. DOCSTAT # 'O'
+Query=.AND.AREACOD>='Area1()'.AND. AREACOD<='Area2()'
+DATE FORMAT=วว/ดด/ปปปป   
+
+
+[master file]
+File=ARTRN
+Alias=A
+Tag=ARTRN9
+System=DATA_PATH
+
+[item file]
+File=stcrd
+Alias=B
+Tag=stcrd5
+System=DATA_PATH
+
+File=artrnrm
+Alias=C
+Tag=artrnrm1
+System=DATA_PATH
+
+[relate file]
+File=ARMAS
+Alias=R
+Tag=ARMAS1
+System=DATA_PATH
+Master file=ARTRN
+Master-Related Field=CUSCOD
+
+File=stmas
+Alias=C
+Tag=stmas1
+System=DATA_PATH
+Master file=stcrd
+Master-Related Field=STKCOD
+
+[data spec]
+*           len (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "tot_rem=0"
+~ADDR:      0,  "",                 "p_addr()",     ""
+~TEL:       0,  "",                 "p_telnum()",   ""
+~INIT_CUS:  0,  "",                 "",             "sub1rem=0; pg=0"
+~FROMCUS:   0,  "",                 "Cus1()",       ""
+~TOCUS:     0,  "",                 "Cus2()",       ""
+~FROMSLM:   0,  "",                 "Slm1()",       ""
+~TOSLM:     0,  "",                 "Slm2()",       ""
+~FROMAREA:  0,  "",                 "Area1()",      ""
+~TOAREA:    0,  "",                 "Area2()",      ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+~ASDATE:    0,  "d ดดด yyyy",       "@date_as()",   "as=@AsDate()"
+~REM_ASDATE: 0, "",                 "rem_asdate",   "rem_asdate=IIF(as#'  ','              ', '(เลือกทั้งหมด)')"
+
+~PAGE:      0,  "99999",            "pg",           "pg=pg+1"
+
+~CUSTOMER:  0,  "",                 "cus_nam",          "cus_nam = ARMAS->PRENAM - ' ' - ARMAS->CUSNAM"
+~CUSCOD:    0,  "",                 "cus_cod",          "cus_cod = '(รหัสลูกค้า=' - A->CUSCOD - ')'"
+~CUSNAME:   0,  "",                 "cus_nam",          ""
+~ADDR01:    0,  "",                 "ARMAS->ADDR01",    ""
+~ADDR02:    0,  "",                 "ARMAS->ADDR02",    ""
+~ADDR03:    0,  "",                 "ARMAS->ADDR03",    ""
+~ADDR_02:   0,  "",                 "addr_02",          "addr_02 = IIF(ARMAS->ADDR03='     ', ARMAS->ADDR02 - '   ' - ARMAS->ZIPCOD, ARMAS->ADDR02+'        ')"
+~ADDR_03:   0,  "",                 "addr_03",          "addr_03 = IIF(ARMAS->ADDR03#'     ', ARMAS->ADDR03 - '   ' - ARMAS->ZIPCOD, ARMAS->ADDR03+'        ')"
+~ZIP:       0,  "",                 "ARMAS->ZIPCOD",    ""
+
+~REMAMT:    0,  "999,999,999.99",   "rem",          "rem=IIF(A->RECTYP='5',A->REMAMT * -1, A->REMAMT); sub1rem=sub1rem+rem",F
+~DUEDAT:    0,  "",                 "A->DUEDAT",    ""
+~DOCNUM:    0,  "",                 "A->DOCNUM",    "seq=0",B
+~DOCDAT:    0,  "",                 "A->DOCDAT",    "",C
+~SLMCOD:    0,  "",                 "A->SLMCOD",    "",D
+~BILNUM:    0,  "",                 "A->BILNUM",    "",E
+
+~SUB1REM:   0,  "999,999,999.99",   "sub1rem",      "",F
+~C_SUB1:    0,  "",                 "",             "tot_rem=tot_rem+sub1rem; sub1rem=0"
+~TOTREM:    0,  "999,999,999.99",   "tot_rem",      ""
+
+~N:         0,  "99",               "seq",              "seq=seq+1",B
+~ARTICLE:  43,  "",                 "article",          "article = STCRD->STKCOD - ' ' - STCRD->STKDES",C
+~STKCOD:   15,  "",                 "STCRD->STKCOD",    ""
+~STKDES:   28,  "",                 "STCRD->STKDES",    ""
+~L:         0,  "",                 "STCRD->LOCCOD",    ""
+~QTY:       0,  "qtyZ(7)",          "STCRD->TRNQTY",    "",F
+~TQUCOD:    9,  "",                 "p_istab( STCRD->TQUCOD,  20, 1, 0 )",      "",G
+~UNITPR:    0,  "priZ(11)",         "STCRD->UNITPR",    "",H
+~DISC_I:    0,  "",                 "STCRD->DISC",      ""
+~NETAMT_I:  0,  "ZZ,ZZZ,ZZZ.ZZ",    "STCRD->TRNVAL",    "",I
+~REMARK:    0,  "",                 "ARTRNRM->REMARK",  "",C
+
+
+

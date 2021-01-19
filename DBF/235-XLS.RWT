@@ -1,0 +1,118 @@
+* POBAKPO.RWT - Back Order Report by P/O No.
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    ","","","","","","","","","","หน้า   : \PAGE
+He:$Eรายงานสินค้าค้างรับ เรียงตามใบสั่งซื้อ$E
+He:รับของวันที่   ~FROMDATE            ถึง  ~TODATE         ","","","","","","","","","","วันที่ : \DATE
+He:ใบสั่งซื้อจาก  ~FROMDOC             ถึง  ~TODOC
+He:รหัสสินค้าจาก  ~FROMSTK             ถึง  ~TOSTK
+He:คลังสินค้าจาก  ~FROMLOC             ถึง  ~TOLOC
+He:ผู้จำหน่ายจาก  ~FROMSUP             ถึง  ~TOSUP             เลือกแผนก  ~FROMDEP
+He:","\LINE
+He:","ใบสั่งซื้อ"," คลัง "," วันที่สั่งซื้อ","รับของวันที่ ","ผู้จำหน่าย ","รายละเอียดสินค้า ","ยอดสั่ง","","ค้างรับ "," จำนวนเงิน
+He:","\LINE
+**:xxxxxxxxx1xx-nnn xxxx DD/MM/YY DD/MM/YY xxxxxxxxx1xxxxxxxxx2xxxxxxxx xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5999,999.999 xx 999,999.999 999,999,999.99 
+Bo:~PONUM           ~LOCCOD    ~PODAT        ~RCVDAT     ~SUPNAM                      ~STKDES                                           ~ORDQTY     ~Q ~REMQTY     ~REMVAL
+Su:","","","","","","","-------------------","","--------------------"," ----------------------
+Su:","รวมทั้งสิ้น  (จำนวนเงินเป็นยอดโดยประมาณ เพราะยังไม่ได้นำส่วนลดรวมมาหัก)                                                $B~SUB1QTY       ~SUB1REM    ~SUB1VAL      $B
+Su:","","","","","",""," =========== ",""," ==========="," ==============
+Su:",">>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=160
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=POBAKPO.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=SUPCOD>='Sup1()'.AND. SUPCOD<='Sup2()'
+Query=.AND.PONUM>='Doc1()'.AND. PONUM<='Doc2()'
+Query=.AND.DTOS(RCVDAT)>='Date1()'.AND.DTOS(RCVDAT)<='Date2()'
+Query=.AND.STKCOD>='Stk1()'.AND. STKCOD<='Stk2()'
+Query=.AND.LOCCOD>='Loc1()'.AND. LOCCOD<='Loc2()'.AND.REMQTY >= 0.0001
+
+[master file]
+File=POPRIT
+Alias=A
+Tag=POPRIT1
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=B
+Tag=APMAS1
+System=DATA_PATH
+Master file=POPRIT
+Master-Related Field=SUPCOD
+
+File=STMAS
+Alias=C
+Tag=STMAS1
+System=DATA_PATH
+Master file=POPRIT
+Master-Related Field=STKCOD
+
+File=POPR
+Alias=D
+Tag=POPR1
+System=DATA_PATH
+Master file=POPRIT
+Master-Related Field=PONUM
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "sub1qty=0;sub1rem=0;sub1val=0; totqty=0;totrem=0;totval=0"
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMLOC:   0,  "",                 "Loc1()",       ""
+~TOLOC:     0,  "",                 "Loc2()",       ""
+~FROMSUP:   0,  "",                 "Sup1()",       ""
+~TOSUP:     0,  "",                 "Sup2()",       ""
+~FROMDOC:   0,  "",                 "Doc1()",       ""
+~TODOC:     0,  "",                 "Doc2()",       ""
+~FROMDATE:  0,  "วว ดดด ปปปป",       "@date1()",     ""
+~TODATE:    0,  "วว ดดด ปปปป",       "@date2()",     ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+
+~LOC:       0,  "",                 "A->LOCCOD",    "" ,C
+~LOCCOD:    0,  "",                 "loc",               "loc=' '-''-A->LOCCOD",C
+~PONUM:     0,  "",                 "num",          "num=A->PONUM-'-'-A->SEQNUM" ,B
+~PODAT:     0,  "วว/ดด/ปปปป",       "D->PODAT",     ""  ,D
+~RCVDAT:    0,  "วว/ดด/ปปปป",       "A->RCVDAT",    ""  ,E
+~STKDES:   51,  "",                 "A->STKDES",    ""  ,G
+~SUPNAM:   28,  "",                 "B->SUPNAM",    ""  ,F
+~ORDQTY:    0,  "qty(11)",          "A->ORDQTY",    "sub1qty=sub1qty+A->ORDQTY" ,H
+~REMQTY:    0,  "qty(11)",          "A->REMQTY",    "sub1rem=sub1rem+A->REMQTY" ,J
+~Q:         0,  "",                 "A->TQUCOD",    ""  ,I
+~UNITPR:    0,  "priZ(12)",         "A->UNITPR",    ""
+~DISC:      0,  "",                 "A->DISC",      ""
+~REMVAL:    0,  "999,999,999.99",   "remval",       "remval=A->REMQTY*A->UNITPR-(A->DISCAMT*A->REMQTY/A->ORDQTY); sub1val=sub1val+remval"  ,K
+
+~SUB1QTY:   0,  "qty(11)",          "sub1qty",      ""  ,G
+~SUB1REM:   0,  "qty(11)",          "sub1rem",      ""  ,I
+~SUB1VAL:   0,  "999,999,999.99",   "sub1val",      ""  ,J
+~C_SUB1:    0,  "",                 "",             "totqty=totqty+sub1qty; sub1qty=0; totrem=totrem+sub1rem; sub1rem=0; totval=totval+sub1val; sub1val=0"
+~TOTQTY:    0,  "qty(11)",          "totqty",       ""
+~TOTREM:    0,  "qty(11)",          "totrem",       ""
+~TOTVAL:    0,  "999,999,999.99",   "totval",       ""
+
+
+
+
+
+
+
+
+
+
+

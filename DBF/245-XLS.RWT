@@ -1,0 +1,92 @@
+* APRCVDUD.RWT - Receive Inventory Dued Report by Document date
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                        `หน้า   : \PAGE
+He:$Eใบรับสินค้าที่ถึงกำหนดจ่ายเงิน เรียงตามวันที่ซื้อ$E
+He:เฉพาะวันที่ครบกำหนดไม่เกินวันที่ ~ASDATE     ~REM_ASDATE     `วันที่ : \DATE
+H1:ผู้จำหน่าย  ~FROMSUP    ถึง  ~TOSUP
+He:\LINE
+*He:  วันที่  ใบรับสินค้า  อ้างถึง        ผู้จำหน่าย                     วันครบกำหนด ใบรับวางบิล  วันนัดจ่าย      ยอดในบิล    ยอดคงค้าง
+He:","วันที่ "," ใบรับสินค้า "," อ้างถึง"," ผู้จำหน่าย "," วันครบกำหนด"," ใบรับวางบิล"," วันนัดจ่าย "," ยอดในบิล"," ยอดคงค้าง
+He:\LINE
+**:DD/MM/YY xxxxxxxxx1xx xxxxxxxxx1xx    xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3 DD/MM/YY   xxxxxxxxx1xx DD/MM/YY  999,999,999.99 999,999,999.99
+Bo:~DOCDAT    ~DOCNUM      ~REFNUM         ~SUPNAM                        ~DUEDAT    ~BILNUM      ~APPDAT   ~NETAMT        ~REMAMT
+Su:","","","","","","","","--------------"," --------------
+Su:                                                                           ~S           ~CC ~T        $B~SUMTYP        ~SUMREM         $B
+Su:","","","","","","","","=============="," ==============
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=132
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APRCVDUD.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=SUPCOD>='Sup1()'.AND. SUPCOD<='Sup2()'
+Query=.AND.(RECTYP='3'.OR.RECTYP='4'.OR.RECTYP='5').AND.CMPLAPP='N'
+*Sort=DTOS(DOCDAT)+DOCNUM
+
+[master file]
+File=APTRN
+Alias=A
+Tag=APTRN5
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=B
+Tag=APMAS1
+System=DATA_PATH
+Master file=APTRN
+Master-Related Field=SUPCOD
+
+File=APBIL
+Alias=C
+Tag=APBIL1
+System=DATA_PATH
+Master file=APTRN
+Master-Related Field=BILNUM
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",             "exp"
+~INIT:          0,      "",                 "",                 "sumtyp=0;grand=0; sumrem=0;grandrem=0;seq=0"
+~ASDATE:        0,      "d ดดด yyyy",       "@date_as()",       "as=@AsDate()"
+~REM_ASDATE:    0,      "",                 "rem_asdate",       "rem_asdate=IIF(as#'  ','              ', '(เลือกทั้งหมด)')"
+
+~FROMSUP:       0,      "",                 "Sup1()",           ""
+~TOSUP:         0,      "",                 "Sup2()",           ""
+~DOCDAT:        0,      "วว/ดด/ปปปป",                 "A->DOCDAT",        "seq=seq+1",B
+~DOCNUM:        0,      "",                 "A->DOCNUM",        "",C
+~DOCNUM:        0,      "",                 "A->DOCNUM",        ""
+~REFNUM:        0,      "",                 "A->REFNUM",        "",D
+~SUPCOD:        0,      "",                 "A->SUPCOD",        ""
+~SUPNAM:       30,      "",                 "APMAS->SUPNAM",    ""E
+~DUEDAT:        0,      "วว/ดด/ปปปป",                 "A->DUEDAT",        "",F
+~BILNUM:        0,      "",                 "A->BILNUM",        "",G
+~APPDAT:        0,      "วว/ดด/ปปปป",                 "C->APPDAT",        "",H
+~NETAMT:        0,      "999,999,999.99",   "net",              "net=IIF(A->RECTYP='5',A->NETAMT*-1,A->NETAMT); sumtyp=sumtyp+net",I
+~REMAMT:        0,      "999,999,999.99",   "rem",              "rem=IIF(A->RECTYP='5',A->REMAMT*-1,A->REMAMT); sumrem=sumrem+rem",J
+
+~CC:            0,      "999",              "seq",              "",G
+~SUMTYP:        0,      "999,999,999.99",   "sumtyp",           "",I
+~SUMREM:        0,      "999,999,999.99",   "sumrem",           "",J
+~SUMTOT:        0,      "",                 " ",                "grand=grand+sumtyp;sumtyp=0; grandrem=grandrem+sumrem;sumrem=0"
+~TOTAL:         0,      "999,999,999.99",   "grand",            ""
+~TOTREM:        0,      "999,999,999.99",   "grandrem",         ""
+
+~S:             0,      "",         "รวมทั้งสิ้น",         "",F
+~T:             0,      "",         "ใบ",                  "",H
+
+
+
+
+

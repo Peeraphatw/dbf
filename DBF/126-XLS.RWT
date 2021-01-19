@@ -1,0 +1,251 @@
+* ARTRNHSB.RWT - Cash Sales Report by Area,Customer
+*
+[report frame]
+Ti::~INIT ~INIT2
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานขายเงินสด เรียงตามเขตการขาย,ลูกค้า$E
+He:วันที่จาก   ~FROMDATE     ถึง  ~TODATE                   `วันที่ : \DATE
+H1:รหัสลูกค้า  ~FROMCUS      ถึง  ~TOCUS
+H1:พนักงานขาย  ~FROMSLM      ถึง  ~TOSLM          เลือกแผนก  ~DEP
+He:\LINE
+He:  ~A1           ~A2     ~A3                          ~A4    ~A5        ~A6              ~A7        ~A8         ~A9         ~A10            ~A11        ~A12       
+HE:~D   ~B1                                                ~B2            ~B3            ~B4        ~B5         ~B6           
+He:\LINE
+**: *HSxxxxxxx1xx DD/MM/YY xxxxxxxxx1                   9 xxxxxxxxx1999,999,999.9999,999,999.99999,999,999.99 9,999,999.99999,999,999.99999,999,999.99 9,999,999.99
+Gh:$Bเขตการขาย : ~AREA                                              $B~KEPTAREA ; 1 AREACOD
+Gh:$B~CUSTOMER                                                      $B ; 2 CUSCOD
+Bo:~F~DOCNUM      ~DOCDAT     ~SLMCOD                   ~V~DISC     ~VALAMT       ~VATAMT      ~NETAMT        ~INTRCV     ~CSHRCV       ~CHQRCV        ~TAX         {1}
+Bo:~9                                              ตัดใบรับมัดจำ#  ~ADVNUM    ~ADVAMT
+Ih::~I                  ;1 stcrd->docnum artrn->docnum
+Ib:     ~N  ~ARTICLE                                ~QTY      ~TQUCOD   ~UNITPR      ~DISC_I   ~NETAMT_I        ~RDOCNUM        ;1
+If:                     ;1
+Ih::                    ;2 artrnrm->docnum+artrnrm->seqnum stcrd->docnum+stcrd->seqnum
+Ib:        ~REMARK      ;2
+Ih:     ~RE       ;3 artrnrm->docnum+'@' artrn->docnum+'@'
+Ib:        ~REMARK      ;3
+Ih:                     ;4 arrcpcq->rcpnum artrn->docnum
+Ib:     เลขที่เช็ค: ~CHQNUM      ~CHQDAT  ~BANK~CHQAMT      ~CHQSTAT ;4
+Gf:                                                                 -------------- ------------ ------------- ------------ ------------- ------------- ------------                 ;2
+Gf:                   รวม ~CUSNAME                                  $B~SUB2VAL      ~SUB2VAT     ~SUB2NET       ~SUB2INT    ~SUB2CSH      ~SUB2CHQ       ~SUB2TAX     $B            ;2
+Gf:~2    ยอดที่ตัดใบรับมัดจำ                                        $B~SUB2ADV                   ~SUB2ADVX     $B ~C_SUB2 ~C_SUB22                                                  ;2
+Gf:                                                                                                                                                                                 ;2
+Gf:                                                                 -------------- ------------ ------------- ------------ ------------- ------------- ------------                 ;1
+Gf:                   รวมเขต ~AREANAME                              $B~SUB1VAL      ~SUB1VAT     ~SUB1NET       ~SUB1INT    ~SUB1CSH      ~SUB1CHQ       ~SUB1TAX     $B            ;1
+Gf:~1       ยอดที่ตัดใบรับมัดจำ                                     $B~SUB1ADV                   ~SUB1ADVX     $B ~C_SUB1 ~C_SUB11                                                  ;1
+Gf:                                                                                                                                                                                 ;1
+Su:                                                                 ============== ============ ============= ============ ============= ============= ============
+Su:                   รวมทั้งสิ้น                                   $B~TOTVAL       ~TOTVAT      ~TOTNET        ~TOTINT     ~TOTCSH       ~TOTCHQ        ~TOTTAX     $B
+Su:~0                 ยอดที่ตัดใบรับมัดจำ                           $B~TOTADV                    ~TOTADVX      $B
+Su:                                                                 ============== ============ ============= ============ ============= ============= ============
+Su:หมายเหตุ:  เอกสารที่มีเครื่องหมาย '*' นำหน้า คือ เอกสารที่ถูกยกเลิก
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=162
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=ARTRNHSB.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=DTOS(DOCDAT)>='Date1()'.AND.DTOS(DOCDAT)<='Date2()'
+Query=.AND.SLMCOD>='Slm1()'.AND.SLMCOD<='Slm2()'
+Query=.AND.CUSCOD>='Cus1()'.AND.CUSCOD<='Cus2()'
+Query=.AND.AREACOD>='Area1()'.AND. AREACOD<='Area2()'.AND.RECTYP='1'
+Sort=AREACOD+CUSCOD+DTOS(DOCDAT)+DOCNUM
+DATE FORMAT=วว/ดด/ปปปป
+
+[master file]
+File=ARTRN
+Alias=A
+Tag=ARTRN1
+System=DATA_PATH
+
+[item file]
+File=STCRD
+Alias=B
+Tag=STCRD5
+System=DATA_PATH
+
+File=ARRCPCQ
+Alias=C
+Tag=ARRCPCQ1
+System=DATA_PATH
+
+File=artrnrm
+Alias=X
+Tag=artrnrm1
+System=DATA_PATH
+
+[relate file]
+File=OESLM
+Alias=D
+Tag=OESLM1
+System=DATA_PATH
+Master file=ARTRN
+Master-Related Field=SLMCOD
+
+File=ARMAS
+Alias=E
+Tag=ARMAS1
+System=DATA_PATH
+Master file=ARTRN
+Master-Related Field=CUSCOD
+
+File=stmas
+Alias=F
+Tag=stmas1
+System=DATA_PATH
+Master file=stcrd
+Master-Related Field=STKCOD
+
+File=BKTRN
+Alias=G
+Tag=BKTRN3
+System=DATA_PATH
+Master file=ARRCPCQ
+Master-Related Field=CHQNUM
+
+[data spec]
+*           len (0)default,(>0)cut,(<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "sub1aft=0;sub1adv=0;sub1val=0;sub1vat=0;sub1net=0;sub1int=0;sub1csh=0;sub1chq=0;sub1tax=0; sub2aft=0;sub2adv=0;sub2val=0;sub2vat=0;sub2net=0;sub2int=0;sub2csh=0;sub2chq=0;sub2tax=0"
+~INIT2:     0,  "",                 "",             "totaft=0;totadv=0;tot_val=0;totvat=0;totnet=0;totint=0;totcsh=0;totchq=0;tottax=0; p_det=@n_prn_detail();prn_detail=IIF(p_det=0,':',' ')"
+~FROMDATE:  0,  "d ดดด ปปปป",       "@date1()",     ""
+~TODATE:    0,  "d ดดด ปปปป",       "@date2()",     ""
+~FROMCUS:   0,  "",                 "Cus1()",       ""
+~TOCUS:     0,  "",                 "Cus2()",       ""
+~FROMSLM:   0,  "",                 "Slm1()",       ""
+~TOSLM:     0,  "",                 "Slm2()",       ""
+~DEP:       0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+
+~AREA:      0,  "",                 "p_istab( A->AREACOD,40,1,40)",     ""
+~KEPTAREA:  0,  "",                 "",             "area = ISTAB->TYPDES"
+~AREANAME:  0,  "",                 "area",         ""
+~CUSTOMER:  0,  "",                 "cus_nam",      "cus_nam = ARMAS->CUSNAM - ' /' - A->CUSCOD"
+~CUSNAME:  40,  "",                 "cus_nam",      ""
+~SALESMAN:  0,  "",                 "slm_nam",      "slm_nam = OESLM->SLMNAM - ' /' - A->SLMCOD"
+~SLMNAME:   0,  "",                 "slm_nam",      ""
+
+~F:         0,  "",                 "cancel",       "cancel=IIF(A->DOCSTAT='C',' *','  ' )"
+~DOCNUM:    0,  "",                 "A->DOCNUM",    "",B
+~DOCDAT:    0,  "",                 "A->DOCDAT",    "",C
+~SLMCOD:    0,  "",                 "A->SLMCOD",    "",D
+~CUSCOD:    0,  "",                 "A->CUSCOD",    ""
+~CUSNAM:   29,  "",                 "ARMAS->CUSNAM",""
+~V:         0,  "",                 "A->FLGVAT",    "",E
+~AMOUNT:    0,  "99,999,999.99",    "A->AMOUNT",    ""
+~DISC:      0,  "",                 "A->DISC",      "",F
+~AFTAMT:    0,  "999,999,999.99",   "A->AFTDISC",   "sub2aft=sub2aft+A->AFTDISC"
+~ADVAMT:    0,  "999,999,999.99",   "A->ADVAMT",    "sub2adv=sub2adv+A->ADVAMT",H
+~VALAMT:    0,  "999,999,999.99",   "A->NETVAL",    "sub2val=sub2val+A->NETVAL",G
+~VATAMT:    0,  "99,999,999.99",    "A->VATAMT",    "sub2vat=sub2vat+A->VATAMT",H
+~NETAMT:    0,  "999,999,999.99",   "A->NETAMT",    "sub2net=sub2net+A->NETAMT",I
+~INTRCV:    0,  "Z,ZZZ,ZZZ.ZZ",     "A->INTRCV",    "sub2int=sub2int+A->INTRCV",J
+~CSHRCV:    0,  "999,999,999.99",   "A->CSHRCV",    "sub2csh=sub2csh+A->CSHRCV",K
+~CHQRCV:    0,  "999,999,999.99",   "A->CHQRCV",    "sub2chq=sub2chq+A->CHQRCV",L
+~TAX:       0,  "Z,ZZZ,ZZZ.ZZ",     "A->TAX",       "sub2tax=sub2tax+A->TAX",M
+
+~SUB2AFT:   0,  "999,999,999.99",   "sub2aft",      ""
+~SUB2ADV:   0,  "999,999,999.99",   "sub2adv",      "",G
+~SUB2VAL:   0,  "999,999,999.99",   "sub2val",      "",G
+~SUB2VAT:   0,  "99,999,999.99",    "sub2vat",      "",H
+~SUB2NET:   0,  "999,999,999.99",   "sub2net",      "",I
+~SUB2INT:   0,  "9,999,999.99",     "sub2int",      "",J
+~SUB2CSH:   0,  "999,999,999.99",   "sub2csh",      "",K
+~SUB2CHQ:   0,  "999,999,999.99",   "sub2chq",      "",L
+~SUB2TAX:   0,  "9,999,999.99",     "sub2tax",      "",M
+~C_SUB2:    0,  "",                 "",             "sub1aft=sub1aft+sub2aft; sub2aft=0; sub1adv=sub1adv+sub2adv; sub2adv=0; sub1val=sub1val+sub2val; sub2val=0; sub1vat=sub1vat+sub2vat; sub2vat=0; sub1net=sub1net+sub2net; sub2net=0"
+~C_SUB22:   0,  "",                 "",             "sub1int=sub1int+sub2int; sub2int=0; sub1csh=sub1csh+sub2csh; sub2csh=0; sub1chq=sub1chq+sub2chq; sub2chq=0; sub1tax=sub1tax+sub2tax; sub2tax=0"
+
+~SUB1AFT:   0,  "999,999,999.99",   "sub1aft",      ""
+~SUB1ADV:   0,  "999,999,999.99",   "sub1adv",      "",G
+~SUB1VAL:   0,  "999,999,999.99",   "sub1val",      "",G
+~SUB1VAT:   0,  "99,999,999.99",    "sub1vat",      "",H
+~SUB1NET:   0,  "999,999,999.99",   "sub1net",      "",I
+~SUB1INT:   0,  "9,999,999.99",     "sub1int",      "",J
+~SUB1CSH:   0,  "999,999,999.99",   "sub1csh",      "",K
+~SUB1CHQ:   0,  "999,999,999.99",   "sub1chq",      "",L
+~SUB1TAX:   0,  "9,999,999.99",     "sub1tax",      "",M
+~C_SUB1:    0,  "",                 "",             "totaft=totaft+sub1aft; sub1aft=0; totadv=totadv+sub1adv; sub1adv=0; tot_val=tot_val+sub1val; sub1val=0; totvat=totvat+sub1vat; sub1vat=0; totnet=totnet+sub1net; sub1net=0"
+~C_SUB11:   0,  "",                 "",             "totint=totint+sub1int; sub1int=0; totcsh=totcsh+sub1csh; sub1csh=0; totchq=totchq+sub1chq; sub1chq=0; tottax=tottax+sub1tax; sub1tax=0"
+
+~TOTAFT:    0,  "999,999,999.99",   "totaft",       ""
+~TOTADV:    0,  "999,999,999.99",   "totadv",       "",G
+~TOTVAL:    0,  "999,999,999.99",   "tot_val",      "",G
+~TOTVAT:    0,  "99,999,999.99",    "totvat",       "",H
+~TOTNET:    0,  "999,999,999.99",   "totnet",       "",I
+~TOTINT:    0,  "9,999,999.99",     "totint",       "",J
+~TOTCSH:    0,  "999,999,999.99",   "totcsh",       "",K
+~TOTCHQ:    0,  "999,999,999.99",   "totchq",       "",L
+~TOTTAX:    0,  "9,999,999.99",     "tottax",       "",M
+
+
+~I:         0,  "",                 "",                 "seq=0"
+~N:         0,  "999",              "seq",              "seq=seq+1",B
+~ARTICLE:   39, "",                 "article",          "article=STCRD->STKCOD-'  '-STCRD->STKDES",C
+~STKCOD:    0,  "",                 "STCRD->STKCOD",    ""
+~STKDES:    0,  "",                 "STMAS->STKDES",    ""
+~L:         0,  "",                 "STCRD->LOCCOD",    ""
+~QTY:       0,  "qtyZ(10)",         "STCRD->TRNQTY",    "",D
+~TQUCOD:    0,  "",                 "p_istab( STCRD->TQUCOD, 20, 1, 0 )",       "",E
+~UNITPR:    0,  "priZ(12)",         "STCRD->UNITPR",    "",F
+~DISC_I:    0,  "",                 "STCRD->DISC",      "",G
+~NETAMT_I:  0,  "ZZZ,ZZZ,ZZZ.ZZ",   "STCRD->TRNVAL",    "",H
+~RDOCNUM:   0,  "",                 "STCRD->RDOCNUM",   "",I
+
+~CHQNUM:    0,  "",                 "ARRCPCQ->CHQNUM",      "",C
+~CHQDAT:    0,  "",                 "BKTRN->CHQDAT",        "",D
+~BANK:      0,  "",                 "p_istab( BKTRN->BNKCOD, 01, 0, 6 )",           "",E
+~CHQAMT:    0,  "99,999,999.99",    "amt",                  "amt=IIF(BKTRN->CHQNUM#'  ', BKTRN->AMOUNT, ARRCPCQ->RCVAMT)",F
+*~REMAMT:   0,  "99999,999.99",     "BKTRN->REMAMT",        ""
+*~RCVAMT:   0,  "99999,999.99",     "ARRCPCQ->RCVAMT",      ""
+~CHQSTAT:  11,  "",                 "p_istab( BKTRN->CHQSTAT, 02, 1, 13 )",         "",G
+
+~D:         0,  "",                 "prn_detail",       ""
+~REMARK:    0,  "",                 "ARTRNRM->REMARK",  "",C
+
+~ADVNUM:    0,  "",                 "A->ADVNUM",        "",G
+~SUB2ADVX:  0,  "999,999,999.99",   "tmp",              "tmp=sub2adv+sub2net",I
+~SUB1ADVX:  0,  "999,999,999.99",   "tmp",              "tmp=sub1adv+sub1net",I
+~TOTADVX:   0,  "999,999,999.99",   "tmp",              "tmp=totadv+totnet",I
+~9:         0,  "",                 "prnadv",           "prnadv=IIF(A->ADVAMT>0,' ',':')"
+~2:         0,  "",                 "prnadv",           "prnadv=IIF(sub2adv>0,' ',':')"
+~1:         0,  "",                 "prnadv",           "prnadv=IIF(sub1adv>0,' ',':')"
+~0:         0,  "",                 "prnadv",           "prnadv=IIF(totadv>0,' ',':')"
+
+~A1:        0,  "",                 "A1",               "A1='เลขที่ '",B
+~A2:        0,  "",                 "A2",               "A2='วันที่ '",C
+~A3:        0,  "",                 "A3",               "A3='พนักงานขาย '",D
+~A4:        0,  "",                 "A4",               "A4='V '",E
+~A5:        0,  "",                 "A5",               "A5='ส่วนลด '",F
+~A6:        0,  "",                 "A6",               "A6='มูลค่าสินค้า  '",G
+~A7:        0,  "",                 "A7",               "A7='VAT. '",H
+~A8:        0,  "",                 "A8",               "A8='รวมทั้งสิ้น  '",I
+~A9:        0,  "",                 "A9",               "A9='ยอดรับเกิน  '",J
+~A10:       0,  "",                 "A10",              "A10='รับด้วย ง/ส  '",K
+~A11:       0,  "",                 "A11",              "A11='รับด้วยเช็ค '",L
+~A12:       0,  "",                 "A12",              "A12='ภาษี ณ ที่จ่าย '",M
+
+~B1:        0,  "",                 "B1",               "B1='รายละเอียด '",C
+~B2:        0,  "",                 "B2",               "B2='จำนวน '",D
+~B3:        0,  "",                 "B3",               "B3='ราคาต่อหน่วย '",F
+~B4:        0,  "",                 "B4",               "B4='ส่วนลด '",G
+~B5:        0,  "",                 "B5",               "B5='จำนวนเงิน '",H
+~B6:        0,  "",                 "B6",               "B6='จากใบสั่งขาย '",I
+
+~RE:        0,   "",                "RE",                "RE='หมายเหตุ: '",C
+~CQ:       0,  "",                 "CQ",                "CQ='เลขที่เช็ค: '",B
+
+
+
+
+
+

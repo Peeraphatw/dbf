@@ -1,0 +1,93 @@
+* GLTRIAL.RWT - Trial Balance 3 Month
+*
+[report frame]
+Ti::~INIT_VAR ~INIT2
+He:\NAME                                                    ","","","","","","Ë¹éÒ : \PAGE
+He:§º·´ÅÍ§áÂ¡ÃÒÂ 3 à´×Í¹  ÊÔé¹ÊØ´ÇÑ¹·Õè ~TODATE             ","","","","","","ÇÑ¹·Õè : \DATE
+H1:àÅ¢·ÕèºÑ­ªÕ¨Ò¡  ","","~FROMACC         ¶Ö§  ~TOACC
+H1:àÅ×Í¡á¼¹¡       ","","~D1              ÃÇÁºÑ­ªÕÂÍ´à»ç¹ 0 ~Y
+*He:\LINE
+He:àÅ¢·ÕèºÑ­ªÕ","á¼¹¡","ª×èÍºÑ­ªÕ","Â¡ÁÒ","~M1","~M2","~M3","¤§àËÅ×Í
+*He:--------------","----","------------------------------------------------","----------------","----------------","----------------","----------------","----------------
+*  9999-9999-99999 xxxx  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5 9,999,999,999.99 9,999,999,999.99 9,999,999,999.99 9,999,999,999.99
+Bo::~Z1  ~Z2    ~ZZ
+Bo:~NUM            ~DEP  ~ACCNAM                                            ~BF              ~PTD1            ~PTD2            ~PTD3            ~BAL            ~N
+*Su:","","","----------------","----------------","----------------","----------------","----------------
+Su:                                      ÃÇÁ ~TC    ºÑ­ªÕ                   ~TOTBF           ~TOT1            ~TOT2            ~TOT3            ~TOTBAL         
+*Su:","","","================","================","================","================","================
+*Su:>>>> ¨ºÃÒÂ§Ò¹ <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=157
+Output=Select, Printer, Screen, File,
+File Name=GLTRIAL.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=ACCNUM>='Acc1()'.AND.ACCNUM<='Acc2()' .AND. GLACC->ACCTYP='0'
+
+[master file]
+File=GLBAL
+Alias=B
+Tag=GLBAL1
+System=DATA_PATH
+
+[relate file]
+File=GLACC
+Alias=A
+Tag=GLACC1
+System=DATA_PATH
+Master file=GLBAL
+Master-Related Field=ACCNUM
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT_VAR:  0,  "",                 "",             "CNT=0;P0=@yesno()"
+~INIT2:     0,  "",                 "",             "TOTBF=0;TOT1=0;TOT2=0;TOT3=0;TOTBAL=0"
+~ACCNUM:    0,  "",                 "B->ACCNUM",    "",C
+~DEP:       0,  "",                 "B->DEPCOD",    "",B
+~ACCNAM:    0,  "",                 "A->ACCNAM",    "",C
+*~TODATE:    0,  "d ´´´ yyyy",       "@date2()",     ""
+~TODATE:    0,  "d ´´´ »»»»",       "@date2()",     ""
+~Z1:        0,  "",                 "",             "PTD1=@nPtd(-2);PTD2=@nPtd(-1);PTD3=@nPtd()"
+~Z2:        0,  "",                 "",             "BF=@nBAL(-3);BAL=@nBAL()"
+~ZZ:        0,  "",                 "",             "SK=IIF(PTD1=0.and.PTD2=0.and.PTD3=0.and.BAL=0,'}',' ')"
+~NUM:       0,  "",                 "NUM",          "NUM=IIF(P0='N'.AND.SK='}','}              ',B->ACCNUM)"
+
+~BF:        0,  "9,999,999,999.99", "BF",           "TOTBF=TOTBF+BF",D
+~PTD1:      0,  "9,999,999,999.99", "PTD1",         "TOT1=TOT1+PTD1",E
+~PTD2:      0,  "9,999,999,999.99", "PTD2",         "TOT2=TOT2+PTD2",F
+~PTD3:      0,  "9,999,999,999.99", "PTD3",         "TOT3=TOT3+PTD3",G
+~BAL:       0,  "9,999,999,999.99", "BAL",          "TOTBAL=TOTBAL+BAL",H
+
+~TOTBF:     0,  "9,999,999,999.99", "TOTBF",        "",D
+~TOT1:      0,  "9,999,999,999.99", "TOT1",         "",E
+~TOT2:      0,  "9,999,999,999.99", "TOT2",         "",F
+~TOT3:      0,  "9,999,999,999.99", "TOT3",         "",G
+~TOTBAL:    0,  "9,999,999,999.99", "TOTBAL",       "",H
+
+~N:         0,  "",                 "",             "CNT=CNT+1"
+~TC:        0,  "99,999",           "CNT",          ""
+~FROMACC:   0,  "",                 "Acc1()",       ""
+~TOACC:     0,  "",                 "Acc2()",       ""
+~D1:        0,  "",                 "Dep1()",       ""
+~D2:        0,  "",                 "Dep2()",       ""
+~D3:        0,  "",                 "Dep3()",       ""
+~D4:        0,  "",                 "Dep4()",       ""
+~D5:        0,  "",                 "Dep5()",       ""
+~D6:        0,  "",                 "Dep6()",       ""
+~P:         0,  "",                 "AsPeriod()",   ""
+~Y:         0,  "",                 "P0",           ""
+
+~M1:        0,  "",                 "M1",           "M1=@p_month(-2)"
+~M2:        0,  "",                 "M2",           "M2=@p_month(-1)"
+~M3:        0,  "",                 "M3",           "M3=@p_month(0)"
+
+
+

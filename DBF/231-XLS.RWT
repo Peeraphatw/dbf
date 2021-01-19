@@ -1,0 +1,163 @@
+* POPRN.RWT - P/O Report by P/O No.
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                    ","","","","","","","","","","","หน้า   : \PAGE
+He:$Eรายงานใบสั่งซื้อ เรียงตามเลขที่$E
+He:เลขที่จาก      ~FROMDOC      ถึง  ~TODOC                              ","","","","","","","","","","","วันที่ : \DATE
+He:วันที่จาก      ~FROMDATE     ถึง  ~TODATE
+He:ผู้จำหน่ายจาก  ~FROMSUP      ถึง  ~TOSUP          เลือกแผนก       ~FROMDEP
+He:","\LINE
+He:","เลขที่ ","วันที่ "," ผู้จำหน่าย"," รับของวันที่ ","เครดิต"," V"," ส่วนลด "," มูลค่าสินค้า ","VAT. ","รวมทั้งสิ้น"," รับหมด ","อ้างอิง
+He:~D  ",""," รายละเอียด  ","","","",""," จำนวน ",""," ราคาต่อหน่วย ","ส่วนลด ","จำนวนเงิน "," วันที่รับของ
+He:","\LINE
+**: *POxxxxxxx1xx DD/MM/YY xxxxxxxxx1 DD/MM/YY  ZZZ  9 xxxxxxxxx1999,999,999.9999,999,999.99999,999,999.99  Y
+Bo:~F~PONUM       ~PODAT       ~SUPCOD    ~RCVDAT   ~TRM ~V~DISC     ~VALAMT       ~VATAMT      ~NETAMT         ~Y   ~YOUREF
+Ih::~I                          ;1 poprit->ponum popr->ponum
+Ib:              ~N  ~STKCOD              ~STKDES                             ~ORDQTY   ~TQUCOD   ~UNITPR      ~DISC_I   ~NETAMT_I        ~RCVDAT_I ;1
+If:                             ;1
+Ih::                            ;2 artrnrm->docnum+artrnrm->seqnum poprit->ponum+poprit->seqnum
+Ib:                  ~REMARK    ;2
+Ih:","หมายเหตุ:                 ;3 artrnrm->docnum+'@' popr->ponum+'@'
+Ib:                  ~REMARK    ;3
+If:                             ;3
+Su: ","","","","","","",""," -----------------------"," ---------------------"," --------------------
+Su:  ~B4           ~CC     ~D4                                          $B~SUB1VAL      ~SUB1VAT     ~SUB1NET      $B
+Su: ","","","","","","",""," =============="," ============"," =============
+Su:","หมายเหตุ:  เอกสารที่มีเครื่องหมาย '*' นำหน้า คือ เอกสารที่ถูกยกเลิก
+Su:",">>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=132
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=POPRN.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=PONUM>='Doc1()'.AND. PONUM<='Doc2()'
+Query=.AND.DTOS(PODAT)>='Date1()'.AND.DTOS(PODAT)<='Date2()'
+Query=.AND.SUPCOD>='Sup1()'.AND. SUPCOD<='Sup2()'
+
+[master file]
+File=POPR
+Alias=A
+Tag=POPR1
+System=DATA_PATH
+
+[item file]
+File=POPRIT
+Alias=B
+Tag=POPRIT1
+System=DATA_PATH
+
+File=artrnrm
+Alias=X
+Tag=artrnrm1
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=D
+Tag=APMAS1
+System=DATA_PATH
+Master file=POPR
+Master-Related Field=SUPCOD
+
+File=STMAS
+Alias=E
+Tag=STMAS1
+System=DATA_PATH
+Master file=POPRIT
+Master-Related Field=STKCOD
+
+[data spec]
+*           len (0)default,(>0)cut,(<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "p_det=@n_prn_detail(); prn_detail=IIF(p_det=0,':',' '); sub1val=0;sub1vat=0;sub1net=0; tot_val=0;totvat=0;totnet=0;cnt=0"
+~FROMDOC:   0,  "",                 "Doc1()",       ""
+~TODOC:     0,  "",                 "Doc2()",       ""
+~FROMDATE:  0,  "วว ดดด ปปปป",       "@date1()",     ""
+~TODATE:    0,  "วว ดดด ปปปป",       "@date2()",     ""
+~FROMSUP:   0,  "",                 "Sup1()",       ""
+~TOSUP:     0,  "",                 "Sup2()",       ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+
+~SUPPLIER:  0,  "",                 "sup_nam",      "sup_nam = APMAS->SUPNAM - ' /' - A->SUPCOD"
+~SUPNAME:   0,  "",                 "sup_nam",      ""
+
+~F:         0,  "",                 "cancel",       "cancel=IIF(A->DOCSTAT='C',' *','  ' )"
+~PONUM:     0,  "",                 "A->PONUM",     "cnt=cnt+1"  ,B
+~PODAT:     0,  "วว/ดด/ปปปป",                 "A->PODAT",     ""  ,C
+~SLMCOD:    0,  "",                 "A->SLMCOD",    ""
+~SUPCOD:    0,  "",                 "A->SUPCOD",    ""  ,D
+~SUPNAM:    0,  "",                 "APMAS->SUPNAM",""
+~V:         0,  "",                 "A->FLGVAT",    ""  ,G
+~AMOUNT:    0,  "99,999,999.99",    "A->AMOUNT",    ""
+~DISC:      0,  "",                 "A->DISC",      ""  ,H
+~VATAMT:    0,  "99,999,999.99",    "A->VATAMT",    "sub1vat=sub1vat+A->VATAMT",J
+~VALAMT:    0,  "999,999,999.99",   "A->NETVAL",    "sub1val=sub1val+A->NETVAL",I
+~NETAMT:    0,  "999,999,999.99",   "A->NETAMT",    "sub1net=sub1net+A->NETAMT",K
+~RCVDAT:    0,  "วว/ดด/ปปปป",                 "A->RCVDAT",    ""  ,E
+~TRM:       0,  "ZZZ",              "A->PAYTRM",    ""  ,F
+~Y:         0,  "",                 "dlv_all",      "dlv_all=IIF(A->DOCSTAT = 'M','Y','N')",L
+~YOUREF:    0,  "",                 "A->YOUREF",    "" ,M
+
+~SUB1VAT:   0,  "99,999,999.99",    "sub1vat",      "",J
+~SUB1VAL:   0,  "999,999,999.99",   "sub1val",      "",I
+~SUB1NET:   0,  "999,999,999.99",   "sub1net",      "",K
+~C_SUB1:    0,  "",                 "",             "tot_val=tot_val+sub1val; sub1val=0; totvat=totvat+sub1vat; sub1vat=0; totnet=totnet+sub1net; sub1net=0"
+~TOTVAT:    0,  "99,999,999.99",    "totvat",       ""
+~TOTVAL:    0,  "999,999,999.99",   "tot_val",      ""
+~TOTNET:    0,  "999,999,999.99",   "totnet",       ""
+
+~CC:        0,  "999",              "cnt",              "",C
+~I:         0,  "",                 "",                 "seq=0"
+~N:         0,  "999",              "seq",              "seq=seq+1"  ,B
+~ARTICLE:   31, "",                 "article",          "article=POPRIT->STKCOD-' '-POPRIT->STKDES"   
+~STKCOD:    0,  "",                 "POPRIT->STKCOD",   "",C
+~STKDES:    0,  "",                 "STMAS->STKDES",    "",D
+~ORDQTY:    0,  "qtyZ(10)",         "POPRIT->ORDQTY",   ""  ,H
+~REMQTY:    0,  "qtyZ(10)",         "POPRIT->REMQTY",   ""
+~TQUCOD:    0,  "",                 "p_istab( POPRIT->TQUCOD, 20, 1, 0 )",      "",  ,I
+~UNITPR:    0,  "ZZZZZ,ZZZ.ZZ",     "POPRIT->UNITPR",   ""  ,J
+~DISC_I:    0,  "",                 "POPRIT->DISC",     ""  ,K
+~NETAMT_I:  0,  "ZZZ,ZZZ,ZZZ.ZZ",   "POPRIT->TRNVAL",   ""  ,L
+~RCVDAT_I:  0,  "วว/ดด/ปปปป",       "rcvdat_i",         "rcvdat_i = IIF(POPRIT->RCVDAT#POPR->RCVDAT, POPRIT->RCVDAT, CTOD('        '))",M
+
+~D:         0,  "",                 "prn_detail",       ""
+~REMARK:    0,  "",                 "ARTRNRM->REMARK",  ""   ,C
+
+~B4:            0,      "",                 "รวมทั้งสิ้น",    "",B
+~D4:            0,      "",                 "ใบ",    "",D
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

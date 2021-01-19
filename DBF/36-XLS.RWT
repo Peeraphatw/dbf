@@ -1,0 +1,202 @@
+* BKPCQNUM.RWT - Payable Cheque by Bank, Cheque No.
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานเช็คจ่าย เรียงตามเลขที่เช็ค$E
+He:เลขที่เช็คจาก  ~FROMCHQ      ถึง  ~TOCHQ                 `วันที่ : \DATE
+H1:จ่ายจากบัญชี   ~FROMBANK     ถึง  ~TOBANK
+H1:สถานะเช็คจาก   ~FS           ถึง  ~TS          เลือกแผนก  ~DEP
+He:\LINE
+*He:    เลขที่เช็ค   วันที่เช็ค    จำนวนเงิน สถานะเช็ค         วันที่เช็คผ่าน  จ่ายให้ หมายเหตุ                                                      ใบสำคัญ#     ใบจ่ายเงิน# เลขที่บิล          จำนวนเงิน หมายเหตุในใบจ่าย               ลายเซ็นผู้รับเช็ค วันที่
+*He:~D                                                                                รายละเอียด (หมายเหตุของใบจ่ายเงิน)
+HE:     ~1           ~2            ~3           ~4             ~5            ~6          ~7                                                             ~8            ~9           ~10               ~11          ~12                        ~13                  ~14
+He:\LINE
+**:   xxxxxxxxx1xx DD/MM/YY 999,999,999.99  xxxxxxxxxxxxxxxxxx DD/MM/YY  xxxxxxxxx1 xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5 xxxxxxxxxx
+Gh:   ~15            : $B~B  ~BANK                                                                         $B ;1 BNKACC
+Bo:   ~CHQNUM      ~CHQDAT  ~AMOUNT         ~CHQSTAT           ~PASSDAT  ~CUSCOD    ~REMARK                                            ~VOUCHER     {1}
+Ih::                  ;1 APRCPCQ->CHQNUM A->CHQNUM
+Ib:{1}                                                                                                                                              ~RCPNUM    ~REFNUM        ~PAYAMT        ~YOUREF  ;1
+Ih::                                                                                            ;2 artrnrm->docnum+'@' aprcpcq->rcpnum+'@'
+Ib:                                                                                  ~REMARK_R  ;2
+*Ih::รายการในใบ PS          ~SEQ0   ;3 aprcpit->rcpnum aprcpcq->rcpnum
+*Ib:              ~N  ~RCVNUM          ~PAYAMT_I    ;3
+*Ih::รายการสินค้าในใบ RR,HP ~Q0     ;4 stcrd->docnum aprcpcq->rcpnum
+*Ib:                       ~NN  ~ARTICLE                           ~QTY   ~TQUCOD    ~UNITPR     ~NETAMT_I      ;4
+*Ih::รายการในใบ OE,AE       ~Q0     ;5 stcrd->docnum aprcpit->docnum
+*Ib:                       ~NN  ~ARTICLE                           ~QTY   ~TQUCOD    ~UNITPR     ~NETAMT_I      ;5
+Gf:                           ;1
+Gf:     ~16 $B~BANKNAME       ~SUBTOT       $B    ~18   ~CNT    ~19   ~CLRSUB  ;1
+Gf:                                             ;1
+Su:                         ==============
+Su:     ~17                 $B~TOTAL        $B
+Su:                         ==============
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Left=0
+Right=240
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=BKPCQNUM.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, Default
+*8_Inch=\027\033\005
+15_Inch=\027\033\005
+Query=BNKACC>='Bank1()'.AND.BNKACC<='Bank2()'
+Query=.AND.CHQNUM >='Chq1()'.AND.CHQNUM<='Chq2()'
+Query=.AND.CHQSTAT>='ChqStat1()'.AND.CHQSTAT<='ChqStat2()'
+Query=.AND.BKTRNTYP='QP'
+
+[master file]
+File=BKTRN
+Alias=A
+Tag=BKTRN10
+System=DATA_PATH
+
+[item file]
+File=APRCPCQ
+Alias=C
+Tag=APRCPCQ2
+System=DATA_PATH
+
+File=ARTRNRM
+Alias=X
+Tag=ARTRNRM1
+System=DATA_PATH
+
+File=APRCPIT
+Alias=E
+Tag=APRCPIT1
+System=DATA_PATH
+
+File=STCRD
+Alias=F
+Tag=STCRD5
+System=DATA_PATH
+
+[relate file]
+File=BKMAS
+Alias=B
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+File=APTRN
+Alias=Z
+Tag=APTRN1
+System=DATA_PATH
+Master file=APRCPCQ
+Master-Related Field=RCPNUM
+
+*File=ISRUN
+*Alias=Y
+*Tag=ISRUN2
+*System=DATA_PATH
+*Master file=BKTRN
+*Master-Related Field=VOUCHER
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",                 "exp"
+~INIT:          0,      "",                 "",                     "p_det=@n_prn_detail();prn_detail=IIF(p_det=0,':',' '); subtot=0; grand=0; cnt=0"
+~FROMBANK:      0,      "",                 "Bank1()",              ""
+~TOBANK:        0,      "",                 "Bank2()",              ""
+~FROMCHQ:       0,      "",                 "Chq1()",               ""
+~TOCHQ:         0,      "",                 "Chq2()",               ""
+~FS:            0,      "",                 "ChqStat1()",           ""
+~TS:            0,      "",                 "ChqStat2()",           ""
+~DEP:           0,      "",                 "Dep1()",               ""
+
+
+~B:             0,      "",                 "BKMAS->BNKACC",        "",B
+~BANK:          0,      "",                 "bank",                 "bank = BKMAS->BNKNAM - ' (สาขา' - BKMAS->BRANCH -')'; abb_bank = BKMAS->SHORTNAM",C
+~BANKNAME:      0,      "",                 "abb_bank",             "",C
+~CNT:           0,      "999,999",          "cnt",                  "",F
+
+
+~CHQNUM:        0,      "",                 "A->CHQNUM",            "cnt=cnt+1",B
+~CHQDAT:        0,      "วว/ดด/ปปปป",                 "A->CHQDAT",            "",C
+~AMOUNT:        0,      "999,999,999.99",   "A->AMOUNT",            "subtot=subtot+A->AMOUNT",D
+~SUBTOT:        0,      "999,999,999.99",   "subtot",               "grand=grand+subtot",D
+~TOTAL:         0,      "999,999,999.99",   "grand",                "",D
+~CHQSTAT:       0,      "",                 "p_istab( A->CHQSTAT, 02, 1, 18 )",         "",E
+~PASSDAT:       0,      "วว/ดด/ปปปป",                 "pass_dat",             "pass_dat=IIF(A->CHQSTAT='1',A->TRNDAT,STOD('        '))",F
+~CUSCOD:        0,      "",                 "A->CUSCOD",            "",G
+*~REMAMT:       0,      "999,999,999.99",   "A->REMAMT",            ""
+~REMARK:       50,      "",                 "re_mark",              "re_mark = A->REMARK-' /'-A->NAME",H
+~REMARK_R:      0,      "",                 "ARTRNRM->REMARK",      "",H
+*~VOUCHER:      0,      "",                 "vv",                   "vv=IIF(ISRUN->DOCTYP='GL', A->VOUCHER, '            ' )"
+~VOUCHER:       0,      "",                 "vv",                   "vv=IIF(A->CHQNUM=A->VOUCHER, '            ', A->VOUCHER )",I
+~RCPNUM:        0,      "",                 "APRCPCQ->RCPNUM",      "",J
+~REFNUM:        0,      "",                 "APTRN->REFNUM",        "",K
+~PAYAMT:        0,      "99,999,999.99",    "APRCPCQ->PAYAMT",      "",L
+~YOUREF:        0,      "",                 "APTRN->YOUREF",        "",M
+
+
+~CLRSUB:        0,      "",                 "",                     "subtot=0;cnt=0"
+
+~D:             0,      "",                 "prn_detail",           ""
+
+~SEQ0:          0,      "99",               "",                     "seq=0"
+~Q0:            0,      "99",               "",                     "q=0"
+~N:             0,      "99",               "seq",                  "seq=seq+1; q=0"
+~RCVNUM:        0,      "",                 "APRCPIT->DOCNUM",      ""
+~PAYAMT_I:      0,      "99,999,999.99",    "pay",                  "pay = IIF(APRCPIT->RECTYP='0'.or.APRCPIT->RECTYP='5',APRCPIT->PAYAMT*-1,APRCPIT->PAYAMT)"
+
+~NN:            0,      "99",               "q",                    "q=q+1"
+~ARTICLE:      43,      "",                 "article",              "article = STCRD->STKCOD - ' ' - STCRD->STKDES"
+~STKCOD:       15,      "",                 "STCRD->STKCOD",        ""
+~STKDES:       28,      "",                 "STCRD->STKDES",        ""
+~L:             0,      "",                 "STCRD->LOCCOD",        ""
+~QTY:           0,      "ZZ,ZZZ",           "STCRD->TRNQTY",        ""
+~TQUCOD:        9,      "",                 "p_istab( STCRD->TQUCOD, 20, 1, 0 )",      ""
+~UNITPR:        0,      "ZZZ,ZZZ.ZZ",       "STCRD->UNITPR",        ""
+~DISC_I:        0,      "",                 "STCRD->DISC",          ""
+~NETAMT_I:      0,      "ZZ,ZZZ,ZZZ.ZZ",    "STCRD->TRNVAL",        ""
+~MQTY:          0,      "ZZ,ZZZ",           "mqty",                 "mqty = STCRD->TRNQTY * STCRD->TFACTOR"
+~MQUCOD:        0,      "",                 "p_istab( STMAS->QUCOD,  20, 1, 0 )",       ""
+
+
+
+~1:        0,    "",   "1",   "1 = 'เลขที่เช็ค '",B
+~2:        0,    "",   "2",   "2 = 'วันที่เช็ค '",C
+~3:        0,    "",   "3",   "3 = 'จำนวนเงิน  '",D
+~4:        0,    "",   "4",   "4 = 'สถานะเช็ค  '",E
+~5:        0,    "",   "5",   "5 = 'วันที่ผ่านเช็ค   '",F
+~6:        0,    "",   "6",   "6 = 'จ่ายให้  '",G
+~7:        0,    "",   "7",   "7 =  'หมายเหตุรายละเอียด(หมายเหตุของใบจ่ายเงิน)       '",H
+~8:        0,    "",   "8",   "8 = 'ใบสำคัญ#    '",I
+~9:        0,    "",   "9",   "9 = 'ใบจ่ายเงิน#  '",J
+~10:       0,    "",   "10",  "10 = 'เลขที่บิล  '",K
+~11:       0,    "",   "11",  "11 = 'จำนวนเงิน   '",L
+~12:       0,    "",   "12",  "12 = 'หมายเหตุในใบจ่าย   '",M
+~13:       0,    "",   "13",  "13 = 'ลายเซ็นผู้รับเช็ค  '",N
+~14:       0,    "",   "14",  "14 = 'วันที่  '",O
+
+~15:       0,    "",   "15",  "15 = 'จ่ายจายบัญชี    '",A
+~16:       0,    "",   "16",  "16 = 'รวม    '",B
+~17:       0,    "",   "17",  "17 = 'รวมทั้งสิ้น    '",B
+~18:       0,    "",   "18",  "18 = 'จำนวน    '",E
+~19:       0,    "",   "19",  "19 = 'ใบ    '",G
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

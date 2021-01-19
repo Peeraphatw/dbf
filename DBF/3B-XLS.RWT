@@ -1,0 +1,89 @@
+* BKRCQTFB.RWT - Print Cheque Deposit's Slip of Thai Farmer Bank
+*
+[report frame]
+Ti::~INIT
+Gh::           ¹Ó½Ò¡à¢éÒºÑ­ªÕ : ~B ~BANK               ;1 BNKACC
+Bo:                                ~BRANCH                      ~PAYIN
+Bo:","  \NAME                                                    "," ~BNKNUM
+Bo:   ~CHQNUM           ~BNK         ~QBRANCH                   ~CHQDAT          ~AMOUNT
+Bo:       ~BAHT
+Bo:"," àªç¤ÁÕ»Ñ­ËÒµÔ´µèÍ.  ","~TEL
+Bo:
+Bo:
+Bo:
+Bo:
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=122
+Lines=-9
+Output=Select, Printer, Screen, File,
+File Name=BKRCQTFB.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Print Control=\027\033\001
+*Select Paper=15_Inch, 8_Inch, Default
+*8_Inch=\027\033\001
+*15_Inch=\027\033\001
+Feed After Print=3
+Query=DTOS(PAYINDAT)>='Date1()'.AND.DTOS(PAYINDAT)<='Date2()'
+Query=.AND.CHQSTAT>='ChqStat1()'.AND.CHQSTAT<='ChqStat2()'
+Query=.AND.BNKACC>='Bank1()'.AND.BNKACC<='Bank2()'.AND.BKTRNTYP='QR'
+Sort=BNKACC+DTOS(PAYINDAT)+DTOS(CHQDAT)+BNKCOD
+Date Format=ÇÇ/´´/»»»»
+
+[master file]
+File=BKTRN
+Alias=A
+Tag=BKTRN1
+System=DATA_PATH
+
+[relate file]
+File=BKMAS
+Alias=B
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,    "pict",             "data",                 "exp"
+~INIT:          0,      "",                 "",                     "subtot=0; grand=0"
+~ADDR:          0,      "",                 "p_addr()",             ""
+~TEL:           0,      "",                 "p_telnum()",           ""
+
+~FROMBANK:      0,      "",                 "frombnkacc()",         ""
+~TOBANK:        0,      "",                 "tobnkacc()",           ""
+~FROMDATE:      0,      "",                 "fromdate()",           ""
+~TODATE:        0,      "",                 "todate()",             ""
+~PAYIN:         0,      "",                 "A->PAYINDAT",          "",D
+~REFDOC:        0,      "",                 "A->REFDOC",            ""
+~CHQDAT:        0,      "",                 "A->CHQDAT",            "",E
+~BNK:           0,      "",                 "p_istab( A->BNKCOD, 01, 0, 6 )",           "",C
+~CHQNUM:        0,      "",                 "A->CHQNUM",            "",B
+~CUSCOD:        0,      "",                 "A->CUSCOD",            ""
+~QBRANCH:       0,      "",                 "A->BRANCH",            "",D
+~AMOUNT:        0,      "999,999,999.99",   "A->AMOUNT",            "subtot=subtot+A->AMOUNT",F
+~BAHT:          0,      "",                 "t_baht( A->AMOUNT )",  "",B
+*~REMAMT:       0,      "999,999,999.99",   "A->REMAMT",            ""
+~CHQSTAT:       0,      "",                 "p_istab( A->CHQSTAT, 02, 1, 15 )",         ""
+~PASSDAT:       0,      "",                 "pass_dat",             "pass_dat=IIF(A->CHQSTAT='1',A->TRNDAT,STOD('        '))"
+~REMARK:        30,     "",                 "A->REMARK",            ""
+~BANK:          0,      "",                 "bank",                 "bank = BKMAS->BNKNAM"
+~BANKNAME:      0,      "",                 "bank",                 ""
+~B:             0,      "",                 "BKMAS->BNKACC",        ""
+~BNKNUM:        0,      "",                 "BKMAS->BNKNUM",        ""
+~BRANCH:        0,      "",                 "BKMAS->BRANCH",        "",B
+
+~REFNUM:        0,      "",                 "ARRCPCQ->RCPNUM",      ""
+~SUBTOT:        0,      "999,999,999.99",   "subtot",               "grand=grand+subtot"
+~CLRSUB:        0,      "",                 "",                     "subtot=0"
+~TOTAL:         0,      "999,999,999.99",   "grand",                ""
+
+
+
+

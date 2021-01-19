@@ -1,0 +1,197 @@
+* APTRNHPD.RWT - Cash Purchasing Report by Document Date
+*
+[report frame]
+Ti::~INIT ~INIT2
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานซื้อเงินสด เรียงตามวันที่$E
+He:วันที่จาก   ~FROMDATE     ถึง  ~TODATE                   `วันที่ : \DATE
+H1:ผู้จำหน่าย  ~FROMSUP      ถึง  ~TOSUP          เลือกแผนก  ~FROMDEP
+He:\LINE
+*He:  วันที่   เลขที่      ผู้จำหน่าย  เลขที่บิล      V      ส่วนลด     มูลค่าสินค้า     VAT.       รวมทั้งสิ้น ยอดจ่ายเกิน จ่ายด้วย ง/ส   จ่ายด้วยเช็ค ภาษี ณ ที่จ่าย
+He:","วันที่ ","เลขที่ "," ผู้จำหน่าย","เลขที่บิล","V","ส่วนลด","มูลค่าสินค้า","VAT.","รวมทั้งสิ้น","ยอดจ่ายเกิน","จ่ายด้วย ง/ส","จ่ายด้วยเช็ค","ภาษี ณ ที่จ่าย
+He:~D"," รายละเอียด","","","","","จำนวน","","ราคาต่อหน่วย","ส่วนลด"," จำนวนเงิน"," จากใบสั่งซื้อ
+*He:~D   รายละเอียด                                         จำนวน          ราคาต่อหน่วย   ส่วนลด     จำนวนเงิน จากใบสั่งซื้อ
+He:\LINE
+**:DD/MM/YY *RRxxxxxxx1xx xxxxxxxxx1 xxxxxxxxx1xxxxx 9 xxxxxxxxx1999,999,999.9999,999,999.99999,999,999.99 9,999,999.99999,999,999.99999,999,999.99 9,999,999.99
+Bo:~DOCDAT ~F~DOCNUM      ~SUPCOD    ~REFNUM         ~V~DISC     ~VALAMT       ~VATAMT      ~NETAMT        ~INTPAY     ~CSHPAY       ~CHQPAY        ~TAX
+Bo:~9                                                              ~R               ~ADVNUM    ~ADVAMT
+Ih::~I                  ;1 stcrd->docnum aptrn->docnum
+Ib:     ~N  ~ARTICLE                                            ~QTY      ~TQUCOD   ~UNITPR      ~DISC_I   ~NETAMT_I      ~RDOCNUM       ;1
+If:                     ;1
+Ih::                    ;2 artrnrm->docnum+artrnrm->seqnum stcrd->docnum+stcrd->seqnum
+Ib:        ~REMARK      ;2
+Ih:     ~S     ;3 artrnrm->docnum+'@' aptrn->docnum+'@'
+Ib:        ~REMARK      ;3
+Ih:                     ;4 aprcpcq->rcpnum aptrn->docnum
+Ib:      ~T           ~CHQNUM      ~CHQDAT       ~BANK      ~CHQAMT      ~CHQSTAT ;4
+If:                     ;4
+Su:","","","","","","",--------------, ------------, -------------, -----------,--------------, -------------, ------------
+Su:                                     ~W   ~CC  ~XX            $B~SUB1VAL      ~SUB1VAT     ~SUB1NET       ~SUB1INT    ~SUB1CSH      ~SUB1CHQ       ~SUB1TAX     $B
+Su:~1                                   ~YY                      $B~SUB1ADV                   ~SUB1ADVX     $B
+Su:","","","","","","",==============, ============, =============, ============, =============, =============, ============
+Su:หมายเหตุ:  เอกสารที่มีเครื่องหมาย '*' นำหน้า คือ เอกสารที่ถูกยกเลิก
+Su:
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=158
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APTRNHPD.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=DTOS(DOCDAT)>='Date1()'.AND.DTOS(DOCDAT)<='Date2()'
+Query=.AND.SUPCOD>='Sup1()'.AND. SUPCOD<='Sup2()'.AND.RECTYP='1'
+*Sort=DTOS(DOCDAT)+DOCNUM
+
+[master file]
+File=APTRN
+Alias=A
+Tag=APTRN5
+System=DATA_PATH
+
+[item file]
+File=STCRD
+Alias=B
+Tag=STCRD5
+System=DATA_PATH
+
+File=APRCPCQ
+Alias=C
+Tag=APRCPCQ1
+System=DATA_PATH
+
+File=ARTRNRM
+Alias=X
+Tag=ARTRNRM1
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=D
+Tag=APMAS1
+System=DATA_PATH
+Master file=APTRN
+Master-Related Field=SUPCOD
+
+File=STMAS
+Alias=E
+Tag=STMAS1
+System=DATA_PATH
+Master file=STCRD
+Master-Related Field=STKCOD
+
+File=BKTRN
+Alias=F
+Tag=BKTRN3
+System=DATA_PATH
+Master file=APRCPCQ
+Master-Related Field=CHQNUM
+
+File=BKMAS
+Alias=G
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+[data spec]
+*           len (0)default,(>0)cut,(<0)cut to new line
+*~dat:      len,"pict",             "data",         "exp"
+~INIT:      0,  "",                 "",             "p_det=@n_prn_detail();prn_detail=IIF(p_det=0,'}',' '); sub1val=0;sub1adv=0;sub1vat=0;sub1net=0;sub1int=0;sub1csh=0;sub1chq=0;sub1tax=0"
+~INIT2:     0,  "",                 "",             "tot_val=0;totadv=0;totvat=0;totnet=0;totint=0;totcsh=0;totchq=0;tottax=0;cnt=0"
+~FROMDATE:  0,  "วว/ดด/ปปปป",       "@date1()",     ""
+~TODATE:    0,  "วว/ดด/ปปปป",       "@date2()",     ""
+~FROMSUP:   0,  "",                 "Sup1()",       ""
+~TOSUP:     0,  "",                 "Sup2()",       ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+~TODEP:     0,  "",                 "Dep2()",       ""
+
+~SUPPLIER:  0,  "",                 "sup_nam",      "sup_nam = APMAS->SUPNAM - ' /' - A->SUPCOD"
+~SUPNAME:   0,  "",                 "sup_nam",      ""
+
+~F:         0,  "",                 "cancel",       "cancel=IIF(A->DOCSTAT='C',' *','  ' )"
+~DOCNUM:    0,  "",                 "A->DOCNUM",    "cnt=cnt+1",C
+~DOCDAT:    0,  "วว/ดด/ปปปป",       "A->DOCDAT",    "",B
+~SUPCOD:    0,  "",                 "A->SUPCOD",    "",D
+~SUPNAM:   29,  "",                 "APMAS->SUPNAM",""
+~REFNUM:    0,  "",                 "A->REFNUM",    "",E
+~V:         0,  "",                 "A->FLGVAT",    "",F
+~AMOUNT:    0,  "999,999,999.99",   "A->AMOUNT",    ""
+~DISC:      0,  "",                 "A->DISC",      "",G
+~VATAMT:    0,  "99,999,999.99",    "A->VATAMT",    "sub1vat=sub1vat+A->VATAMT",I
+~VALAMT:    0,  "999,999,999.99",   "A->NETVAL",    "sub1val=sub1val+A->NETVAL",H
+~ADVAMT:    0,  "999,999,999.99",   "A->ADVAMT",    "sub1adv=sub1adv+A->ADVAMT",J
+~NETAMT:    0,  "999,999,999.99",   "A->NETAMT",    "sub1net=sub1net+A->NETAMT",J
+~INTPAY:    0,  "9,999,999.99",     "A->INTPAY",    "sub1int=sub1int+A->INTPAY",K
+~CSHPAY:    0,  "999,999,999.99",   "A->CSHPAY",    "sub1csh=sub1csh+A->CSHPAY",L
+~CHQPAY:    0,  "999,999,999.99",   "A->CHQPAY",    "sub1chq=sub1chq+A->CHQPAY",M
+~TAX:       0,  "9,999,999.99",     "A->TAX",       "sub1tax=sub1tax+A->TAX",N
+
+~SUB1VAT:   0,  "99,999,999.99",    "sub1vat",      "",I
+~SUB1VAL:   0,  "999,999,999.99",   "sub1val",      "",H
+~SUB1ADV:   0,  "999,999,999.99",   "sub1adv",      "",H
+~SUB1NET:   0,  "999,999,999.99",   "sub1net",      "",J
+~SUB1INT:   0,  "9,999,999.99",     "sub1int",      "",K
+~SUB1CSH:   0,  "999,999,999.99",   "sub1csh",      "",L
+~SUB1CHQ:   0,  "999,999,999.99",   "sub1chq",      "",M
+~SUB1TAX:   0,  "9,999,999.99",     "sub1tax",      "",N
+~C_SUB1:    0,  "",                 "",             "tot_val=tot_val+sub1val; sub1val=0; totadv=totadv+sub1adv; sub1adv=0; totvat=totvat+sub1vat; sub1vat=0; totnet=totnet+sub1net; sub1net=0"
+~C_SUB11:   0,  "",                 "",             "totint=totint+sub1int; sub1int=0; totcsh=totcsh+sub1csh; sub1csh=0; totchq=totchq+sub1chq; sub1chq=0; tottax=tottax+sub1tax; sub1tax=0"
+~TOTVAT:    0,  "99,999,999.99",    "totvat",       ""
+~TOTVAL:    0,  "999,999,999.99",   "tot_val",      ""
+~TOTNET:    0,  "999,999,999.99",   "totnet",       ""
+~TOTINT:    0,  "9,999,999.99",     "totint",       ""
+~TOTCSH:    0,  "999,999,999.99",   "totcsh",       ""
+~TOTCHQ:    0,  "999,999,999.99",   "totchq",       ""
+~TOTTAX:    0,  "9,999,999.99",     "tottax",       ""
+
+~CC:        0,  "999",              "cnt",              "",F
+~I:         0,  "",                 "",                 "seq=0"
+~N:         0,  "999",              "seq",              "seq=seq+1",B
+~ARTICLE:   53, "",                 "article",          "article=STCRD->STKCOD-'  '-STCRD->STKDES",C
+~STKCOD:    0,  "",                 "STCRD->STKCOD",    ""
+~STKDES:    0,  "",                 "STMAS->STKDES",    ""
+~L:         0,  "",                 "STCRD->LOCCOD",    ""
+~QTY:       0,  "qtyZ(10)",         "STCRD->TRNQTY",    "",G
+~TQUCOD:    0,  "",                 "p_istab( STCRD->TQUCOD, 20, 1, 0 )",       "",H
+~UNITPR:    0,  "priZ(12)",         "STCRD->UNITPR",    "",I
+~DISC_I:    0,  "",                 "STCRD->DISC",      "",J
+~NETAMT_I:  0,  "ZZZ,ZZZ,ZZZ.ZZ",   "STCRD->TRNVAL",    "",K
+~RDOCNUM:   0,  "",                 "STCRD->RDOCNUM",   "",L
+
+~CHQNUM:    0,  "",                 "APRCPCQ->CHQNUM",  "",C
+~CHQDAT:    0,  "วว/ดด/ปปปป",                 "BKTRN->CHQDAT",    "",D
+~BANK:      0,  "",                 "BKMAS->SHORTNAM",  "",E
+~CHQAMT:    0,  "99999,999.99",     "amt",              "amt=IIF(BKTRN->CHQNUM#'  ', BKTRN->AMOUNT, APRCPCQ->PAYAMT)",F
+*~REMAMT:   0,  "99999,999.99",     "BKTRN->REMAMT",    ""
+*~PAYAMT:   0,  "99999,999.99",     "APRCPCQ->PAYAMT",  ""
+~CHQSTAT:  11,  "",                 "p_istab( BKTRN->CHQSTAT, 02, 1, 13 )",     "",G
+
+~D:         0,  "",                 "prn_detail",       ""
+~REMARK:    0,  "",                 "ARTRNRM->REMARK",  "",B
+
+~ADVNUM:    0,  "",                 "A->ADVNUM",        "",I
+~SUB1ADVX:  0,  "999,999,999.99",   "tmp",              "tmp=sub1adv+sub1net",J
+~TOTADVX:   0,  "999,999,999.99",   "tmp",              "tmp=totadv+totnet"
+~9:         0,  "",                 "prnadv",           "prnadv=IIF(A->ADVAMT>0,' ','}')"
+~1:         0,  "",                 "prnadv",           "prnadv=IIF(sub1adv>0,' ','}')"
+~0:         0,  "",                 "prnadv",           "prnadv=IIF(totadv>0,' ','}')"
+
+~R:         0,  "",                 "ตัดใบจ่ายมัดจำ#",        "",H
+~S:         0,  "",                 "หมายเหตุ",               "",B
+~T:         0,  "",                 "เลขที่เช็ค:",            "",B
+~W:         0,  "",                 "รวม",            "",E
+~XX:         0,  "",                 "ใบ",            "",G
+~YY:         0,  "",                 "ยอดที่ตัดใบจ่ายมัดจำ",            "",F
+
+
+
+
+

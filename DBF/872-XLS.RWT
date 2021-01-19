@@ -1,0 +1,88 @@
+* STTOPQ_X.RWT - Top Quantity Purchase Report
+*
+[report frame]
+Ti::~INIT_VAR
+He:\NAME                                                   ","","","","","","","","","","","","","","","","หน้า   : \PAGE
+He:$Eรายงานการจัดลำดับยอดซื้อ$E ตามปริมาณ  (~TOP ลำดับแรก)
+He:วันที่จาก       ","","~FROMDATE        ถึง  ~TODATE         ","","","","","","","","","","","","","","วันที่ : \DATE
+H1:รหัสสินค้าจาก   ","","~FROMSTK            ถึง  ~TOSTK
+H1:หมวดสินค้าจาก   ","","~FROMGRP             ถึง  ~TOGRP      ","","","","","","","","","","","","","","เลือกแผนก  ~FROMDEP
+*He:\LINE
+He:ลำดับ","รหัสสินค้า","รายละเอียด","หน่วยนับ","ปริมาณซื้อสุทธิ","มูลค่าซื้อ 
+*He:\LINE
+*  xxxx  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5x xxxxxxxx 9,999,999.999 9999,999,999.99 
+Bo:~NN   ~ARTICLE                                            ~QUDES   ~PURQTY       ~PURVAL         
+Su:                                                                                 --------------- 
+Su:                      รวมทั้งสิ้น                                                $B~TPURVAL       $B
+Su:                                                                                 ===============
+Su:หมายเหตุ:    ปริมาณซื้อสุทธิ(ของแถมไม่นำมาคิด) = ปริมาณที่ซื้อสด+ซื้อเชื่อ-ส่งคืน
+Su:             มูลค่าซื้อ                   = จำนวนเงินซื้อสด+ซื้อเชื่อ-ส่งคืน
+Su:>>>>  จบรายงาน  <<<<
+[end frame]
+
+[print options]
+Top=0
+Left=0
+Right=98
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=STTOPQ_X.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\000\027\103
+15_Inch=\027\033\001
+Query=STKGRP>='StkGrp1()'.AND. STKGRP<='StkGrp2()'
+
+[master file]
+File=A
+Alias=A
+Key=STR(999999999-TRNQTY,15,4)+STR(999999999-PURVAL,15,2)
+*Descending=Y
+System=DATA_PATH
+
+[relate file]
+File=STMAS
+Alias=B
+Tag=STMAS1
+System=DATA_PATH
+Master file=A
+Master-Related Field=STKCOD
+
+[data spec]
+*~dat:      len,"pict",             "data",         "exp"
+~INIT_VAR:  0,  "",                 "",             "TPURVAL=0;TTRNVAL=0;TPROFIT=0;tt=@n_totpur()"
+~FROMSTK:   0,  "",                 "Stk1()",       ""
+~TOSTK:     0,  "",                 "Stk2()",       ""
+~FROMDATE:  0,  "d ดดด ปปปป",       "@date1()",     ""
+~TODATE:    0,  "d ดดด ปปปป",       "@date2()",     ""
+~FROMGRP:   0,  "",                 "StkGrp1()",    ""
+~TOGRP:     0,  "",                 "StkGrp2()",    ""
+~FROMDEP:   0,  "",                 "Dep1()",       ""
+
+~TOP:       0,  "9999",             "prntop()",     ""
+~NN:        4,  "",                 "prncount_pur()",""
+~ARTICLE:   50, "",                 "ARTICLE",      "ARTICLE=A->STKCOD-'  '-A->STKDES",B
+~STKCOD:    0,  "",                 "A->STKCOD",    "",B
+~STKDES:    0,  "",                 "A->STKDES",    "",C
+*~QUDES:    0,  "",                 "p_istab(A->QUCOD,20,1,8)", "",D
+~QUDES:     0,  "",                 "p_cqu()",       "nouse=@save_cfactor()",D
+~CHECKTOP:  0,  "",                 "check_top()",  ""
+
+*~PURQTY:   0,  "qty(13)",          "A->TRNQTY",    "",E
+~PURQTY:    0,  "",                 "Q",            "Q=@s_cqu( A->TRNQTY,13 )",E
+~PURVAL:    0,  "9999,999,999.99",  "A->PURVAL",    "TPURVAL=TPURVAL+A->PURVAL",F
+~TRNVAL:    0,  "9999,999,999.99",  "A->TRNVAL",    "TTRNVAL=TTRNVAL+A->TRNVAL; PROFIT=A->PURVAL - A->TRNVAL; PFRAT= PROFIT*100/A->PURVAL"
+~PROFIT:    0,  "999,999,999.99",   "PROFIT",       "TPROFIT=TPROFIT+PROFIT"
+~PFRAT:     0,  "99,999.99",        "PFRAT",        ""
+~TPURVAL:   0,  "9999,999,999.99",  "TPURVAL",      "",F
+~TTRNVAL:   0,  "9999,999,999.99",  "TTRNVAL",      ""
+~TPROFIT:   0,  "999,999,999.99",   "TPROFIT",      "TPF=TPROFIT*100/TPURVAL"
+~TPF:       0,  "99,999.99",        "TPF",          ""
+
+~PC:        0,  "999.99",           "pct",          "pct=A->PURVAL * 100 / tt"
+~TPC:       0,  "999.99",           "pct",          "pct=TPURVAL * 100 / tt"
+
+
+

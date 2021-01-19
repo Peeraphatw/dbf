@@ -1,0 +1,165 @@
+[Preference]
+	vert align=Center
+	horz align=Left
+	border=No
+	curve=0
+	font name=Cordia New
+	font size=16
+	bold=No
+	italic=No
+	underline=No
+	clr=0,0,0
+	bgclr=255,255,255
+	bdclr=0,0,0
+	bkmode=Transparent
+	secheight=0.1250 inch
+	secclr=255,255,255
+	pcurve=1
+	line clr=0,0,0
+	pixel=1
+	exc font name=
+	exc font size=
+	exc freeze=Yes
+[Report]
+	caption=Report
+	edit copy=ทุกชุด
+	form=Yes
+	scope=Yes
+	def scope=0
+	width=6.9790 inch
+	psize=0, "ตามเครื่องพิมพ์"
+	pwidth=7.0000
+	pheight=3.5000
+	pw=8.2700
+	ph=11.6900
+	tblvw hi=72
+	tblvw mode=2
+	secvw wd=150
+	left margin=0.5000 inch
+	top margin=0.0500 inch
+	right margin=0.2500 inch
+	bot margin=0.2500 inch
+	set margin=No
+	supg=No
+	printer=
+	to border=Yes
+	col wd=1.0000
+	col gap=0.5000
+	printpref=1
+	multipg=1
+	sepset=Yes
+	horzalign=0
+	datefmt=
+	horgap=2.2000
+	vergap=1.2000
+	stwd=2.0000
+	sthg=1.0000
+	strow=5
+	stcol=4
+	st how column=1
+	st type=Junk A4
+	stcustom=No
+[File]
+	[Variable]
+		dimension=0,0,136,150
+
+	[Master File]
+		file name=BKTRN
+		alias=A
+		tag=BKTRN3
+		dimension=130,0,266,150
+
+	[Related File]
+		file name=APMAS
+		alias=B
+		tag=APMAS1
+		master file=BKTRN
+		related fld=CUSCOD
+		dimension=260,0,396,150
+
+[Section]
+[He]
+	name=He2
+	secheight=0.3750 inch
+	order objs=1
+	shrink=No
+	[Object]
+		obj type=TEXT
+		name=TEXT4
+		gridtype=1
+		print with=A->CHQDAT
+		order=1
+		dimension=3814,48,5801,323
+		exc dimension=3814,48,5801,323
+		font name=Cordia New
+		font size=18
+		bold=Yes
+		insu=0
+
+[Bo]
+	name=Bo1
+	secheight=0.4370 inch
+	order objs=1
+	shrink=No
+	[Object]
+		obj type=TEXT
+		name=TEXT0
+		gridtype=1
+		print with=A->NAME
+		order=1
+		dimension=444,114,5036,347
+		exc dimension=444,114,5036,347
+		bdclr=255,255,255
+		font name=Cordia New
+		font size=12
+		bold=Yes
+		insu=0
+
+[Bo]
+	name=Bo2
+	secheight=0.9790 inch
+	order objs=2
+	shrink=No
+	exc visible=No
+	[Object]
+		obj type=TEXT
+		name=TEXT1
+		gridtype=1
+		print with=A->AMOUNT
+		format=***,***,**9.99
+		order=1
+		dimension=2763,194,5215,543
+		exc dimension=2763,194,5215,543
+		horz align=Center
+		font name=Cordia New
+		font size=16
+		bold=Yes
+		insu=0
+
+		obj type=TEXT
+		name=TEXT2
+		gridtype=1
+		print with=t_baht(A->AMOUNT)
+		order=2
+		dimension=894,0,5301,234
+		exc dimension=894,0,5301,234
+		font name=Cordia New
+		font size=12
+		bold=Yes
+		insu=0
+
+[Bo]
+	name=Bo3
+	secheight=0.5600 inch
+	order objs=0
+	shrink=No
+[Bo]
+	name=Bo4
+	secheight=0.4160 inch
+	order objs=0
+	shrink=No
+[Bo]
+	name=Bo5
+	secheight=0.3970 inch
+	order objs=0
+	shrink=Yes

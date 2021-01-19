@@ -1,0 +1,65 @@
+* GLCHART.RWT - Chart of Accounts Report
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    ","","","","หน้า : \PAGE
+He:ผังบัญชี
+He:เลขที่บัญชีจาก  ~FROMACC         ถึง  ~TOACC             ","","","","วันที่ : \DATE
+*He:\LINE
+He:เลขที่บัญชี","ชื่อบัญชี","หมวด","ระดับ","ประเภท","บัญชีคุม
+He:---------------  -----------------------------------------------------------------  -----  -----  ----   ---------------
+*  xxxxxxxxx1xxxx!  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5xxxxxxxxx6xxxx!
+Bo:~ACCNUM          ~ACCNAM                                                            ~GROUP   ~LEV ~TYPE  ~PARENT         ~X~T~N
+*Bo:                 ~ACCNAM2
+*Su:\LINE
+Su:
+Su:   บัญชีคุม  ~PAR
+Su:   บัญชีย่อย ~CH
+Su:   รวม       ~RS   บัญชี
+*Su:>>>> จบรายงาน <<<<  ~STOP
+[end frame]
+
+[print options]
+Top=0
+Right=120
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=GLCHART.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+
+[master file]
+File=GLACC
+Alias=A
+Tag=GLACC1
+System=DATA_PATH
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,"pict",     "data",             "exp"
+~FROMACC:   0,  "",         "Acc1()",           ""
+~TOACC:     0,  "",         "Acc2()",           ""
+~D1:        0,  "",         "Dep1()",           ""
+~D2:        0,  "",         "Dep2()",           ""
+~ACCNUM:    0,  "",         "GLACC->ACCNUM",    ""
+~ACCNAM:    0,  "",         "acname()",         "",B
+~ACCNAM2:   0,  "",         "acname2()",        "",B
+~GROUP:     0,  "",         "acgroup()",        "",C
+~LEV:       0,  "",         "GLACC->LEVEL",     "",D
+~TYPE:      0,  "",         "TYP",              "TYP=IIF(GLACC->ACCTYP='0', '---', IIF(GLACC->ACCTYP='1','คุม','ERR'))",E
+~PARENT:    0,  "",         "GLACC->PARENT",    "",F
+~INIT:      0,  "",         "start_rep()",      "cnt=0;par=0;child=0"
+~N:         0,  "",         " ",                "par=par+IIF(GLACC->ACCTYP='1', 1, 0);child=child+IIF(GLACC->ACCTYP='0', 1, 0)"
+~RS:        0,  "99999",    "cnt",              "cnt=par+child"
+~PAR:       0,  "99999",    "par",              ""
+~CH:        0,  "99999",    "child",            ""
+~X:         0,  "",         "GG",               "GG=IIF(GLACC->GROUP<'1' .OR. GLACC->GROUP>'5','G',' ')"
+~T:         0,  "",         "TT",               "TT=IIF(GLACC->NATURE#'0' .AND. GLACC->NATURE#'1','T',' ')"
+~P:         0,  "",         "test_parent()",    ""
+~STOP:      0,  "",         "stop_rep()",       ""
+
+

@@ -1,0 +1,98 @@
+* APPURPRD.RWT - Period's Purchase Report (Cash Purchase & Receive & C/N and D/N) by Date
+*
+[report frame]
+Ti::~INIT
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eสรุปยอดซื้อประจำงวด$E (ยอดซื้อก่อนคิดVAT + เงินมัดจำ)
+He:วันที่จาก    ~FROMDATE      ถึง  ~TODATE                 `วันที่ : \DATE
+H1:ผู้จำหน่าย   ~FROMSUP       ถึง  ~TOSUP
+He:\LINE
+*He:    ชื่อผู้จำหน่าย                                           ซื้อสด+มัดจำ ซื้อเชื่อ+มัดจำ   เพิ่มหนี้  ลดหนี้/ส่งคืน     ยอดสุทธิ
+He:"ชื่อผู้จำหน่าย,"ซื้อสด+มัดจำ","ซื้อเชื่อ+มัดจำ","เพิ่มหนี้","ลดหนี้/ส่งคืน","ยอดสุทธิ",
+He:\LINE
+**:xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4xxxxxxxxx5xxxxx 999,999,999.99999,999,999.99999,999,999.99999,999,999.99(999,999,999.99)
+Gh::~SUPPLIER           ; 1 SUPCOD
+Bo::~ADVVAT ~SUMCSH ~SUMRCV ~SUMCN ~SUMDN ~SUMPS
+Gf:~SUPNAM                                                 ~SUPCSH       ~SUPRCV       ~SUPCN        ~SUPDN        ~SUPNET        ~CLRSUP ; 1
+Su:","--------------","-------------","-------------","-------------","--------------
+Su:                       รวมทั้งสิ้น ~CC ราย              $B~TOTCSH       ~TOTRCV       ~TOTCN        ~TOTDN        ~TOTNET          $B
+Su:","==============","=============","=============","=============","==============
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Top=0
+Right=110
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=APPURPRD.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\004
+15_Inch=\027\033\001
+Query=DTOS(DOCDAT)>='Date1()'.AND.DTOS(DOCDAT)<='Date2()'
+Query=.AND.SUPCOD>='Sup1()'.AND. SUPCOD<='Sup2()'
+Query=.AND.SUPCOD#'          ' .AND.DOCSTAT #'C'
+Query=.AND. RECTYP#'9'
+Date format=วว/ดด/ปปปป
+
+[master file]
+File=APTRN
+Alias=A
+Tag=APTRN8
+System=DATA_PATH
+
+[relate file]
+File=APMAS
+Alias=B
+Tag=APMAS1
+System=DATA_PATH
+Master file=APTRN
+Master-Related Field=SUPCOD
+
+File=APTRNX
+Clone From=APTRN
+Alias=X
+Tag=APTRN1
+System=DATA_PATH
+Master file=APTRN
+Master-Related Field=ADVNUM
+
+[data spec]
+*~dat:      len,    "pict",             "data",         "exp"
+~INIT:      0,      "",                 "",             "supcsh=0;suprcv=0;supcn=0;supdn=0;supps=0;sumcsh=0;sumrcv=0;sumcn=0;sumdn=0;sumps=0;cnt=0"
+~FROMSUP:   0,      "",                 "Sup1()",       ""
+~TOSUP:     0,      "",                 "Sup2()",       ""
+~FROMDATE:  0,      "d ดดด yyyy",       "@date1()",     ""
+~TODATE:    0,      "d ดดด yyyy",       "@date2()",     ""
+~SUPPLIER:  0,      "",                 "",             "sup_nam = B->SUPNAM - ' /' - A->SUPCOD"
+~SUPNAM:    0,      "",                 "sup_nam",      "cnt=cnt+1"
+~CC:        0,      "999",              "cnt",          ""
+
+~ADVVAT:    0,      "",                 "",             "adv_vat = IIF( A->ADVNUM=APTRNX->DOCNUM .and. SUBSTR(A->ADVNUM,3,3)#'...', APTRNX->VATRAT, A->VATRAT )"
+~SUMCSH:    0,      "",                 "",             "supcsh = supcsh+IIF(A->RECTYP='1',A->NETVAL+IIF(A->FLGVAT='1',A->ADVAMT*100/(100+adv_vat),A->ADVAMT),0)"
+~SUMRCV:    0,      "",                 "",             "suprcv = suprcv+IIF(A->RECTYP='3',A->NETVAL+IIF(A->FLGVAT='1',A->ADVAMT*100/(100+adv_vat),A->ADVAMT),0)"
+~SUMCN:     0,      "",                 "",             "supcn = supcn+IIF(A->RECTYP='4',A->NETVAL,0)"
+~SUMDN:     0,      "",                 "",             "supdn = supdn+IIF(A->RECTYP='5',A->NETVAL,0)"
+~SUMPS:     0,      "",                 "",             "supps = supps+IIF(A->RECTYP='9',A->NETAMT+A->ADVAMT,0)"
+~SUPCSH:    0,      "999,999,999.99",   "supcsh",       "sumcsh = sumcsh+supcsh",B
+~SUPRCV:    0,      "999,999,999.99",   "suprcv",       "sumrcv = sumrcv+suprcv",C
+~SUPCN:     0,      "999,999,999.99",   "supcn",        "sumcn = sumcn+supcn",D
+~SUPDN:     0,      "999,999,999.99",   "supdn",        "sumdn = sumdn+supdn",E
+~SUPPS:     0,      "999,999,999.99",   "supps",        "sumps = sumps+supps"
+~SUPNET:    0,      "(999,999,999.99)", "supcsh",       "supcsh = supcsh+suprcv+supcn-supdn-supps",F
+~CLRSUP:    0,      "",                 "",             "supcsh=0;suprcv=0;supcn=0;supdn=0;supps=0"
+~TOTCSH:    0,      "999,999,999.99",   "sumcsh",       "",B
+~TOTRCV:    0,      "999,999,999.99",   "sumrcv",       "",C
+~TOTCN:     0,      "999,999,999.99",   "sumcn",        "",D
+~TOTDN:     0,      "999,999,999.99",   "sumdn",        "",E
+~TOTPS:     0,      "999,999,999.99",   "sumps",        ""
+~TOTNET:    0,      "(999,999,999.99)", "sumcsh",       "sumcsh = sumcsh+sumrcv+sumcn-sumdn-sumps",F
+
+
+
+
+
+

@@ -1,0 +1,130 @@
+* BKRCQREM.RWT - Posted Date Cheque As of Date  Separate by Cheque Account No.
+* ใช้อักษร 2 ตัวแรกของเลขที่เช็ค ไปเทียบกับค่าที่กำหนดใน 'วิธีการรับชำระหนี้'
+*   เพื่อดึงเลขที่บัญชีของเช็คมาใช้
+*
+[report frame]
+Ti::~INIT ~C_SUB
+He:\NAME                                                    `หน้า   : \PAGE
+He:$Eรายงานเช็ครับคงเหลือ แยกตามเลขที่บัญชีเช็ค$E (ตรวจกับบัญชีแยกประเภท)
+He:ณ.วันที่ ~ASDATE           เลือกแผนก  ~DEP               `วันที่ : \DATE
+He:\LINE
+He:","วันที่รับ","ลวท.","เลขที่เช็ค","ธ.","สาขา","รับจาก","เงินหน้าเช็ค","ยอดที่ยังไม่ลงบัญชี","เข้าบัญชี","หมายเหตุ","","ใบเสร็จ#
+*He:วันที่รับ  ลวท.   เลขที่เช็ค   ธ.    สาขา            รับจาก      เงินหน้าเช็ค ยอดที่ยังไม่ลงบัญชี   เข้าบัญชี   หมายเหตุ                          ใบเสร็จ#
+He:~D","","","","","","","","","","รายละเอียด (หมายเหตุของใบเสร็จ)
+*He:~D                                                                                                      รายละเอียด (หมายเหตุของใบเสร็จ)
+He:\LINE
+**:DD/MM/YY DD/MM/YY xxxxxxxxx1xx xxxx  xxxxxxxxx1xxxxx xxxxxxxxxx999,999,999.99 99999,999.99  xxxxxxxxxx  xxxxxxxxx1xxxxxxxxx2xxxxxxxxx3xxxxxxxxx4x xxxxxxxxxx
+Gh:$Bเลขที่บัญชี : ~ACCNUM                                                                        $B ;1 ISRUN->ACCNUM01
+Bo:~GETDAT     ~CHQDAT     ~CHQNUM       ~BANK   ~BRANCH         ~CUSCOD   ~AMOUNT        ~REMAMT       ~BNKACC     ~REMARK                                   {1}
+Ih::                    ;1 ARRCPCQ->CHQNUM A->CHQNUM
+Ib:{1}                                                                                                                                               ~REFNUM ;1
+Ih::                    ;2 artrnrm->docnum+'@' arrcpcq->rcpnum+'@'
+Ib:                                                                                                        ~REMARK_R    ;2
+Gf:","","","","","","","--------------------","--------------------   ;1
+Gf:","","รวมบัญชี    ","~TACCNUM                  ","","~CNT                ใบ","","~SUBTOT                      ","~SUBREM                     ","","ยอดเช็คลงบัญชีสุทธิ=","~SUBNET            ~C_SUB      ;1
+Gf:             ;1
+Su:","","","","","","","=================","================
+Su:","","รวมทั้งสิ้น ","~C_GRP  บัญชี   ","","~G_CNT  ใบ ","","~TOTAL                       ","~TOTREM                   ","","ยอดเช็คลงบัญชีสุทธิ=","~TOTNET      
+Su:","","","","","","","=================","================
+Su:
+Su:หมายเหตุ  *** ณ.สิ้นรอบระยะเวลาบัญชี ไม่ควรปล่อยให้มียอดค้างอยู่ในช่อง 'ยอดที่ยังไม่ลงบัญชี' (ควรปรับปรุงยอดนี้ออกให้หมด)
+Su:>>>> จบรายงาน <<<<
+[end frame]
+
+[print options]
+Left=0
+Right=158
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=BKRCQREM.TXT
+Fix Foot Line=OFF
+Select Scope=OFF
+Select Page=OFF
+Select Paper=15_Inch, 8_Inch, Default
+8_Inch=\027\033\005
+15_Inch=\027\033\001
+Query=BKTRNTYP='QR'
+Query=.AND.( DTOS(GETDAT)<='AsDate()'.AND. (CHQSTAT='0'.OR. ((CHQSTAT='1'.OR.CHQSTAT='21').AND.(DTOS(TRNDAT)>'AsDate()'.OR.REMAMT>=0.01))))
+Sort=BKTRNTYP+ISRUN->ACCNUM01+DTOS(CHQDAT)+CHQNUM
+Date Format=วว/ดด/ปปปป
+
+[master file]
+File=BKTRN
+Alias=A
+Tag=BKTRN1
+System=DATA_PATH
+
+[relate file]
+File=BKMAS
+Alias=B
+Tag=BKMAS1
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field=BNKACC
+
+File=ISRUN
+Alias=X
+Tag=ISRUN4
+System=DATA_PATH
+Master file=BKTRN
+Master-Related Field='ZR'+CHQNUM
+
+File=GLACC
+Alias=Y
+Tag=GLACC1
+System=DATA_PATH
+Master file=ISRUN
+Master-Related Field=ACCNUM01
+
+[item file]
+File=ARRCPCQ
+Alias=C
+Tag=ARRCPCQ2
+System=DATA_PATH
+
+File=ARTRNRM
+Alias=X
+Tag=ARTRNRM1
+System=DATA_PATH
+
+[data spec]
+*               len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:          len,"pict",             "data",                 "exp"
+~INIT:          0,  "",                 "",                     "p_det=@n_prn_detail();prn_detail=IIF(p_det=0,':',' '); grand=0; totrem=0; cnt=0;g_cnt=0; subtot=0; c_grp=0"
+~ASDATE:        0,  "d ดดด yyyy",       "@date_as()",           "as_date=@AsDate()"
+~DEP:           0,  "",                 "Dep1()",               ""
+~ACCNUM:        0,  "",                 "acc_num",              "acc_num=ISRUN->ACCNUM01-'  '-GLACC->ACCNAM; acc_num1=GLACC->ACCNAM"
+~TACCNUM:      30,  "",                 "acc_num1",             "c_grp=c_grp+1"
+~GETDAT:        0,  "",                 "A->GETDAT",            "",b
+~CHQDAT:        0,  "",                 "A->CHQDAT",            "",c
+~BANK:          0,  "",                 "p_istab( A->BNKCOD, 01, 0, 6)",    "",e
+~BRANCH:       15,  "",                 "A->BRANCH",            "",f
+~CHQNUM:        0,  "",                 "A->CHQNUM",            "cnt=cnt+1",d
+~CUSCOD:        0,  "",                 "A->CUSCOD",            "",g
+~AMOUNT:        0,  "ZZZ,ZZZ,ZZZ.ZZ",   "amt",                  "amt=IIF(CHQSTAT='1'.AND. DTOS(TRNDAT)<='AsDate()'.AND. REMAMT>=0.01, 0, A->AMOUNT ); subtot = subtot + amt",h
+~REMAMT:        0,  "ZZZZZ,ZZZ.ZZ",     "rem_amt",              "rem_amt = IIF( STR(A->REMAMT,13,2)='         0.00' .OR. STR(A->REMAMT,13,2)='        -1.00', 0, A->REMAMT ); subrem=subrem+rem_amt",i
+~BNKACC:        0,  "",                 "BKMAS->SHORTNAM",      "",j
+~CHQSTAT:       0,  "",                 "p_istab( A->CHQSTAT, 02, 1, 15 )",         ""
+~PASSDAT:       0,  "",                 "pass_dat",             "pass_dat=IIF(A->CHQSTAT='1'.OR.A->CHQSTAT='20',A->TRNDAT,STOD('        '))"
+~REMARK:       45,  "",                 "re_mark",              "re_mark = A->NAME-' '-A->REMARK",k
+*~REMARK:       0,  "",                 "rem",                  "rem = SUBSTR(A->NAME,1,39)+' '+A->VOUCHER"
+
+~REFNUM:        0,  "",                 "ARRCPCQ->RCPNUM",      "",m
+~RCVAMT:        0,  "99,999,999.99",    "ARRCPCQ->RCVAMT",      ""
+~SUBTOT:        0,  "999,999,999.99",   "subtot",               "grand=grand+subtot"
+~SUBREM:        0,  "99999,999.99",     "subrem",               "totrem=totrem+subrem"
+~TOTAL:         0,  "999,999,999.99",   "grand",                ""
+~TOTREM:        0,  "99999,999.99",     "totrem",               ""
+~SUBNET:        0,  "999,999,999.99",   "amt",                  "amt=subtot-subrem"
+~TOTNET:        0,  "999,999,999.99",   "amt",                  "amt=grand-totrem"
+
+~D:             0,  "",                 "prn_detail",           ""
+~REMARK_R:      0,  "",                 "ARTRNRM->REMARK",      "",k
+~CNT:           0,  "999,999",          "cnt",                  "g_cnt=g_cnt+cnt"
+~C_SUB:         0,  "",                 "",                     "subtot=0; subrem=0; cnt=0"
+~G_CNT:         0,  "999,999",          "g_cnt",                ""
+~C_GRP:         0,  "99,999",           "c_grp",                ""
+
+
+
+

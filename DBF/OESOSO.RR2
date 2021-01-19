@@ -1,0 +1,187 @@
+* OESO.RLX - „∫ —Ëß¢“¬ (SALES ORDER)
+*
+[report frame]
+*** ºŸÈ„™È “¡“√∂‡ª≈’Ë¬π·ª≈ß·°È‰¢†‰¥Èµ“¡µÈÕß°“√†****************************************
+Ti:: ~INIT
+He:$E\NAME                                             $E
+He:~ADDR
+He:~TEL                                                                           $E„∫ —Ëß¢“¬$E
+He:‡≈¢ª√–®”µ—«ºŸÈ‡ ’¬¿“…’†~TAXID          ~P_ORGTXT       ~P_ORGSTR    
+He:
+He:  ≈Ÿ°§È“ ~CUSCOD     ~BILLTO                                  ‡≈¢∑’Ë„∫ —Ëß¢“¬   ~SONUM
+He:  ~CUSNAM
+He:  ~ADDR01                                                     «—π∑’Ë            ~SODAT
+He:  ~ADDR02
+He:  ~ADDR03                                                     «—π∑’Ë Ëß¢Õß      ~DLVDAT
+He:  ‡≈¢ª√–®”µ—«ºŸÈ‡ ’¬¿“…’ ~TAXIDX        ~ORG
+He:  ÕÈ“ßÕ‘ß   ~YOUREF                                           æπ—°ß“π¢“¬        ~SLMCOD
+He:  ¢π Ëß‚¥¬  ~DLVBY                                            ‡¢µ°“√¢“¬         ~AREA
+He:ÄÖÖÖÖâÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖâÖÖÖÖâÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖâÖÖÖÖÖÖÖÖÖÖÖâÖÖÖÖÖÖÖÖÖÖÖâÖÖÖÖÖÖÖÖÖÖÖÖÖÖÅ
+He:Ñ No.Ñ                  √À—  ‘π§È“/√“¬≈–‡Õ’¬¥         Ñ§≈—ßÑ      ®”π«π      Ñ   ÀπË«¬≈– Ñ    Ë«π≈¥  Ñ  ~TXT0       Ñ
+He:ÜÖÖÖÖäÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖäÖÖÖÖäÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖäÖÖÖÖÖÖÖÖÖÖÖäÖÖÖÖÖÖÖÖÖÖÖäÖÖÖÖÖÖÖÖÖÖÖÖÖÖá
+Bo::
+Ih::                    ;1 oesoit->sonum oeso->sonum
+Ib: ~N   ~ARTICLE                                         ~L   ~QTY    ~TQUCOD   ~UNITPR     ~DISC_I     ~TRNVAL        ;1
+Ih::                    ;2 artrnrm->docnum+artrnrm->seqnum oesoit->sonum+oesoit->seqnum
+Ib:      ~REMARK        ;2
+Bt:Ñ    Ñ                                                Ñ    Ñ                 Ñ           Ñ           Ñ              Ñ
+Fo:ÜÖÖÖÖàÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖàÖÖÖÖàÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖàÖÖÖÖÖÖÖÖÖÖÖàÖÖÖÖÖÖÖÖÖÖÖäÖÖÖÖÖÖÖÖÖÖÖÖÖÖá
+Su:ÑÀ¡“¬‡Àµÿ                                                                √«¡‡ªÁπ‡ß‘π                 Ñ~AMOUNT       Ñ
+Su:Ñ ~HREM1                                                                 $_À—°$_ Ë«π≈¥        ~DISC      Ñ~DISCAMT      Ñ
+Su:Ñ ~HREM2                                                                 ~TXT1                       Ñ~TOTAL        Ñ
+Su:Ñ ~HREM3                                                                 ®”π«π¿“…’¡Ÿ≈§Ë“‡æ‘Ë¡ ~VAT % Ñ~VATAMT       Ñ
+Su:Ñ µ—«Õ—°…√:~BAHT                                                         ~TXT2                       Ñ~CHKAMT       Ñ
+*Su:Ñ ~HREM3                                                                                             ÑÖÖÖÖÖÖÖÖÖÖÖÖÖÖÑ
+*Su:Ñ ~HREM4                                                                  ‘π§È“¬°‡«Èπ¿“…’¡Ÿ≈§Ë“‡æ‘Ë¡ Ñ~AMTRATZ      Ñ
+*Su:Ñ ~HREM5                                                                 ¡Ÿ≈§Ë“ ‘π§È“Õ—µ√“  ~VAT  %  Ñ~AMTRATX      Ñ
+*Su:Ñ                                                                        ®”π«π‡ß‘π¿“…’¡Ÿ≈§Ë“‡æ‘Ë¡    Ñ~VATAMT       Ñ
+*Su:Ñ~BAHT                                                                          ®”π«π‡ß‘π√«¡∑—Èß ‘Èπ Ñ~NETAMT       Ñ
+Su:ÜÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖàÖÖÖÖÖÖÖÖÖÖÖÖÖÖá
+Su:Ñ                                                                                                                   Ñ
+Su:Ñ                                                    „ππ“¡ \NAME                                                    Ñ
+Su:Ñ    ___________________                                                                                            Ñ
+Su:Ñ         ºŸÈ√—∫ ‘π§È“                                    ºŸÈ√—∫¡Õ∫Õ”π“®††__________________                        Ñ
+*Su:Ñ æ‘¡æÏ‚¥¬  ~PRNBY         «—π∑’Ë  ~PRNDAT   ~PRNTIM æ‘¡æÏ§√—Èß∑’Ë~PRNCNT  ∫—π∑÷°‚¥¬ ~RECBY                         Ñ
+Su:ÇÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÖÉ
+[end frame]
+
+*** §” —ËßµËÕ®“°π’È†ºŸÈ„™È‰¡Ë§«√·°È‰¢†****************************************
+
+[print options]
+Top=0
+Left=0
+Tabs=4
+Right=117
+Lines=41
+Output=Select, Printer, Screen, File,
+File Name=OESO.TXT
+Print Control=\018\027\103
+Fix Summary Line=ON
+Select Scope=OFF
+Select Page=OFF
+Condition=OFF
+
+[range of report]
+From=CUR
+
+[master file]
+File=oeso
+Alias=A
+Tag=oeso1
+System=DATA_PATH
+
+[item file]
+File=oesoit
+Alias=B
+Tag=oesoit1
+System=DATA_PATH
+
+File=artrnrm
+Alias=C
+Tag=artrnrm1
+System=DATA_PATH
+
+[relate file]
+File=armas
+Alias=R
+Tag=armas1
+System=DATA_PATH
+Master file=oeso
+Master-Related Field=CUSCOD
+
+File=stmas
+Alias=C
+Tag=stmas1
+System=DATA_PATH
+Master file=oesoit
+Master-Related Field=STKCOD
+
+File=stloc
+Alias=L
+Tag=stloc1
+System=DATA_PATH
+Master file=oesoit
+Master-Related Field=STKCOD+LOCCOD
+
+[data spec]
+*           len  (0)default, (>0)cut, (<0)cut to new line
+*~dat:      len,    "pict",             "data",             "exp"
+~ADDR:      0,      "",                 "p_addr()",         ""
+~TAXID:     0,      "",                 "p_taxid()",        ""
+~TEL:       0,      "",                 "p_telnum()",       ""
+~INIT:      0,      "",                 "",                 "seq=0"
+~TXT0:      0,      "",                 "txt0",             "txt0 = IIF( OESO->FLGVAT <> '1', '  ®”π«π‡ß‘π', '√“§“√«¡¿“…’')",
+~TXT1:      0,      "",                 "txt1",             "txt1 = IIF( OESO->FLGVAT <> '1', '®”π«π‡ß‘πÀ≈—ßÀ—° Ë«π≈¥', '®”π«π‡ß‘π√«¡∑—Èß ‘Èπ  ')",
+~TXT2:      0,      "",                 "txt2",             "txt2 = IIF( OESO->FLGVAT <> '1', '®”π«π‡ß‘π√«¡∑—Èß ‘Èπ', '√“§“ ‘π§È“          ')",
+~SONUM:     0,      "",                 "OESO->SONUM",      ""
+~SODAT:     0,      "",                 "OESO->SODAT",      ""
+~CUSCOD:    0,      "",                 "OESO->CUSCOD",     ""
+~CUSNAM:    0,      "",                 "cus_nam",          "cus_nam = ARMAS->PRENAM - '†' - ARMAS->CUSNAM"
+~ADDR01:    0,      "",                 "ARMAS->ADDR01",    ""
+~ADDR02:    0,      "",                 "ARMAS->ADDR02",    ""
+~ADDR03:    0,      "",                 "addr_03",          "addr_03 = ARMAS->ADDR03 - '†' - ARMAS->ZIPCOD"
+~YOUREF:    0,      "",                 "OESO->YOUREF",     ""
+~SLMCOD:   35,      "",                 "slm",              "slm = OESO->SLMCOD-'-'-OESLM->SLMNAM"
+~CR:        0,      "ZZZ",              "OESO->PAYTRM",     ""
+~DLVDAT:    0,      "",                 "OESO->DLVDAT",     ""
+~DLVBY:     0,      "",                 "p_istab( OESO->DLVBY, 41, 1, 40 )",            ""
+~AREA:      0,      "",                 "p_istab( OESO->AREACOD, 40, 1, 40 )",          ""
+~FLGVAT:    0,      "Y",                "OESO->FLGVAT",     ""
+~AMOUNT:    0,      "99,999,999.99",    "OESO->AMOUNT",     ""
+~DISC:      0,      "",                 "OESO->DISC",       ""
+~DISCAMT:   0,      "99,999,999.99",    "OESO->DISCAMT",    ""
+~TOTAL:     0,      "99,999,999.99",    "OESO->TOTAL",      ""
+~VAT:       0,      "99.99",            "OESO->VATRAT",     ""
+~VATAMT:    0,      "99,999,999.99",    "OESO->VATAMT",     ""
+~CHKAMT:    0,      "99,999,999.99",    "netamt",           "netamt = IIF( OESO->FLGVAT <> '1', OESO->NETAMT, OESO->TOTAL - OESO->VATAMT)"
+~BAHT:      0,      "",                 "t_baht(OESO->NETAMT)"                          ""
+
+~N:         0,      "999",              "seq",              "seq=seq+1"
+~ARTICLE:  48,      "",                 "article",          "article = OESOIT->STKCOD - '†' - OESOIT->STKDES"
+~STKCOD:    0,      "",                 "OESOIT->STKCOD",   ""
+~STKDES:   35,      "",                 "OESOIT->STKDES",   ""
+~L:         0,      "",                 "OESOIT->LOCCOD",   ""
+~QTY:       0,      "qtyZ(7)",          "OESOIT->ORDQTY",   ""
+~TQUCOD:    8,      "",                 "p_istab( OESOIT->TQUCOD,  20, 1, 0 )",     ""
+~UNITPR:    0,      "priZ(10)",         "OESOIT->UNITPR",   ""
+~DISC_I:    0,      "",                 "OESOIT->DISC",     ""
+~TRNVAL:    0,      "ZZ,ZZZ,ZZZ.ZZ",    "OESOIT->TRNVAL",   ""
+~DLVDAT_I:  0,      "",                 "OESOIT->DLVDAT",   ""
+~REMARK:    0,      "",                 "ARTRNRM->REMARK",  ""
+
+~HREM1:     0,      "",                 "p_hrem(A->SONUM,1)",       ""
+~HREM2:     0,      "",                 "p_hrem(A->SONUM,2)",       ""
+~HREM3:     0,      "",                 "p_hrem(A->SONUM,3)",       ""
+~HREM4:     0,      "",                 "p_hrem(A->SONUM,4)",       ""
+~HREM5:     0,      "",                 "p_hrem(A->SONUM,5)",       ""
+
+~DEP:       0,      "",                 "A->DEPCOD",                ""
+~P_ISDEP:   0,      "",                 "p_isdep( A->DEPCOD )",     ""
+~LOCAREA:   0,      "",                 "STLOC->AREA",              ""
+
+~NETAMT:    0,      "99,999,999.99",    "OESO->NETAMT",     ""
+~AMTRATZ:   0,      "99,999,999.99",    "AMTRATZ",          "AMTRATZ = OESO->AMTRAT0 - (OESO->AMTRAT0 * OESO->DISCAMT / OESO->AMOUNT)"
+~AMTRATX:   0,      "99,999,999.99",    "AMTRATX",          "AMTRATX = IIF(OESO->FLGVAT='1',OESO->TOTAL - AMTRATZ - OESO->VATAMT, OESO->TOTAL - AMTRATZ)"
+*~V:        0,      "",                 "VAT_SYM",          "VAT_SYM = IIF(OESOIT->VATCOD='0', ' ', 'V')"
+~V:         0,      "",                 "OESOIT->VATCOD",   ""
+~SHIPTO:    0,      "",                 "OESO->SHIPTO",     ""
+~S_ADDR01:  0,      "",                 "ARSHIP->ADDR01",   ""
+~S_ADDR02:  0,      "",                 "ARSHIP->ADDR02",   ""
+~S_ADDR03:  0,      "",                 "addr_03",          "addr_03 = ARSHIP->ADDR03 - '†' - ARSHIP->ZIPCOD"
+~S_TELNUM:  0,      "",                 "ARSHIP->TELNUM",   ""
+
+~PRNBY:     0,      "",                 "p_userid()",       ""
+~PRNDAT:    0,      "",                 "@d_prndat()",      ""
+~PRNTIM:    0,      "",                 "s_prntim()",       ""
+~PRNCNT:    0,      "999",              "@n_prncnt()",      ""
+~RECBY:     0,      "",                 "A->USERID",        ""
+
+~P_ORGTXT:  0,      "",                 "p_orgtxt()",       ""
+~P_ORG:     0,      "",                 "p_orgnum()",       ""
+~P_ORGSTR:  0,      "",                 "p_orgstr()",       ""
+~BILLTO:    0,      "",                 "A->BILLTO",        "tax_id=@TAXID()"
+~TAXIDX:    0,      "",                 "tax_id",           ""
+~ORG:       0,      "",                 "org",              "org=IIF(tax_id#'   '.AND.A->ORGNUM>=0,IIF(A->ORGNUM=0,'† ”π—°ß“π„À≠Ë†††', '† “¢“∑’Ë†'   -LTRIM(STR(A->ORGNUM,5,0))),'              ')"
+*~ORG:      0,      "",                 "org",              "br=@p_orgnum_00009( A->ORGNUM ); org=IIF(tax_id#'   '.AND.A->ORGNUM>=0,IIF(A->ORGNUM=0,'† ”π—°ß“π„À≠Ë††', '† “¢“∑’Ë†'-br),'               ')"
+~SEEKCUS:   0,      "",                 "SeekCus()",        ""
+
