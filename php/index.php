@@ -1,6 +1,5 @@
 <?php
     $curl = curl_init();
-    //curl_setopt($curl,CURLOPT_URL,'https://jsonplaceholder.typicode.com/users');
     curl_setopt($curl,CURLOPT_URL,'http://localhost:3000');
     curl_setopt($curl,CURLOPT_SSL_VERIFYPEER,FALSE); 
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
