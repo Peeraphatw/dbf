@@ -5,14 +5,17 @@ const cors = require("cors");
 var output;
 app.use(express.json());
 app.use(cors());
-app.get("/", (req, res) => {
+app.get("/api/:filename", (req, res) => {
+  console.log(`DBF/${req.params.filename}.DBF`);
   const readFileDBF = async () => {
-    let dbf = await DBFFile.open("DBF/ARMAS.DBF", { encoding: "ISO-8859-11" });
+    let dbf = await DBFFile.open(`DBF/GLREPIT.DBF`, {
+      encoding: "ISO-8859-11",
+    });
 
     //console.log(`DBF file contains ${dbf.recordCount} records.`);
     //console.log(`Field names: ${dbf.fields.map((f) => f.name).join(", ")}`);
     let records = await dbf.readRecords(dbf.recordCount);
-    //console.log(records);
+    console.log(records);
     return records;
   };
   readFileDBF().then((data) => res.status(200).json({ data: data }));
